@@ -1,0 +1,27 @@
+pipeline {
+  agent any
+
+  stages {
+    stage('Install') {
+      steps {
+        sh 'corepack enable'
+        sh 'pnpm install --frozen-lockfile=false'
+      }
+    }
+    stage('Test') {
+      steps {
+        sh 'pnpm test'
+      }
+    }
+    stage('Build') {
+      steps {
+        sh 'pnpm build'
+      }
+    }
+    stage('Docker Build') {
+      steps {
+        sh 'docker build -t {{imageName}}:${BUILD_NUMBER} .'
+      }
+    }
+  }
+}
