@@ -37,20 +37,9 @@ Settings
 
 # Pages
 
-## Landing page
+## Initial screen
 
-Purpose:
-
-- Explain BuildSphere.
-- Show product value.
-- Link to login or signup.
-
-Sections:
-
-- Hero statement.
-- How it works.
-- Supported tools.
-- Example generated pipeline.
+The local MVP opens on login or signup so the first screen is the usable product entry point. A public marketing landing page remains future scope.
 
 ## Authentication pages
 
@@ -143,7 +132,7 @@ Content format:
 # Initial frontend route map
 
 ```text
-/
+/ -> login when signed out, dashboard when signed in
 /login
 /signup
 /dashboard

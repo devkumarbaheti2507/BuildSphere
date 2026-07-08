@@ -97,6 +97,14 @@ Request:
 
 Returns the authenticated user.
 
+## POST /auth/refresh
+
+Rotates a valid refresh token and returns a new authenticated session.
+
+## POST /auth/logout
+
+Revokes the supplied refresh token.
+
 # Project endpoints
 
 ## POST /projects
@@ -134,6 +142,14 @@ Saves selected tools.
 
 Generates project assets from templates.
 
+## GET /projects/{projectId}/artifacts
+
+Lists generated artifact bundles.
+
+## GET /artifacts/{artifactId}/download
+
+Downloads generated files as a TAR archive.
+
 # Pipeline endpoints
 
 ## POST /pipelines
@@ -155,6 +171,14 @@ Lists pipeline executions.
 ## GET /executions/{executionId}/logs
 
 Returns logs for an execution.
+
+## GET /executions/{executionId}
+
+Returns the current simulated execution and stage states.
+
+## POST /executions/{executionId}/cancel
+
+Cancels a queued or running simulated execution.
 
 # Suggestion endpoints
 
@@ -179,6 +203,17 @@ Lists user notifications.
 ## PATCH /notifications/{notificationId}/read
 
 Marks notification as read.
+
+# Deployment endpoints
+
+- `POST /deployments/targets` creates a Kubernetes deployment target definition.
+- `GET /projects/{projectId}/deployment-targets` lists owned targets.
+- `POST /deployments/validate` performs structural checks on generated Kubernetes YAML.
+
+# Monitoring endpoints
+
+- `GET /monitoring/health` aggregates BuildSphere service health for an authenticated user.
+- `GET /metrics` on Monitoring Service exposes Prometheus-format service health gauges.
 
 # Health endpoints
 

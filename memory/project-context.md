@@ -4,16 +4,14 @@ BuildSphere is an AI-assisted Developer Experience Platform for designing, gener
 
 Current implementation status:
 
-- Repository scaffold created.
-- Documentation created.
-- TypeScript workspace prepared.
-- Backend service skeletons prepared.
-- Frontend skeleton prepared.
-- Templates and prompts prepared.
+- Local-first MVP code is implemented through roadmap Phase 5.
+- Authentication, projects, generation, pipelines, logs, suggestions, deployment targets, monitoring, notifications, and frontend workflows are present.
+- Workspace builds and focused in-memory API tests pass.
+- Fresh dependency installation, live PostgreSQL migration, and browser E2E verification remain release blockers because external registry and browser access were unavailable.
 
 Primary goal now:
 
-Implement the MVP in phases from `docs/12_ROADMAP.md` and `docs/13_BACKLOG.md`.
+Complete BS-901 and BS-902 release verification, then choose the first Phase 6 integration deliberately.
 
 Default stack:
 

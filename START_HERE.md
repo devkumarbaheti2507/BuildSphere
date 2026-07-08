@@ -6,7 +6,7 @@ Use this file first when opening the project with Codex.
 
 BuildSphere is an AI-assisted Developer Experience Platform for designing, generating, deploying, observing, and improving microservice applications.
 
-It is prepared as a documentation-first, Codex-friendly project scaffold.
+It is a documentation-first, Codex-friendly local MVP implemented through roadmap Phase 5.
 
 ## First reading order
 
@@ -23,10 +23,10 @@ Read these files in this exact order:
 9. `docs/13_BACKLOG.md`
 10. `memory/next-session.md`
 
-## First Codex prompt to use
+## Recommended Codex prompt
 
 ```text
-Read START_HERE.md, AGENTS.md, BUILDSPHERE_MANIFEST.md, docs/12_ROADMAP.md, docs/13_BACKLOG.md, and specs/AUTH_SPEC.md. Then inspect the workspace and implement the first roadmap task BS-001: make sure pnpm install, pnpm -r build, and pnpm -r test are ready to run cleanly. Keep changes small, explain the files changed, and update memory/completed-features.md and memory/next-session.md.
+Read START_HERE.md, AGENTS.md, BUILDSPHERE_MANIFEST.md, docs/12_ROADMAP.md, docs/13_BACKLOG.md, and memory/next-session.md. Inspect the current implementation and take the next incomplete ticket without changing the documented MVP boundaries. Explain the implementation and update tests, docs, and memory files.
 ```
 
 ## First human verification checklist
@@ -39,7 +39,7 @@ Before coding, verify:
 - Roadmap in `docs/12_ROADMAP.md` is practical.
 - Backlog in `docs/13_BACKLOG.md` starts with workspace setup, then auth, then projects.
 
-## Recommended first implementation sequence
+## Implemented MVP sequence
 
 1. Verify workspace configuration.
 2. Implement shared types package.
@@ -51,6 +51,9 @@ Before coding, verify:
 8. Implement project wizard.
 9. Implement template catalog.
 10. Implement project generation.
+11. Implement simulated pipelines and logs.
+12. Implement rule-based suggestions.
+13. Implement deployment, monitoring, and notification foundations.
 
 ## Important rule
 

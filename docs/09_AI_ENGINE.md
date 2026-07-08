@@ -21,10 +21,12 @@ BuildSphere AI should explain and suggest. It should not secretly modify user pr
 
 # MVP strategy
 
-The MVP uses two modes:
+The MVP uses two local modes behind a `SuggestionAnalyzer` interface:
 
 1. Rule-based suggestions.
 2. Mock LLM provider or optional external LLM provider.
+
+Set `AI_PROVIDER=rules` for project-aware deterministic checks or `AI_PROVIDER=mock` for fixed sample output. The interface reserves `external` mode, but no external data is sent in the MVP.
 
 This keeps development possible without relying on paid APIs.
 

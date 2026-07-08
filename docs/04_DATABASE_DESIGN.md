@@ -166,4 +166,12 @@ Owned by Notification Service.
 
 # Migration strategy
 
-Use a migration tool selected during implementation. Options include Prisma Migrate, Drizzle Kit, or Knex migrations. The first implementation should create migrations from this document.
+The MVP uses ordered SQL migrations under `infrastructure/database/migrations/` and a small TypeScript runner in `packages/service-core/src/migrate.ts`.
+
+Run migrations with:
+
+```bash
+pnpm db:migrate
+```
+
+The runner records applied filenames in `schema_migrations`, uses a PostgreSQL advisory lock to prevent concurrent migration runs, and wraps each unapplied file in a transaction.

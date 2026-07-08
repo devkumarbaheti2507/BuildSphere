@@ -22,3 +22,4 @@ Architecture Decision Records explain important BuildSphere design choices.
 - ADR-003: Database.
 - ADR-004: Communication.
 - ADR-005: AI.
+- ADR-006: Shared service core and SQL migrations.

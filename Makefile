@@ -1,17 +1,19 @@
-.PHONY: install build test dev compose-up compose-down tree
+.PHONY: install build test dev db-migrate compose-up compose-down tree
 
 install:
-	corepack enable
-	pnpm install
+	./scripts/pnpm-workspace.sh install
 
 build:
-	pnpm -r build
+	./scripts/pnpm-workspace.sh -r build
 
 test:
-	pnpm -r test
+	./scripts/pnpm-workspace.sh -r test
 
 dev:
-	pnpm -r --parallel dev
+	./scripts/pnpm-workspace.sh -r --parallel dev
+
+db-migrate:
+	./scripts/pnpm-workspace.sh --filter @buildsphere/service-core db:migrate
 
 compose-up:
 	docker compose -f docker-compose.dev.yml up -d

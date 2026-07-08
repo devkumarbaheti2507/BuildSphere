@@ -36,6 +36,8 @@ Exit criteria:
 
 # Phase 1: Core platform MVP
 
+Status: Complete.
+
 Goal: Build the minimum usable product.
 
 Features:
@@ -56,6 +58,8 @@ Exit criteria:
 
 # Phase 2: Generation engine
 
+Status: Complete.
+
 Goal: Generate useful project and DevOps files.
 
 Features:
@@ -73,6 +77,8 @@ Exit criteria:
 - User can generate and download or inspect files for a selected stack.
 
 # Phase 3: Pipeline model and logs
+
+Status: Complete.
 
 Goal: Show pipeline lifecycle.
 
@@ -92,6 +98,8 @@ Exit criteria:
 
 # Phase 4: AI and recommendation engine
 
+Status: Complete for local `rules` and `mock` modes. External provider calls remain future work.
+
 Goal: Give meaningful suggestions.
 
 Features:
@@ -107,6 +115,8 @@ Exit criteria:
 - User receives actionable recommendations for generated assets.
 
 # Phase 5: Deployment and observability foundations
+
+Status: Complete.
 
 Goal: Move toward real DevOps operations.
 

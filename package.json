@@ -4,11 +4,18 @@
   "private": true,
   "description": "AI-assisted Developer Experience Platform for microservice delivery.",
   "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=22 <27",
+    "pnpm": "9.15.0"
+  },
   "scripts": {
-    "build": "pnpm -r build",
-    "dev": "pnpm -r --parallel dev",
-    "test": "pnpm -r test",
-    "lint": "pnpm -r lint",
+    "build": "sh scripts/pnpm-workspace.sh -r build",
+    "dev": "sh scripts/pnpm-workspace.sh -r --parallel dev",
+    "test": "sh scripts/pnpm-workspace.sh -r test",
+    "lint": "sh scripts/pnpm-workspace.sh -r lint",
+    "verify": "sh scripts/verify-workspace.sh",
+    "smoke": "sh scripts/pnpm-workspace.sh --filter @buildsphere/auth-service exec tsx ../../scripts/smoke-mvp.ts",
+    "db:migrate": "sh scripts/pnpm-workspace.sh --filter @buildsphere/service-core db:migrate",
     "format": "prettier --write \"**/*.{ts,tsx,md,json,yml,yaml}\""
   },
   "devDependencies": {

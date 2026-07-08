@@ -2,7 +2,7 @@
 
 BuildSphere is an AI-assisted Developer Experience Platform that helps developers design, configure, build, deploy, monitor, and optimize modern microservice applications while explaining DevOps concepts in real time.
 
-The project is intentionally documented before implementation so that human developers and AI coding agents can use the repository as a shared source of truth.
+The project uses documentation-first development so that human developers and AI coding agents can use the repository as a shared source of truth.
 
 ## What BuildSphere does
 
@@ -82,25 +82,42 @@ Codex and human developers should read these files first:
 
 ## Quick start for local development
 
-The initial repository contains documentation and service skeletons. After cloning:
+Use Node.js 22, then install the workspace dependencies:
 
 ```bash
 corepack enable
 pnpm install
-pnpm -r build
 ```
 
-Start infrastructure dependencies:
+Create local configuration, start infrastructure, and apply the SQL migration:
 
 ```bash
+cp .env.example .env
 docker compose -f docker-compose.dev.yml up -d
+pnpm db:migrate
 ```
 
-Start all services in development mode:
+Start all backend services and the frontend:
 
 ```bash
 pnpm -r --parallel dev
 ```
+
+Open `http://localhost:5173`. The API Gateway listens on `http://localhost:8080/api`.
+
+Verify the complete workspace:
+
+```bash
+./scripts/verify-workspace.sh
+```
+
+For a non-durable smoke run without PostgreSQL, set `STORAGE_DRIVER=memory` in the environment together with local JWT and internal service tokens, start the workspace, then run:
+
+```bash
+npm run smoke
+```
+
+The smoke script exercises the complete API workflow through the gateway. Memory mode is for development verification only; data is lost when services restart.
 
 ## Development approach
 
@@ -114,9 +131,9 @@ A feature is not considered complete until its code, tests, docs, and memory fil
 
 ## Current status
 
-Status: Planning and starter scaffold.
+Status: Local-first MVP implemented through roadmap Phase 5.
 
-The repository is ready for Codex-assisted implementation. Start with milestone M1 in `docs/12_ROADMAP.md` and the tickets in `docs/13_BACKLOG.md`.
+Implemented workflows include authentication, project and tool configuration, generated DevOps files, simulated pipelines and logs, rule-based suggestions, deployment target definitions, Kubernetes manifest checks, health aggregation, and notifications. Real cloud deployment and external CI provider execution remain Phase 6 work.
 
 ## License
 

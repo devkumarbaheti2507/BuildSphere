@@ -1,27 +1,39 @@
-import express from 'express';
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import {
+  createLogger,
+  loadEnvironment,
+  requiredEnvironment,
+} from "@buildsphere/service-core";
+import { createDeploymentApp } from "./app.js";
+import {
+  InMemoryDeploymentRepository,
+  PostgresDeploymentRepository,
+} from "./repository.js";
 
-const serviceName = process.env.SERVICE_NAME ?? 'deployment-service';
+const repoRoot = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "..",
+  "..",
+);
+loadEnvironment(path.join(repoRoot, ".env"));
 const port = Number(process.env.PORT ?? 8084);
-
-const app = express();
-app.use(express.json());
-
-app.get('/health', (_request, response) => {
-  response.json({
-    service: serviceName,
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-  });
-});
-
-app.get('/', (_request, response) => {
-  response.json({
-    service: serviceName,
-    description: 'Manages deployment targets and generated deployment assets.',
-    docs: 'Read AGENTS.md and the matching spec before implementation.',
-  });
-});
-
-app.listen(port, () => {
-  console.log(serviceName + ' listening on port ' + port);
-});
+const logger = createLogger(process.env.SERVICE_NAME ?? "deployment-service");
+const database =
+  process.env.STORAGE_DRIVER === "memory"
+    ? undefined
+    : (await import("@buildsphere/service-core/database")).createDatabasePool();
+const app = createDeploymentApp(
+  database
+    ? new PostgresDeploymentRepository(database)
+    : new InMemoryDeploymentRepository(),
+  requiredEnvironment("JWT_ACCESS_TOKEN_SECRET"),
+  logger,
+);
+const server = app.listen(port, () =>
+  logger.info({ port }, "Deployment service listening"),
+);
+const shutdown = () => server.close(() => void database?.end());
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);

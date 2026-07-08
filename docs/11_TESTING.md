@@ -83,3 +83,9 @@ Future additions:
 - Coverage reports.
 - Docker build checks.
 - Security scan.
+
+# MVP smoke test
+
+With all services running, `npm run smoke` verifies registration, project creation, tool selection, asset generation, pipeline simulation, log retrieval, suggestions, deployment validation, health aggregation, and notifications through the API Gateway.
+
+`STORAGE_DRIVER=memory` can be used for a non-durable local smoke run. Release verification must still run the same workflow with PostgreSQL after applying migrations.

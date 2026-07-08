@@ -1,27 +1,17 @@
-import express from 'express';
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { createLogger, loadEnvironment } from "@buildsphere/service-core";
+import { createAnalyticsApp } from "./app.js";
 
-const serviceName = process.env.SERVICE_NAME ?? 'analytics-service';
+const repoRoot = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "..",
+  "..",
+);
+loadEnvironment(path.join(repoRoot, ".env"));
 const port = Number(process.env.PORT ?? 8088);
-
-const app = express();
-app.use(express.json());
-
-app.get('/health', (_request, response) => {
-  response.json({
-    service: serviceName,
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-  });
-});
-
-app.get('/', (_request, response) => {
-  response.json({
-    service: serviceName,
-    description: 'Tracks usage and engineering metrics.',
-    docs: 'Read AGENTS.md and the matching spec before implementation.',
-  });
-});
-
-app.listen(port, () => {
-  console.log(serviceName + ' listening on port ' + port);
-});
+const logger = createLogger(process.env.SERVICE_NAME ?? "analytics-service");
+createAnalyticsApp(logger).listen(port, () =>
+  logger.info({ port }, "Analytics service listening"),
+);

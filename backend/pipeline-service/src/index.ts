@@ -1,27 +1,52 @@
-import express from 'express';
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import {
+  createLogger,
+  HttpNotificationPublisher,
+  loadEnvironment,
+  requiredEnvironment,
+} from "@buildsphere/service-core";
+import { createPipelineApp } from "./app.js";
+import { HttpLogWriter } from "./log-writer.js";
+import {
+  InMemoryPipelineRepository,
+  PostgresPipelineRepository,
+} from "./repository.js";
 
-const serviceName = process.env.SERVICE_NAME ?? 'pipeline-service';
+const repoRoot = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "..",
+  "..",
+);
+loadEnvironment(path.join(repoRoot, ".env"));
 const port = Number(process.env.PORT ?? 8083);
-
-const app = express();
-app.use(express.json());
-
-app.get('/health', (_request, response) => {
-  response.json({
-    service: serviceName,
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-  });
-});
-
-app.get('/', (_request, response) => {
-  response.json({
-    service: serviceName,
-    description: 'Manages pipeline definitions, stages, executions, and statuses.',
-    docs: 'Read AGENTS.md and the matching spec before implementation.',
-  });
-});
-
-app.listen(port, () => {
-  console.log(serviceName + ' listening on port ' + port);
-});
+const logger = createLogger(process.env.SERVICE_NAME ?? "pipeline-service");
+const database =
+  process.env.STORAGE_DRIVER === "memory"
+    ? undefined
+    : (await import("@buildsphere/service-core/database")).createDatabasePool();
+const notifications = new HttpNotificationPublisher(
+  process.env.NOTIFICATION_SERVICE_URL ?? "http://localhost:8089",
+  requiredEnvironment("INTERNAL_SERVICE_TOKEN"),
+  logger,
+);
+const app = createPipelineApp(
+  database
+    ? new PostgresPipelineRepository(database)
+    : new InMemoryPipelineRepository(),
+  new HttpLogWriter(
+    process.env.LOGGING_SERVICE_URL ?? "http://localhost:8086",
+    requiredEnvironment("INTERNAL_SERVICE_TOKEN"),
+  ),
+  requiredEnvironment("JWT_ACCESS_TOKEN_SECRET"),
+  Number(process.env.PIPELINE_STAGE_DELAY_MS ?? 700),
+  logger,
+  notifications,
+);
+const server = app.listen(port, () =>
+  logger.info({ port }, "Pipeline service listening"),
+);
+const shutdown = () => server.close(() => void database?.end());
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);

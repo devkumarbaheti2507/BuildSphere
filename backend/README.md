@@ -15,5 +15,4 @@ BuildSphere backend is organized as independent services.
 - analytics-service
 - notification-service
 
-Each service begins as a small TypeScript + Express app with a `/health` endpoint.
-Codex should implement business features according to `specs/` and `docs/03_LLD.md`.
+Each service is a TypeScript + Express application with a `/health` endpoint, structured request logs, correlation IDs, normalized errors, and focused API tests. Durable service data is stored in PostgreSQL through the migration under `infrastructure/database/migrations/`.
