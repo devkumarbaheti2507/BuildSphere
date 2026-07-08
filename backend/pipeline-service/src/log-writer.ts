@@ -1,4 +1,4 @@
-import type { LogLevel, PipelineLog } from "@buildsphere/shared-types";
+import type { LogLevel } from "@buildsphere/shared-types";
 
 export interface LogWriteInput {
   ownerId: string;

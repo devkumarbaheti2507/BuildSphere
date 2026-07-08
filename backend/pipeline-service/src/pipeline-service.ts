@@ -2,7 +2,6 @@ import type {
   PipelineDefinition,
   PipelineExecutionStage,
   PipelineExecutionSummary,
-  PipelineStage,
 } from "@buildsphere/shared-types";
 import { ApiError, NoopNotificationPublisher } from "@buildsphere/service-core";
 import type { NotificationPublisher } from "@buildsphere/service-core";

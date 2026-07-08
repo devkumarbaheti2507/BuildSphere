@@ -1,12 +1,12 @@
 # Document Information
 
-| Field | Value |
-| --- | --- |
-| Document | Backlog |
-| Version | 0.1.0 |
-| Status | Draft |
-| Author | BuildSphere Team |
-| Last Updated | 2026-06-28 |
+| Field             | Value                  |
+| ----------------- | ---------------------- |
+| Document          | Backlog                |
+| Version           | 0.1.0                  |
+| Status            | Draft                  |
+| Author            | BuildSphere Team       |
+| Last Updated      | 2026-07-08             |
 | Related Documents | 12_ROADMAP.md, specs/* |
 
 ---
@@ -238,19 +238,19 @@ Status: Done
 
 Priority: High
 Milestone: MVP verification
-Status: Blocked
+Status: Done
 
 Description:
 Install the new `pg` dependency, regenerate `pnpm-lock.yaml`, run the SQL migration against PostgreSQL, and exercise the complete browser workflow.
 
-Blocking condition:
-The npm registry timed out repeatedly on 2026-07-07. Workspace builds, focused tests, and the full gateway-level smoke test pass in memory mode, but a fresh dependency install and live PostgreSQL verification still require registry connectivity.
+Verification outcome:
+The dependency lockfile was refreshed, frozen installation passed, the SQL migration applied idempotently to PostgreSQL, and the complete gateway workflow passed against durable storage on 2026-07-08. Persisted data was retrieved after an application restart.
 
 ## BS-902: Complete screenshot-based responsive UI verification
 
 Priority: Medium
 Milestone: MVP verification
-Status: Blocked
+Status: Done
 
-Blocking condition:
-The in-app browser was unavailable in the implementation session. TypeScript and the production Vite build pass, and the local frontend server starts successfully.
+Verification outcome:
+The complete browser workflow passed from signup through deployment target creation. Desktop and mobile screenshots covered authentication, dashboard, and project views, and automated viewport checks found no page-level horizontal overflow.

@@ -1,4 +1,4 @@
-import { Pool, type PoolClient, type PoolConfig } from "pg";
+import { Pool, type PoolConfig } from "pg";
 
 export interface QueryResult<Row> {
   rows: Row[];

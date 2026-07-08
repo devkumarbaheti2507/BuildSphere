@@ -2,25 +2,22 @@
 
 Recommended next task:
 
-Finish MVP release verification tickets BS-901 and BS-902 before beginning Phase 6.
+Select and specify the first Phase 6 integration before implementation. Create or update the relevant spec and ADR when the provider or deployment direction is chosen.
 
 Immediate tasks:
 
-1. Confirm `https://registry.npmjs.org` is reachable.
-2. Run `./scripts/pnpm-workspace.sh install --frozen-lockfile=false` to install `pg` and refresh `pnpm-lock.yaml`.
-3. Create `.env` from `.env.example` and replace both JWT secrets and `INTERNAL_SERVICE_TOKEN` with strong local values.
-4. Start PostgreSQL with `docker compose -f docker-compose.dev.yml up -d`.
-5. Run `pnpm db:migrate`, then `pnpm -r --parallel dev`.
-6. Exercise signup, project creation, generation, simulated pipeline logs, suggestions, deployment validation, health, and notifications through the browser.
-7. Capture desktop and mobile screenshots and correct any responsive UI defects.
-8. Run `./scripts/verify-workspace.sh` and commit the refreshed lockfile.
+1. Review the Phase 6 options in `docs/12_ROADMAP.md`.
+2. Choose one bounded integration and define its acceptance criteria.
+3. Add the corresponding backlog ticket and design decision.
+4. Implement the smallest useful slice with tests.
+5. Keep `pnpm verify` green throughout the work.
 
 Current notes:
 
-- Node `v26.3.0` is active while `.nvmrc` requests Node 22; all current TypeScript builds and tests pass, but release verification should also use Node 22.
-- The npm registry and Yarn registry timed out repeatedly on 2026-07-07, including outside the sandbox.
-- `pnpm-lock.yaml` does not yet include `packages/service-core`, workspace links added to services, or the new `pg` dependency.
-- Existing local modules were restored from the PNPM store and used to verify `pnpm -r build` and `pnpm -r test`.
-- `npm run smoke` passed against all services in `STORAGE_DRIVER=memory` mode; memory mode is non-durable and does not replace PostgreSQL verification.
-- The in-app browser was unavailable, so screenshot-based UI verification is still required.
-- The frontend dev server was started successfully at `http://127.0.0.1:5173` during implementation.
+- BS-901 and BS-902 release verification completed on 2026-07-08.
+- Frozen install, lint, production build, and all automated tests pass.
+- Memory and PostgreSQL smoke workflows pass with 10 generated files, 7 pipeline stages, 14 logs, suggestions, 8 health checks, and 4 notifications.
+- PostgreSQL migration and restart persistence checks pass.
+- The complete desktop browser workflow and responsive desktop/mobile checks pass.
+- Local infrastructure containers are stopped; their development volumes are retained.
+- Node `v22.23.1` and `v24.18.0` are installed. The complete verification gate passes on both; run `nvm use` at the repository root to select the preferred Node 22 toolchain from `.nvmrc`.

@@ -6,12 +6,14 @@ Current implementation status:
 
 - Local-first MVP code is implemented through roadmap Phase 5.
 - Authentication, projects, generation, pipelines, logs, suggestions, deployment targets, monitoring, notifications, and frontend workflows are present.
-- Workspace builds and focused in-memory API tests pass.
-- Fresh dependency installation, live PostgreSQL migration, and browser E2E verification remain release blockers because external registry and browser access were unavailable.
+- Frozen dependency installation, lint, production builds, and automated tests pass.
+- Memory and PostgreSQL gateway smoke workflows pass.
+- Live migration, persistence after restart, and desktop/mobile browser verification are complete.
+- Database-backed services use a shared idempotent graceful-shutdown helper.
 
 Primary goal now:
 
-Complete BS-901 and BS-902 release verification, then choose the first Phase 6 integration deliberately.
+Choose the first Phase 6 integration deliberately and document its requirements before implementation.
 
 Default stack:
 

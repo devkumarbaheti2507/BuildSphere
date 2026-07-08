@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import {
   createLogger,
   loadEnvironment,
+  registerGracefulShutdown,
   requiredEnvironment,
 } from "@buildsphere/service-core";
 import { createAuthApp } from "./app.js";
@@ -44,8 +45,6 @@ const server = app.listen(port, () =>
   logger.info({ port }, "Auth service listening"),
 );
 
-const shutdown = () => {
-  server.close(() => void database?.end());
-};
-process.on("SIGINT", shutdown);
-process.on("SIGTERM", shutdown);
+registerGracefulShutdown(server, database ? [database] : [], (error) =>
+  logger.error({ err: error }, "Graceful shutdown failed"),
+);

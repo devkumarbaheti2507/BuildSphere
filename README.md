@@ -33,16 +33,16 @@ The first version focuses on a practical developer workflow:
 
 This repository is prepared for a TypeScript-first implementation:
 
-| Layer | Default Choice | Reason |
-| --- | --- | --- |
-| Frontend | React + Vite + TypeScript | Fast UI development and strong ecosystem. |
-| Backend services | Node.js + TypeScript + Express initially, NestJS-compatible structure later | Simple to start, easy for Codex to implement, microservice-friendly. |
-| Database | PostgreSQL | Strong relational model, transactions, auditability. |
-| Cache and queues | Redis initially, Kafka optional later | Redis keeps the MVP simple; Kafka can be added for event-heavy flows. |
-| Containerization | Docker | Required for generated workloads and BuildSphere services. |
-| Orchestration | Kubernetes | Primary target for production deployment templates. |
-| CI/CD | GitHub Actions first | Common, accessible, and portfolio-friendly. |
-| Monitoring | Prometheus + Grafana planned | Standard cloud-native observability stack. |
+| Layer            | Default Choice                                                              | Reason                                                                |
+| ---------------- | --------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Frontend         | React + Vite + TypeScript                                                   | Fast UI development and strong ecosystem.                             |
+| Backend services | Node.js + TypeScript + Express initially, NestJS-compatible structure later | Simple to start, easy for Codex to implement, microservice-friendly.  |
+| Database         | PostgreSQL                                                                  | Strong relational model, transactions, auditability.                  |
+| Cache and queues | Redis initially, Kafka optional later                                       | Redis keeps the MVP simple; Kafka can be added for event-heavy flows. |
+| Containerization | Docker                                                                      | Required for generated workloads and BuildSphere services.            |
+| Orchestration    | Kubernetes                                                                  | Primary target for production deployment templates.                   |
+| CI/CD            | GitHub Actions first                                                        | Common, accessible, and portfolio-friendly.                           |
+| Monitoring       | Prometheus + Grafana planned                                                | Standard cloud-native observability stack.                            |
 
 ## Repository structure
 
@@ -131,7 +131,7 @@ A feature is not considered complete until its code, tests, docs, and memory fil
 
 ## Current status
 
-Status: Local-first MVP implemented through roadmap Phase 5.
+Status: Local-first MVP implemented and release-verified through roadmap Phase 5.
 
 Implemented workflows include authentication, project and tool configuration, generated DevOps files, simulated pipelines and logs, rule-based suggestions, deployment target definitions, Kubernetes manifest checks, health aggregation, and notifications. Real cloud deployment and external CI provider execution remain Phase 6 work.
 

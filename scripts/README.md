@@ -17,8 +17,9 @@ Runs the pinned BuildSphere PNPM version.
 Resolution order:
 
 1. Use an installed `pnpm` binary.
-2. Use `corepack enable` when Corepack is available.
-3. Fall back to `npm exec --yes pnpm@9.15.0`.
+2. Run the pinned PNPM version through `corepack pnpm` when Corepack is available.
+3. Reuse the exact pinned PNPM version from the project-local npm cache.
+4. Fall back to `npm exec --yes pnpm@9.15.0`.
 
 When npm has previously cached the pinned PNPM package inside `.cache/npm`, the script reuses that exact cached version before requesting the registry. This keeps workspace commands available during a temporary registry outage.
 
@@ -28,10 +29,11 @@ When the script falls back to npm, it uses `.cache/npm` inside the repository. T
 
 ## `verify-workspace.sh`
 
-Runs the Phase 1 workspace verification sequence:
+Runs the complete workspace verification sequence:
 
 ```bash
-pnpm install --frozen-lockfile=false
+pnpm install --frozen-lockfile
+pnpm lint
 pnpm -r build
 pnpm -r test
 ```

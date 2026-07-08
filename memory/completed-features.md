@@ -25,3 +25,12 @@
 - Monorepo recursive build passed for all workspace packages; all implemented backend API/unit tests passed.
 - Added a non-durable memory storage mode and `npm run smoke`; the full gateway-level workflow passed with 10 generated files, 7 stages, 14 logs, suggestions, 8 health checks, and 4 notifications.
 - Fresh lockfile generation and live PostgreSQL/browser verification remain blocked by npm registry timeouts and unavailable in-app browser access.
+
+## 2026-07-08
+
+- Refreshed `pnpm-lock.yaml` with `packages/service-core`, workspace links, and PostgreSQL dependencies; frozen installation now passes across all 14 workspace projects.
+- Completed BS-901 with an idempotent PostgreSQL migration, full durable-storage smoke workflow, direct table verification, and persistence checks after application restart.
+- Completed BS-902 with a full browser workflow plus desktop and mobile authentication, dashboard, and project verification.
+- Added root ESLint configuration for all TypeScript and TSX sources and made lint part of `pnpm verify`.
+- Added a shared idempotent graceful-shutdown helper and regression coverage, preventing duplicate PostgreSQL pool closure when multiple termination signals arrive.
+- Installed Node `v22.23.1` through NVM and passed the complete verification gate on both Node 22 and Node 24.

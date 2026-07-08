@@ -10,8 +10,7 @@ if command -v pnpm >/dev/null 2>&1; then
 fi
 
 if command -v corepack >/dev/null 2>&1; then
-  corepack enable
-  exec pnpm "$@"
+  exec corepack pnpm "$@"
 fi
 
 NPM_CONFIG_CACHE="${NPM_CONFIG_CACHE:-${REPO_ROOT}/.cache/npm}"

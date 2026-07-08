@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import {
   createLogger,
   loadEnvironment,
+  registerGracefulShutdown,
   requiredEnvironment,
 } from "@buildsphere/service-core";
 import { createNotificationApp } from "./app.js";
@@ -35,6 +36,6 @@ const app = createNotificationApp(
 const server = app.listen(port, () =>
   logger.info({ port }, "Notification service listening"),
 );
-const shutdown = () => server.close(() => void database?.end());
-process.on("SIGINT", shutdown);
-process.on("SIGTERM", shutdown);
+registerGracefulShutdown(server, database ? [database] : [], (error) =>
+  logger.error({ err: error }, "Graceful shutdown failed"),
+);

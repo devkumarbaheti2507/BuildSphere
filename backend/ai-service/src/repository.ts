@@ -2,10 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { Suggestion, SuggestionStatus } from "@buildsphere/shared-types";
 import type { DatabasePool } from "@buildsphere/service-core/database";
 
-export interface SuggestionDraft extends Omit<
-  Suggestion,
-  "id" | "status" | "createdAt"
-> {}
+export type SuggestionDraft = Omit<Suggestion, "id" | "status" | "createdAt">;
 export interface SuggestionRepository {
   replaceForProject(
     ownerId: string,
