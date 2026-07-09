@@ -1,0 +1,1331 @@
+{
+  "schemaVersion": "1.0.0",
+  "snapshotDate": "2026-07-09",
+  "project": {
+    "id": "buildsphere",
+    "name": "BuildSphere",
+    "version": "0.1.0",
+    "kind": "AI-assisted Developer Experience Platform",
+    "status": "Local-first MVP complete through tracked Phase 6 GitHub milestone",
+    "primaryAudience": [
+      "learning developer",
+      "backend or DevOps portfolio builder",
+      "future small-team developer"
+    ],
+    "safeToShare": true,
+    "excludedSensitiveSources": [
+      ".env",
+      "passwords",
+      "provider tokens",
+      "GitHub client secrets",
+      "personal account data",
+      "private repository identifiers"
+    ]
+  },
+  "statusLabels": {
+    "implemented": "Executable and covered by current verification",
+    "prepared": "Scaffold, interface, configuration, or template exists but is not active",
+    "future": "Requires requirements and a backlog milestone before implementation"
+  },
+  "nodes": [
+    {
+      "id": "product.buildsphere",
+      "type": "product",
+      "name": "BuildSphere",
+      "status": "implemented",
+      "description": "Guided platform for project configuration, DevOps asset generation, explainable delivery workflows, recommendations, validation, and GitHub integration.",
+      "evidence": ["README.md", "docs/00_PROJECT_VISION.md"]
+    },
+    {
+      "id": "actor.learner",
+      "type": "actor",
+      "name": "Learning developer",
+      "status": "implemented",
+      "description": "Primary user who needs guided setup, explanations, and inspectable files.",
+      "evidence": ["docs/00_PROJECT_VISION.md"]
+    },
+    {
+      "id": "actor.portfolio_builder",
+      "type": "actor",
+      "name": "Backend or DevOps portfolio builder",
+      "status": "implemented",
+      "description": "Secondary user who needs demonstrable architecture and delivery engineering.",
+      "evidence": ["docs/00_PROJECT_VISION.md"]
+    },
+    {
+      "id": "actor.team_developer",
+      "type": "actor",
+      "name": "Small-team developer",
+      "status": "future",
+      "description": "Future user of shared templates, standards, and collaboration.",
+      "evidence": ["docs/00_PROJECT_VISION.md"]
+    },
+    {
+      "id": "surface.frontend",
+      "type": "runtime_component",
+      "name": "React frontend",
+      "status": "implemented",
+      "port": 5173,
+      "responsibility": "Authentication, dashboard, project wizard, artifact inspection, pipeline UI, suggestions, deployment UI, and GitHub workspace.",
+      "evidence": ["frontend/src/App.tsx", "frontend/src/pages/ProjectPage.tsx"]
+    },
+    {
+      "id": "service.api_gateway",
+      "type": "service",
+      "name": "API Gateway",
+      "status": "implemented",
+      "port": 8080,
+      "responsibility": "Public REST entry point, path routing, CORS, request correlation, and upstream error handling.",
+      "evidence": ["backend/api-gateway/src/app.ts"]
+    },
+    {
+      "id": "service.auth",
+      "type": "service",
+      "name": "Auth Service",
+      "status": "implemented",
+      "port": 8081,
+      "responsibility": "Password and GitHub authentication, JWT sessions, refresh-token records, provider token encryption/refresh, GitHub repository publication, and Actions synchronization.",
+      "evidence": [
+        "backend/auth-service/src/auth-service.ts",
+        "backend/auth-service/src/github-oauth.ts",
+        "backend/auth-service/src/github-integration.ts"
+      ]
+    },
+    {
+      "id": "service.project",
+      "type": "service",
+      "name": "Project Service",
+      "status": "implemented",
+      "port": 8082,
+      "responsibility": "Projects, tool selections, template rendering, generated artifacts, TAR downloads, coordination, and public project-scoped GitHub routes.",
+      "evidence": [
+        "backend/project-service/src/project-service.ts",
+        "backend/project-service/src/template-catalog.ts"
+      ]
+    },
+    {
+      "id": "service.pipeline",
+      "type": "service",
+      "name": "Pipeline Service",
+      "status": "implemented",
+      "port": 8083,
+      "responsibility": "Seven-stage explainable definitions and simulated execution, failure, polling, and cancellation.",
+      "evidence": [
+        "backend/pipeline-service/src/pipeline-service.ts",
+        "backend/pipeline-service/src/stages.ts"
+      ]
+    },
+    {
+      "id": "service.deployment",
+      "type": "service",
+      "name": "Deployment Service",
+      "status": "implemented",
+      "port": 8084,
+      "responsibility": "Kubernetes target records and structural validation of generated manifests.",
+      "evidence": [
+        "backend/deployment-service/src/app.ts",
+        "backend/deployment-service/src/validator.ts"
+      ]
+    },
+    {
+      "id": "service.monitoring",
+      "type": "service",
+      "name": "Monitoring Service",
+      "status": "implemented",
+      "port": 8085,
+      "responsibility": "Health aggregation for eight components and Prometheus-format gauges.",
+      "evidence": ["backend/monitoring-service/src/health-checker.ts"]
+    },
+    {
+      "id": "service.logging",
+      "type": "service",
+      "name": "Logging Service",
+      "status": "implemented",
+      "port": 8086,
+      "responsibility": "Internal pipeline log ingestion and owner-scoped retrieval.",
+      "evidence": [
+        "backend/logging-service/src/app.ts",
+        "backend/logging-service/src/repository.ts"
+      ]
+    },
+    {
+      "id": "service.ai",
+      "type": "service",
+      "name": "AI Service",
+      "status": "implemented",
+      "port": 8087,
+      "responsibility": "Rule or mock analysis, prompt loading, durable suggestions, and suggestion lifecycle.",
+      "evidence": [
+        "backend/ai-service/src/analyzer.ts",
+        "backend/ai-service/src/rules.ts"
+      ]
+    },
+    {
+      "id": "service.analytics",
+      "type": "service",
+      "name": "Analytics Service",
+      "status": "prepared",
+      "port": 8088,
+      "responsibility": "Future product analytics boundary; currently exposes only the shared health contract.",
+      "evidence": ["backend/analytics-service/src/app.ts"]
+    },
+    {
+      "id": "service.notification",
+      "type": "service",
+      "name": "Notification Service",
+      "status": "implemented",
+      "port": 8089,
+      "responsibility": "Internal event creation, user-scoped notification listing, and read state.",
+      "evidence": [
+        "backend/notification-service/src/app.ts",
+        "backend/notification-service/src/repository.ts"
+      ]
+    },
+    {
+      "id": "package.shared_types",
+      "type": "package",
+      "name": "Shared Types",
+      "status": "implemented",
+      "responsibility": "Executable domain vocabulary shared by frontend, services, and scripts.",
+      "evidence": ["packages/shared-types/src/index.ts"]
+    },
+    {
+      "id": "package.service_core",
+      "type": "package",
+      "name": "Service Core",
+      "status": "implemented",
+      "responsibility": "JWT, scrypt, errors, logging, PostgreSQL, migrations, notifications, and graceful shutdown.",
+      "evidence": ["packages/service-core/src/"]
+    },
+    {
+      "id": "store.postgresql",
+      "type": "datastore",
+      "name": "PostgreSQL",
+      "status": "implemented",
+      "port": 5432,
+      "responsibility": "Durable state for all implemented domain services.",
+      "evidence": [
+        "docker-compose.dev.yml",
+        "infrastructure/database/migrations/"
+      ]
+    },
+    {
+      "id": "store.memory",
+      "type": "datastore",
+      "name": "In-memory repositories",
+      "status": "implemented",
+      "responsibility": "Non-durable development and smoke-test alternative selected by STORAGE_DRIVER=memory.",
+      "evidence": ["backend/*/src/repository.ts", "scripts/smoke-mvp.ts"]
+    },
+    {
+      "id": "store.browser_session",
+      "type": "datastore",
+      "name": "Browser sessionStorage",
+      "status": "implemented",
+      "responsibility": "Per-tab BuildSphere session and temporary GitHub PKCE verifier.",
+      "evidence": ["frontend/src/App.tsx", "frontend/src/github-auth.ts"]
+    },
+    {
+      "id": "store.redis",
+      "type": "datastore",
+      "name": "Redis",
+      "status": "prepared",
+      "port": 6379,
+      "responsibility": "Future cache, ephemeral session, lock, or lightweight queue store.",
+      "evidence": ["docker-compose.dev.yml", ".env.example"]
+    },
+    {
+      "id": "store.minio",
+      "type": "datastore",
+      "name": "MinIO",
+      "status": "prepared",
+      "port": 9000,
+      "responsibility": "Future S3-compatible generated artifact storage.",
+      "evidence": ["docker-compose.dev.yml", ".env.example"]
+    },
+    {
+      "id": "tool.mailhog",
+      "type": "infrastructure_tool",
+      "name": "MailHog",
+      "status": "prepared",
+      "port": 8025,
+      "responsibility": "Future local email delivery capture.",
+      "evidence": ["docker-compose.dev.yml"]
+    },
+    {
+      "id": "provider.github",
+      "type": "external_provider",
+      "name": "GitHub",
+      "status": "implemented",
+      "responsibility": "GitHub App identity, user-token API access, repository hosting, and Actions workflow runs.",
+      "evidence": ["specs/GITHUB_INTEGRATION_SPEC.md"]
+    },
+    {
+      "id": "capability.authentication",
+      "type": "capability",
+      "name": "Authentication and sessions",
+      "status": "implemented",
+      "evidence": ["specs/AUTH_SPEC.md"]
+    },
+    {
+      "id": "capability.projects",
+      "type": "capability",
+      "name": "Project and tool configuration",
+      "status": "implemented",
+      "evidence": ["specs/PROJECT_SPEC.md"]
+    },
+    {
+      "id": "capability.generation",
+      "type": "capability",
+      "name": "Template generation and artifacts",
+      "status": "implemented",
+      "evidence": ["specs/TEMPLATE_SPEC.md"]
+    },
+    {
+      "id": "capability.pipeline",
+      "type": "capability",
+      "name": "Explainable simulated pipelines",
+      "status": "implemented",
+      "evidence": ["specs/PIPELINE_SPEC.md"]
+    },
+    {
+      "id": "capability.logs",
+      "type": "capability",
+      "name": "User-visible pipeline logs",
+      "status": "implemented",
+      "evidence": ["specs/LOGGING_SPEC.md"]
+    },
+    {
+      "id": "capability.suggestions",
+      "type": "capability",
+      "name": "Rule-based recommendations",
+      "status": "implemented",
+      "evidence": ["specs/AI_SPEC.md"]
+    },
+    {
+      "id": "capability.deployment_validation",
+      "type": "capability",
+      "name": "Kubernetes validation and target modeling",
+      "status": "implemented",
+      "evidence": ["specs/DEPLOYMENT_SPEC.md"]
+    },
+    {
+      "id": "capability.monitoring",
+      "type": "capability",
+      "name": "Health aggregation and metrics",
+      "status": "implemented",
+      "evidence": ["backend/monitoring-service/src/health-checker.ts"]
+    },
+    {
+      "id": "capability.notifications",
+      "type": "capability",
+      "name": "User notifications",
+      "status": "implemented",
+      "evidence": ["specs/NOTIFICATION_SPEC.md"]
+    },
+    {
+      "id": "capability.github_oauth",
+      "type": "capability",
+      "name": "GitHub App OAuth",
+      "status": "implemented",
+      "evidence": ["docs/adr/ADR-007-GitHub-App-OAuth.md"]
+    },
+    {
+      "id": "capability.github_publish",
+      "type": "capability",
+      "name": "GitHub repository publication",
+      "status": "implemented",
+      "evidence": ["backend/auth-service/src/github-integration.ts"]
+    },
+    {
+      "id": "capability.github_sync",
+      "type": "capability",
+      "name": "GitHub Actions synchronization",
+      "status": "implemented",
+      "evidence": ["backend/auth-service/src/github-integration.ts"]
+    },
+    {
+      "id": "entity.user",
+      "type": "domain_entity",
+      "name": "User",
+      "status": "implemented",
+      "owner": "service.auth",
+      "table": "users"
+    },
+    {
+      "id": "entity.refresh_token",
+      "type": "domain_entity",
+      "name": "Refresh token record",
+      "status": "implemented",
+      "owner": "service.auth",
+      "table": "refresh_tokens"
+    },
+    {
+      "id": "entity.github_connection",
+      "type": "domain_entity",
+      "name": "GitHub connection",
+      "status": "implemented",
+      "owner": "service.auth",
+      "table": "github_connections"
+    },
+    {
+      "id": "entity.project",
+      "type": "domain_entity",
+      "name": "Project",
+      "status": "implemented",
+      "owner": "service.project",
+      "table": "projects"
+    },
+    {
+      "id": "entity.tool_selection",
+      "type": "domain_entity",
+      "name": "Tool selection",
+      "status": "implemented",
+      "owner": "service.project",
+      "table": "project_tool_selections"
+    },
+    {
+      "id": "entity.artifact",
+      "type": "domain_entity",
+      "name": "Generated artifact",
+      "status": "implemented",
+      "owner": "service.project",
+      "table": "generated_artifacts"
+    },
+    {
+      "id": "entity.pipeline_definition",
+      "type": "domain_entity",
+      "name": "Pipeline definition",
+      "status": "implemented",
+      "owner": "service.pipeline",
+      "table": "pipeline_definitions"
+    },
+    {
+      "id": "entity.pipeline_execution",
+      "type": "domain_entity",
+      "name": "Pipeline execution",
+      "status": "implemented",
+      "owner": "service.pipeline",
+      "table": "pipeline_executions"
+    },
+    {
+      "id": "entity.pipeline_log",
+      "type": "domain_entity",
+      "name": "Pipeline log",
+      "status": "implemented",
+      "owner": "service.logging",
+      "table": "pipeline_logs"
+    },
+    {
+      "id": "entity.suggestion",
+      "type": "domain_entity",
+      "name": "Suggestion",
+      "status": "implemented",
+      "owner": "service.ai",
+      "table": "suggestions"
+    },
+    {
+      "id": "entity.deployment_target",
+      "type": "domain_entity",
+      "name": "Deployment target",
+      "status": "implemented",
+      "owner": "service.deployment",
+      "table": "deployment_targets"
+    },
+    {
+      "id": "entity.notification",
+      "type": "domain_entity",
+      "name": "Notification",
+      "status": "implemented",
+      "owner": "service.notification",
+      "table": "notifications"
+    },
+    {
+      "id": "entity.github_repository",
+      "type": "domain_entity",
+      "name": "Project GitHub repository",
+      "status": "implemented",
+      "owner": "service.auth",
+      "table": "project_github_repositories"
+    },
+    {
+      "id": "entity.github_workflow_run",
+      "type": "domain_entity",
+      "name": "GitHub workflow run",
+      "status": "implemented",
+      "owner": "service.auth",
+      "table": "github_workflow_runs"
+    },
+    {
+      "id": "workflow.password_auth",
+      "type": "workflow",
+      "name": "Password registration and login",
+      "status": "implemented"
+    },
+    {
+      "id": "workflow.github_auth",
+      "type": "workflow",
+      "name": "GitHub App OAuth with PKCE",
+      "status": "implemented"
+    },
+    {
+      "id": "workflow.project_generation",
+      "type": "workflow",
+      "name": "Project generation and delivery coordination",
+      "status": "implemented"
+    },
+    {
+      "id": "workflow.pipeline_simulation",
+      "type": "workflow",
+      "name": "Pipeline simulation and logs",
+      "status": "implemented"
+    },
+    {
+      "id": "workflow.deployment_validation",
+      "type": "workflow",
+      "name": "Kubernetes validation and target creation",
+      "status": "implemented"
+    },
+    {
+      "id": "workflow.github_publication",
+      "type": "workflow",
+      "name": "Idempotent GitHub repository publication",
+      "status": "implemented"
+    },
+    {
+      "id": "workflow.github_actions_sync",
+      "type": "workflow",
+      "name": "GitHub Actions run synchronization",
+      "status": "implemented"
+    },
+    {
+      "id": "technology.typescript",
+      "type": "technology",
+      "name": "TypeScript",
+      "status": "implemented",
+      "reason": "One typed language and shared contracts across frontend, services, and scripts."
+    },
+    {
+      "id": "technology.node",
+      "type": "technology",
+      "name": "Node.js 22",
+      "status": "implemented",
+      "reason": "Async runtime and unified tooling for small REST services."
+    },
+    {
+      "id": "technology.react",
+      "type": "technology",
+      "name": "React 18",
+      "status": "implemented",
+      "reason": "Component-based interactive workspace."
+    },
+    {
+      "id": "technology.vite",
+      "type": "technology",
+      "name": "Vite 5",
+      "status": "implemented",
+      "reason": "Fast frontend development and production bundling."
+    },
+    {
+      "id": "technology.express",
+      "type": "technology",
+      "name": "Express 4",
+      "status": "implemented",
+      "reason": "Explicit REST routing and middleware."
+    },
+    {
+      "id": "technology.zod",
+      "type": "technology",
+      "name": "Zod 3",
+      "status": "implemented",
+      "reason": "Runtime validation at API trust boundaries."
+    },
+    {
+      "id": "technology.pino",
+      "type": "technology",
+      "name": "Pino 9",
+      "status": "implemented",
+      "reason": "Structured service and request logs."
+    },
+    {
+      "id": "technology.pnpm",
+      "type": "technology",
+      "name": "PNPM workspaces",
+      "status": "implemented",
+      "reason": "Efficient monorepo package linking and reproducible lockfile."
+    },
+    {
+      "id": "technology.docker",
+      "type": "technology",
+      "name": "Docker and Compose",
+      "status": "implemented",
+      "reason": "Repeatable local infrastructure and generated container definitions."
+    },
+    {
+      "id": "technology.kubernetes",
+      "type": "technology",
+      "name": "Kubernetes YAML",
+      "status": "implemented",
+      "reason": "Declarative generated deployment model and validation target."
+    },
+    {
+      "id": "technology.github_actions",
+      "type": "technology",
+      "name": "GitHub Actions",
+      "status": "implemented",
+      "reason": "Accessible real CI provider and generated workflow target."
+    },
+    {
+      "id": "technology.jwt",
+      "type": "technology",
+      "name": "HS256 JWT",
+      "status": "implemented",
+      "reason": "Stateless authenticated identity across services."
+    },
+    {
+      "id": "technology.scrypt",
+      "type": "technology",
+      "name": "scrypt",
+      "status": "implemented",
+      "reason": "Memory-hard salted password hashing."
+    },
+    {
+      "id": "technology.aes_gcm",
+      "type": "technology",
+      "name": "AES-256-GCM",
+      "status": "implemented",
+      "reason": "Authenticated encryption for provider tokens at rest."
+    },
+    {
+      "id": "future.jenkins",
+      "type": "future_candidate",
+      "name": "Jenkins integration",
+      "status": "future"
+    },
+    {
+      "id": "future.helm",
+      "type": "future_candidate",
+      "name": "Helm chart generation",
+      "status": "future"
+    },
+    {
+      "id": "future.terraform",
+      "type": "future_candidate",
+      "name": "Terraform generation",
+      "status": "future"
+    },
+    {
+      "id": "future.real_kubernetes",
+      "type": "future_candidate",
+      "name": "Real Kubernetes deployment",
+      "status": "future"
+    },
+    {
+      "id": "future.cost",
+      "type": "future_candidate",
+      "name": "Cost estimation",
+      "status": "future"
+    },
+    {
+      "id": "future.collaboration",
+      "type": "future_candidate",
+      "name": "Team collaboration",
+      "status": "future"
+    }
+  ],
+  "edges": [
+    {
+      "from": "actor.learner",
+      "relation": "uses",
+      "to": "product.buildsphere"
+    },
+    {
+      "from": "actor.portfolio_builder",
+      "relation": "uses",
+      "to": "product.buildsphere"
+    },
+    {
+      "from": "actor.team_developer",
+      "relation": "future_uses",
+      "to": "product.buildsphere"
+    },
+    {
+      "from": "product.buildsphere",
+      "relation": "exposes",
+      "to": "surface.frontend"
+    },
+    {
+      "from": "surface.frontend",
+      "relation": "calls",
+      "to": "service.api_gateway"
+    },
+    {
+      "from": "surface.frontend",
+      "relation": "stores_session_in",
+      "to": "store.browser_session"
+    },
+    {
+      "from": "surface.frontend",
+      "relation": "redirects_for_oauth",
+      "to": "provider.github"
+    },
+    {
+      "from": "service.api_gateway",
+      "relation": "routes_to",
+      "to": "service.auth"
+    },
+    {
+      "from": "service.api_gateway",
+      "relation": "routes_to",
+      "to": "service.project"
+    },
+    {
+      "from": "service.api_gateway",
+      "relation": "routes_to",
+      "to": "service.pipeline"
+    },
+    {
+      "from": "service.api_gateway",
+      "relation": "routes_to",
+      "to": "service.deployment"
+    },
+    {
+      "from": "service.api_gateway",
+      "relation": "routes_to",
+      "to": "service.monitoring"
+    },
+    {
+      "from": "service.api_gateway",
+      "relation": "routes_to",
+      "to": "service.logging"
+    },
+    {
+      "from": "service.api_gateway",
+      "relation": "routes_to",
+      "to": "service.ai"
+    },
+    {
+      "from": "service.api_gateway",
+      "relation": "routes_to",
+      "to": "service.notification"
+    },
+    {
+      "from": "service.project",
+      "relation": "coordinates",
+      "to": "service.pipeline"
+    },
+    {
+      "from": "service.project",
+      "relation": "coordinates",
+      "to": "service.ai"
+    },
+    {
+      "from": "service.project",
+      "relation": "publishes_events_to",
+      "to": "service.notification"
+    },
+    {
+      "from": "service.project",
+      "relation": "requests_internal_github_operations_from",
+      "to": "service.auth"
+    },
+    {
+      "from": "service.pipeline",
+      "relation": "writes_logs_to",
+      "to": "service.logging"
+    },
+    {
+      "from": "service.pipeline",
+      "relation": "publishes_events_to",
+      "to": "service.notification"
+    },
+    {
+      "from": "service.ai",
+      "relation": "publishes_events_to",
+      "to": "service.notification"
+    },
+    {
+      "from": "service.monitoring",
+      "relation": "health_checks",
+      "to": "service.api_gateway"
+    },
+    {
+      "from": "service.monitoring",
+      "relation": "health_checks",
+      "to": "service.auth"
+    },
+    {
+      "from": "service.monitoring",
+      "relation": "health_checks",
+      "to": "service.project"
+    },
+    {
+      "from": "service.monitoring",
+      "relation": "health_checks",
+      "to": "service.pipeline"
+    },
+    {
+      "from": "service.monitoring",
+      "relation": "health_checks",
+      "to": "service.deployment"
+    },
+    {
+      "from": "service.monitoring",
+      "relation": "health_checks",
+      "to": "service.logging"
+    },
+    {
+      "from": "service.monitoring",
+      "relation": "health_checks",
+      "to": "service.ai"
+    },
+    {
+      "from": "service.monitoring",
+      "relation": "health_checks",
+      "to": "service.notification"
+    },
+    { "from": "service.auth", "relation": "calls", "to": "provider.github" },
+    {
+      "from": "service.auth",
+      "relation": "persists_to",
+      "to": "store.postgresql"
+    },
+    {
+      "from": "service.project",
+      "relation": "persists_to",
+      "to": "store.postgresql"
+    },
+    {
+      "from": "service.pipeline",
+      "relation": "persists_to",
+      "to": "store.postgresql"
+    },
+    {
+      "from": "service.deployment",
+      "relation": "persists_to",
+      "to": "store.postgresql"
+    },
+    {
+      "from": "service.logging",
+      "relation": "persists_to",
+      "to": "store.postgresql"
+    },
+    {
+      "from": "service.ai",
+      "relation": "persists_to",
+      "to": "store.postgresql"
+    },
+    {
+      "from": "service.notification",
+      "relation": "persists_to",
+      "to": "store.postgresql"
+    },
+    {
+      "from": "package.shared_types",
+      "relation": "defines_contracts_for",
+      "to": "surface.frontend"
+    },
+    {
+      "from": "package.shared_types",
+      "relation": "defines_contracts_for",
+      "to": "service.auth"
+    },
+    {
+      "from": "package.shared_types",
+      "relation": "defines_contracts_for",
+      "to": "service.project"
+    },
+    {
+      "from": "package.shared_types",
+      "relation": "defines_contracts_for",
+      "to": "service.pipeline"
+    },
+    {
+      "from": "package.shared_types",
+      "relation": "defines_contracts_for",
+      "to": "service.deployment"
+    },
+    {
+      "from": "package.shared_types",
+      "relation": "defines_contracts_for",
+      "to": "service.monitoring"
+    },
+    {
+      "from": "package.shared_types",
+      "relation": "defines_contracts_for",
+      "to": "service.logging"
+    },
+    {
+      "from": "package.shared_types",
+      "relation": "defines_contracts_for",
+      "to": "service.ai"
+    },
+    {
+      "from": "package.shared_types",
+      "relation": "defines_contracts_for",
+      "to": "service.notification"
+    },
+    {
+      "from": "package.service_core",
+      "relation": "supports",
+      "to": "service.api_gateway"
+    },
+    {
+      "from": "package.service_core",
+      "relation": "supports",
+      "to": "service.auth"
+    },
+    {
+      "from": "package.service_core",
+      "relation": "supports",
+      "to": "service.project"
+    },
+    {
+      "from": "package.service_core",
+      "relation": "supports",
+      "to": "service.pipeline"
+    },
+    {
+      "from": "package.service_core",
+      "relation": "supports",
+      "to": "service.deployment"
+    },
+    {
+      "from": "package.service_core",
+      "relation": "supports",
+      "to": "service.monitoring"
+    },
+    {
+      "from": "package.service_core",
+      "relation": "supports",
+      "to": "service.logging"
+    },
+    {
+      "from": "package.service_core",
+      "relation": "supports",
+      "to": "service.ai"
+    },
+    {
+      "from": "package.service_core",
+      "relation": "supports",
+      "to": "service.analytics"
+    },
+    {
+      "from": "package.service_core",
+      "relation": "supports",
+      "to": "service.notification"
+    },
+    {
+      "from": "service.auth",
+      "relation": "implements",
+      "to": "capability.authentication"
+    },
+    {
+      "from": "service.auth",
+      "relation": "implements",
+      "to": "capability.github_oauth"
+    },
+    {
+      "from": "service.auth",
+      "relation": "implements",
+      "to": "capability.github_publish"
+    },
+    {
+      "from": "service.auth",
+      "relation": "implements",
+      "to": "capability.github_sync"
+    },
+    {
+      "from": "service.project",
+      "relation": "implements",
+      "to": "capability.projects"
+    },
+    {
+      "from": "service.project",
+      "relation": "implements",
+      "to": "capability.generation"
+    },
+    {
+      "from": "service.pipeline",
+      "relation": "implements",
+      "to": "capability.pipeline"
+    },
+    {
+      "from": "service.logging",
+      "relation": "implements",
+      "to": "capability.logs"
+    },
+    {
+      "from": "service.ai",
+      "relation": "implements",
+      "to": "capability.suggestions"
+    },
+    {
+      "from": "service.deployment",
+      "relation": "implements",
+      "to": "capability.deployment_validation"
+    },
+    {
+      "from": "service.monitoring",
+      "relation": "implements",
+      "to": "capability.monitoring"
+    },
+    {
+      "from": "service.notification",
+      "relation": "implements",
+      "to": "capability.notifications"
+    },
+    {
+      "from": "service.auth",
+      "relation": "owns",
+      "to": "entity.user"
+    },
+    {
+      "from": "service.auth",
+      "relation": "owns",
+      "to": "entity.refresh_token"
+    },
+    {
+      "from": "service.auth",
+      "relation": "owns",
+      "to": "entity.github_connection"
+    },
+    {
+      "from": "service.auth",
+      "relation": "owns",
+      "to": "entity.github_repository"
+    },
+    {
+      "from": "service.auth",
+      "relation": "owns",
+      "to": "entity.github_workflow_run"
+    },
+    {
+      "from": "service.project",
+      "relation": "owns",
+      "to": "entity.project"
+    },
+    {
+      "from": "service.project",
+      "relation": "owns",
+      "to": "entity.tool_selection"
+    },
+    {
+      "from": "service.project",
+      "relation": "owns",
+      "to": "entity.artifact"
+    },
+    {
+      "from": "service.pipeline",
+      "relation": "owns",
+      "to": "entity.pipeline_definition"
+    },
+    {
+      "from": "service.pipeline",
+      "relation": "owns",
+      "to": "entity.pipeline_execution"
+    },
+    {
+      "from": "service.logging",
+      "relation": "owns",
+      "to": "entity.pipeline_log"
+    },
+    {
+      "from": "service.ai",
+      "relation": "owns",
+      "to": "entity.suggestion"
+    },
+    {
+      "from": "service.deployment",
+      "relation": "owns",
+      "to": "entity.deployment_target"
+    },
+    {
+      "from": "service.notification",
+      "relation": "owns",
+      "to": "entity.notification"
+    },
+    {
+      "from": "entity.user",
+      "relation": "owns_many",
+      "to": "entity.refresh_token"
+    },
+    {
+      "from": "entity.user",
+      "relation": "connects_one",
+      "to": "entity.github_connection"
+    },
+    { "from": "entity.user", "relation": "owns_many", "to": "entity.project" },
+    {
+      "from": "entity.user",
+      "relation": "receives_many",
+      "to": "entity.notification"
+    },
+    {
+      "from": "entity.project",
+      "relation": "has_many",
+      "to": "entity.tool_selection"
+    },
+    {
+      "from": "entity.project",
+      "relation": "produces_many",
+      "to": "entity.artifact"
+    },
+    {
+      "from": "entity.project",
+      "relation": "has_many",
+      "to": "entity.pipeline_definition"
+    },
+    {
+      "from": "entity.pipeline_definition",
+      "relation": "has_many",
+      "to": "entity.pipeline_execution"
+    },
+    {
+      "from": "entity.pipeline_execution",
+      "relation": "emits_many",
+      "to": "entity.pipeline_log"
+    },
+    {
+      "from": "entity.project",
+      "relation": "receives_many",
+      "to": "entity.suggestion"
+    },
+    {
+      "from": "entity.project",
+      "relation": "has_many",
+      "to": "entity.deployment_target"
+    },
+    {
+      "from": "entity.project",
+      "relation": "publishes_to_zero_or_one",
+      "to": "entity.github_repository"
+    },
+    {
+      "from": "entity.github_repository",
+      "relation": "reports_many",
+      "to": "entity.github_workflow_run"
+    },
+    {
+      "from": "workflow.password_auth",
+      "relation": "uses",
+      "to": "capability.authentication"
+    },
+    {
+      "from": "workflow.github_auth",
+      "relation": "uses",
+      "to": "capability.github_oauth"
+    },
+    {
+      "from": "workflow.project_generation",
+      "relation": "uses",
+      "to": "capability.projects"
+    },
+    {
+      "from": "workflow.project_generation",
+      "relation": "uses",
+      "to": "capability.generation"
+    },
+    {
+      "from": "workflow.project_generation",
+      "relation": "triggers",
+      "to": "capability.pipeline"
+    },
+    {
+      "from": "workflow.project_generation",
+      "relation": "triggers",
+      "to": "capability.suggestions"
+    },
+    {
+      "from": "workflow.pipeline_simulation",
+      "relation": "uses",
+      "to": "capability.pipeline"
+    },
+    {
+      "from": "workflow.pipeline_simulation",
+      "relation": "uses",
+      "to": "capability.logs"
+    },
+    {
+      "from": "workflow.deployment_validation",
+      "relation": "uses",
+      "to": "capability.deployment_validation"
+    },
+    {
+      "from": "workflow.github_publication",
+      "relation": "uses",
+      "to": "capability.github_publish"
+    },
+    {
+      "from": "workflow.github_actions_sync",
+      "relation": "uses",
+      "to": "capability.github_sync"
+    },
+    {
+      "from": "product.buildsphere",
+      "relation": "built_with",
+      "to": "technology.typescript"
+    },
+    {
+      "from": "surface.frontend",
+      "relation": "built_with",
+      "to": "technology.react"
+    },
+    {
+      "from": "surface.frontend",
+      "relation": "built_with",
+      "to": "technology.vite"
+    },
+    {
+      "from": "service.api_gateway",
+      "relation": "built_with",
+      "to": "technology.express"
+    },
+    {
+      "from": "service.auth",
+      "relation": "built_with",
+      "to": "technology.node"
+    },
+    { "from": "service.auth", "relation": "uses", "to": "technology.jwt" },
+    { "from": "service.auth", "relation": "uses", "to": "technology.scrypt" },
+    { "from": "service.auth", "relation": "uses", "to": "technology.aes_gcm" },
+    {
+      "from": "product.buildsphere",
+      "relation": "managed_by",
+      "to": "technology.pnpm"
+    },
+    {
+      "from": "product.buildsphere",
+      "relation": "uses_local_infrastructure",
+      "to": "technology.docker"
+    },
+    {
+      "from": "capability.generation",
+      "relation": "generates",
+      "to": "technology.kubernetes"
+    },
+    {
+      "from": "capability.generation",
+      "relation": "generates",
+      "to": "technology.github_actions"
+    },
+    {
+      "from": "product.buildsphere",
+      "relation": "may_evolve_to",
+      "to": "future.jenkins"
+    },
+    {
+      "from": "product.buildsphere",
+      "relation": "may_evolve_to",
+      "to": "future.helm"
+    },
+    {
+      "from": "product.buildsphere",
+      "relation": "may_evolve_to",
+      "to": "future.terraform"
+    },
+    {
+      "from": "product.buildsphere",
+      "relation": "may_evolve_to",
+      "to": "future.real_kubernetes"
+    },
+    {
+      "from": "product.buildsphere",
+      "relation": "may_evolve_to",
+      "to": "future.cost"
+    },
+    {
+      "from": "product.buildsphere",
+      "relation": "may_evolve_to",
+      "to": "future.collaboration"
+    }
+  ],
+  "generatedArtifact": {
+    "status": "implemented",
+    "storage": "PostgreSQL generated_artifacts.files JSONB",
+    "checksum": "SHA-256 of serialized files",
+    "archive": "In-memory TAR download",
+    "dynamicSelectionLimitation": "Tool selections are validated but the current catalog renders a fixed ten-file bundle.",
+    "files": [
+      "frontend/README.md",
+      "backend/README.md",
+      "backend/Dockerfile",
+      "docker-compose.yml",
+      ".github/workflows/ci.yml",
+      "kubernetes/namespace.yaml",
+      "kubernetes/deployment.yaml",
+      "kubernetes/service.yaml",
+      "kubernetes/ingress.yaml",
+      ".env.example"
+    ]
+  },
+  "pipelineStages": [
+    "checkout",
+    "install_dependencies",
+    "run_tests",
+    "build_application",
+    "build_docker_image",
+    "push_artifact",
+    "validate_kubernetes_manifests"
+  ],
+  "verification": {
+    "automatedTests": 39,
+    "testFiles": 14,
+    "gates": [
+      "pnpm install --frozen-lockfile",
+      "pnpm lint",
+      "pnpm -r build",
+      "pnpm -r test",
+      "memory gateway smoke",
+      "PostgreSQL gateway smoke",
+      "migration idempotency",
+      "restart persistence",
+      "desktop and mobile browser verification",
+      "live GitHub OAuth, private repository publication, successful Actions synchronization, and no-op republish"
+    ]
+  },
+  "limitations": [
+    "Generated output is delivery/configuration scaffolding, not a complete application source tree.",
+    "The internal pipeline is simulated.",
+    "Kubernetes deployment is generated and validated but not applied.",
+    "External AI provider calls are not implemented.",
+    "Redis, MinIO, and MailHog are not consumed by active services.",
+    "Artifacts are stored in PostgreSQL JSONB rather than object storage.",
+    "Analytics Service is health-only.",
+    "GitHub disconnect, organization SSO, workflow control, and log archive UI are out of scope.",
+    "Rate limiting, audit logs, full RBAC, and production secret management are future hardening."
+  ],
+  "sourceMap": {
+    "productAndRequirements": [
+      "BUILDSPHERE_MANIFEST.md",
+      "docs/00_PROJECT_VISION.md",
+      "docs/01_SRS.md",
+      "docs/12_ROADMAP.md",
+      "docs/13_BACKLOG.md"
+    ],
+    "architecture": ["docs/02_HLD.md", "docs/03_LLD.md", "docs/adr/"],
+    "contracts": [
+      "specs/",
+      "packages/shared-types/src/index.ts",
+      "docs/05_API_SPEC.md"
+    ],
+    "runtime": ["frontend/src/", "backend/", "packages/service-core/src/"],
+    "data": [
+      "infrastructure/database/migrations/",
+      "docs/04_DATABASE_DESIGN.md"
+    ],
+    "generationAndAI": [
+      "templates/",
+      "prompts/",
+      "backend/project-service/src/template-catalog.ts",
+      "backend/ai-service/src/rules.ts"
+    ],
+    "operationsAndEvidence": [
+      "docker-compose.dev.yml",
+      ".github/workflows/ci.yml",
+      "scripts/",
+      "docs/11_TESTING.md",
+      "memory/"
+    ]
+  }
+}

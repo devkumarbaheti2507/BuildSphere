@@ -6,7 +6,7 @@
 | Version | 0.1.0 |
 | Status | Draft |
 | Author | BuildSphere Team |
-| Last Updated | 2026-06-28 |
+| Last Updated | 2026-07-09 |
 | Related Documents | 00_PROJECT_VISION.md, 01_SRS.md |
 
 ---
@@ -27,13 +27,13 @@ This document defines the main BuildSphere user experience.
 
 ```text
 Dashboard
-Projects
+Create project
 Templates
-Pipelines
-Suggestions
-Learning Center
 Settings
 ```
+
+Pipelines, GitHub integration, suggestions, generated files, and deployment
+workflows are grouped as tabs within each project workspace.
 
 # Pages
 
@@ -65,24 +65,20 @@ Steps:
 
 1. Project basics.
 2. Architecture selection.
-3. Frontend selection.
-4. Backend selection.
-5. Database and cache.
-6. CI/CD provider.
-7. Container and deployment target.
-8. Review and generate.
+3. Application stack.
+4. Delivery stack.
+5. Review and create.
 
 ## Project detail page
 
 Tabs:
 
 - Overview.
-- Tool selections.
 - Generated files.
-- Pipelines.
+- Pipeline and logs.
+- GitHub repository and Actions.
 - Suggestions.
-- Logs.
-- Settings.
+- Deployment validation and targets.
 
 ## Pipeline page
 
@@ -139,8 +135,7 @@ Content format:
 /projects
 /projects/new
 /projects/:projectId
-/projects/:projectId/pipelines
-/projects/:projectId/suggestions
+/templates
 /settings
 ```
 

@@ -138,9 +138,9 @@ Owned by Project Service.
 | --- | --- | --- |
 | id | uuid | Primary key. |
 | project_id | uuid | References projects. |
-| artifact_type | text | `archive`, `dockerfile`, `workflow`, `k8s_manifest`. |
-| storage_uri | text | Location in local filesystem or object storage. |
-| checksum | text | Optional. |
+| artifact_type | text | `bundle` in the current implementation. |
+| files | jsonb | Generated paths, content, language, and explanations. |
+| checksum | text | SHA-256 checksum of the serialized file bundle. |
 | created_at | timestamptz | Required. |
 
 ## pipeline_definitions
@@ -217,10 +217,13 @@ Owned by Notification Service.
 - organizations
 - teams
 - environments
-- deployment_targets
 - audit_logs
 - cost_estimates
 - template_versions
+
+`deployment_targets` is implemented in migration 001. Generated artifacts are
+currently stored directly in PostgreSQL JSONB; the object-storage URI model is
+future work.
 
 # Migration strategy
 

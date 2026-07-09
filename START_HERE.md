@@ -6,7 +6,7 @@ Use this file first when opening the project with Codex.
 
 BuildSphere is an AI-assisted Developer Experience Platform for designing, generating, deploying, observing, and improving microservice applications.
 
-It is a documentation-first, Codex-friendly local MVP implemented through roadmap Phase 5.
+It is a documentation-first, Codex-friendly local MVP implemented through the tracked roadmap Phase 6 GitHub milestone.
 
 ## First reading order
 
@@ -22,6 +22,7 @@ Read these files in this exact order:
 8. `docs/12_ROADMAP.md`
 9. `docs/13_BACKLOG.md`
 10. `memory/next-session.md`
+11. `docs/15_PROJECT_KNOWLEDGE_GRAPH.md` when learning or presenting the complete system
 
 ## Recommended Codex prompt
 
@@ -54,6 +55,13 @@ Before coding, verify:
 11. Implement simulated pipelines and logs.
 12. Implement rule-based suggestions.
 13. Implement deployment, monitoring, and notification foundations.
+14. Implement GitHub App authentication, repository publishing, and Actions synchronization.
+
+## Learning and presentation pack
+
+- `docs/15_PROJECT_KNOWLEDGE_GRAPH.md`: self-contained project context.
+- `docs/project-knowledge-graph.json`: machine-readable nodes and relationships.
+- `docs/16_PRESENTATION_AND_LEARNING_GUIDE.md`: presentation, demo, interview, and study material.
 
 ## Important rule
 

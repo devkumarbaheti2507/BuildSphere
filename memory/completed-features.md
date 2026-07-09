@@ -37,6 +37,9 @@
 
 ## 2026-07-09
 
+- Added a safe-to-share, ChatGPT-ready project knowledge graph with 77 validated nodes and 99 validated relationships, plus a presentation/demo guide and structured JSON companion.
+- Reconciled stale Phase, ADR, database, UI, and testing documentation against the current Phase 6 implementation.
+
 - Completed BS-501, the first Phase 6 slice: users can authenticate through a GitHub App and receive normal BuildSphere access and refresh tokens.
 - Added signed expiring OAuth state, PKCE S256 binding, verified-email enforcement, stable GitHub identity lookup, and safe linking to existing users by verified email.
 - Added AES-256-GCM provider token encryption and an additive `github_connections` migration; GitHub-only users can be stored without a local password.

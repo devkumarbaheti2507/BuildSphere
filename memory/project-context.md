@@ -14,7 +14,14 @@ Current implementation status:
 
 Primary goal now:
 
-Select and specify the next post-Phase 6 milestone before implementation.
+Use the project knowledge graph and presentation guide to learn and explain the
+implemented system before selecting the next post-Phase 6 milestone.
+
+Learning pack:
+
+- `docs/15_PROJECT_KNOWLEDGE_GRAPH.md`
+- `docs/project-knowledge-graph.json`
+- `docs/16_PRESENTATION_AND_LEARNING_GUIDE.md`
 
 Default stack:
 

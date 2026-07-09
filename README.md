@@ -143,6 +143,16 @@ Requirement -> Design -> Spec -> Implementation -> Test -> Documentation update
 
 A feature is not considered complete until its code, tests, docs, and memory files are updated.
 
+## Learn and present BuildSphere
+
+Use these files as a safe, self-contained learning and presentation pack:
+
+- `docs/15_PROJECT_KNOWLEDGE_GRAPH.md` explains the product, architecture, stack, workflows, data, security, testing, limitations, and evidence.
+- `docs/project-knowledge-graph.json` provides structured nodes and relationships for AI tools.
+- `docs/16_PRESENTATION_AND_LEARNING_GUIDE.md` provides slide notes, a live-demo script, interview answers, a study curriculum, and ChatGPT prompts.
+
+The pack excludes `.env`, credentials, provider tokens, personal account data, and private repository identifiers.
+
 ## Current status
 
 Status: Local-first MVP implemented through roadmap Phase 6. GitHub App authentication, generated repository publishing, and GitHub Actions run synchronization are complete.

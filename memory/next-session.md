@@ -2,7 +2,9 @@
 
 Recommended next task:
 
-Select one post-Phase 6 candidate and define its requirements, backlog ticket, and architecture boundary before implementation.
+Study and rehearse BuildSphere with the knowledge graph and presentation guide,
+then select one post-Phase 6 candidate and define its requirements, backlog
+ticket, and architecture boundary before implementation.
 
 Immediate tasks:
 
@@ -14,6 +16,7 @@ Immediate tasks:
 
 Current notes:
 
+- The ChatGPT-ready learning pack is available in `docs/15_PROJECT_KNOWLEDGE_GRAPH.md`, `docs/project-knowledge-graph.json`, and `docs/16_PRESENTATION_AND_LEARNING_GUIDE.md`.
 - BS-901 and BS-902 release verification completed on 2026-07-08.
 - Frozen install, lint, production build, and all automated tests pass.
 - Memory and PostgreSQL smoke workflows pass with 10 generated files, 7 pipeline stages, 14 logs, suggestions, 8 health checks, and 4 notifications.

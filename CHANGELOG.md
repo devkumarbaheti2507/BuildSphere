@@ -8,6 +8,7 @@ The project follows semantic versioning once the first implementation milestone 
 
 ### Added
 
+- A safe-to-share project knowledge graph, structured JSON graph, and presentation/learning guide covering the complete implementation through Phase 6.
 - Enforceable TypeScript linting as part of workspace verification.
 - Regression coverage for idempotent service shutdown.
 - GitHub App authentication with PKCE, signed expiring state, verified-email account linking, encrypted provider token storage, and frontend callback handling.

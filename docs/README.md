@@ -6,7 +6,7 @@
 | Version | 0.1.0 |
 | Status | Draft |
 | Author | BuildSphere Team |
-| Last Updated | 2026-06-28 |
+| Last Updated | 2026-07-09 |
 | Related Documents | All docs |
 
 ---
@@ -34,6 +34,9 @@ This folder is the single source of truth for BuildSphere product and engineerin
 | `12_ROADMAP.md` | Defines phased implementation plan. |
 | `13_BACKLOG.md` | Defines implementation tickets. |
 | `14_GLOSSARY.md` | Defines important terms. |
+| `15_PROJECT_KNOWLEDGE_GRAPH.md` | Self-contained product and engineering graph for learning and AI tutoring. |
+| `project-knowledge-graph.json` | Structured nodes, relationships, evidence, status, and limitations. |
+| `16_PRESENTATION_AND_LEARNING_GUIDE.md` | Presentation plan, live demo, study curriculum, interview answers, and ChatGPT prompts. |
 
 # Rule
 

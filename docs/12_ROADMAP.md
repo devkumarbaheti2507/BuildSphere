@@ -17,7 +17,7 @@ This document defines the phased implementation roadmap for BuildSphere.
 
 # Phase 0: Repository foundation
 
-Status: Ready.
+Status: Complete.
 
 Goals:
 

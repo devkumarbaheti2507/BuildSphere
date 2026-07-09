@@ -6,7 +6,7 @@
 | Version | 0.1.0 |
 | Status | Draft |
 | Author | BuildSphere Team |
-| Last Updated | 2026-06-28 |
+| Last Updated | 2026-07-09 |
 | Related Documents | docs/adr/* |
 
 ---
@@ -36,6 +36,9 @@ Create an ADR when a decision affects:
 | ADR-003 | PostgreSQL as primary database | Accepted |
 | ADR-004 | REST-first communication | Accepted |
 | ADR-005 | AI service design | Accepted |
+| ADR-006 | Shared Service Core and ordered SQL migrations | Accepted |
+| ADR-007 | GitHub App OAuth with signed state, PKCE, and encrypted provider tokens | Accepted |
+| ADR-008 | Project/Auth service boundary for GitHub operations | Accepted |
 
 # ADR template
 
