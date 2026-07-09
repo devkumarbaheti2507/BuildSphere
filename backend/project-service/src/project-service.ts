@@ -3,6 +3,9 @@ import type {
   CreateProjectInput,
   GeneratedArtifact,
   GenerationVariables,
+  GitHubRepositorySummary,
+  GitHubWorkflowRun,
+  PublishGitHubRepositoryInput,
   ProjectSummary,
   ToolCategory,
   ToolSelection,
@@ -10,6 +13,7 @@ import type {
 } from "@buildsphere/shared-types";
 import { ApiError } from "@buildsphere/service-core";
 import type { ProjectRepository } from "./repository.js";
+import type { GitHubIntegrationGateway } from "./github-integration.js";
 import { TemplateCatalogService } from "./template-catalog.js";
 
 const supportedTools: Record<ToolCategory, string[]> = {
@@ -27,6 +31,7 @@ export class ProjectService {
   constructor(
     private readonly repository: ProjectRepository,
     private readonly templates: TemplateCatalogService,
+    private readonly github: GitHubIntegrationGateway,
   ) {}
 
   async create(
@@ -180,5 +185,55 @@ export class ProjectService {
       );
     await this.getOwned(ownerId, artifact.projectId);
     return artifact;
+  }
+
+  async publishToGitHub(
+    ownerId: string,
+    projectId: string,
+    input: PublishGitHubRepositoryInput,
+  ): Promise<GitHubRepositorySummary> {
+    const project = await this.getOwned(ownerId, projectId);
+    const artifact = input.artifactId
+      ? await this.getArtifact(ownerId, input.artifactId)
+      : (await this.repository.listArtifacts(projectId))[0];
+    if (!artifact || artifact.projectId !== projectId) {
+      throw new ApiError(
+        409,
+        "GENERATED_ARTIFACT_REQUIRED",
+        "Generate project files before publishing to GitHub",
+      );
+    }
+    return this.github.publish({
+      userId: ownerId,
+      projectId,
+      name: input.name,
+      description: input.description ?? project.description,
+      private: input.private,
+      files: artifact.files,
+    });
+  }
+
+  async githubRepository(
+    ownerId: string,
+    projectId: string,
+  ): Promise<GitHubRepositorySummary | undefined> {
+    await this.getOwned(ownerId, projectId);
+    return this.github.repository(ownerId, projectId);
+  }
+
+  async synchronizeGitHubRuns(
+    ownerId: string,
+    projectId: string,
+  ): Promise<GitHubWorkflowRun[]> {
+    await this.getOwned(ownerId, projectId);
+    return this.github.synchronizeRuns(ownerId, projectId);
+  }
+
+  async githubRuns(
+    ownerId: string,
+    projectId: string,
+  ): Promise<GitHubWorkflowRun[]> {
+    await this.getOwned(ownerId, projectId);
+    return this.github.runs(ownerId, projectId);
   }
 }

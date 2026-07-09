@@ -7,6 +7,12 @@ import {
   requiredEnvironment,
 } from "@buildsphere/service-core";
 import { createAuthApp } from "./app.js";
+import { HttpGitHubApiClient } from "./github-api.js";
+import { GitHubIntegrationService } from "./github-integration.js";
+import {
+  githubOAuthConfigurationFromEnvironment,
+  GitHubOAuthService,
+} from "./github-oauth.js";
 import {
   InMemoryAuthRepository,
   PostgresAuthRepository,
@@ -30,6 +36,10 @@ const database =
 const repository = database
   ? new PostgresAuthRepository(database)
   : new InMemoryAuthRepository();
+const githubConfiguration = githubOAuthConfigurationFromEnvironment();
+const githubOAuth = githubConfiguration
+  ? new GitHubOAuthService(githubConfiguration)
+  : undefined;
 const app = createAuthApp(
   repository,
   {
@@ -39,6 +49,15 @@ const app = createAuthApp(
     refreshTtl: process.env.JWT_REFRESH_TOKEN_TTL ?? "7d",
   },
   logger,
+  githubOAuth,
+  githubOAuth && githubConfiguration
+    ? new GitHubIntegrationService(
+        repository,
+        githubOAuth,
+        new HttpGitHubApiClient(githubConfiguration.apiVersion),
+      )
+    : undefined,
+  requiredEnvironment("INTERNAL_SERVICE_TOKEN"),
 );
 
 const server = app.listen(port, () =>

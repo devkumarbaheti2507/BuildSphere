@@ -6,7 +6,7 @@
 | Version | 0.1.0 |
 | Status | Draft |
 | Author | BuildSphere Team |
-| Last Updated | 2026-06-28 |
+| Last Updated | 2026-07-09 |
 | Related Documents | ../docs/03_LLD.md |
 
 ---
@@ -28,3 +28,4 @@ Specs are implementation-focused instructions for Codex and developers.
 | `NOTIFICATION_SPEC.md` | Notification behavior. |
 | `LOGGING_SPEC.md` | Pipeline logs and service logging. |
 | `TEMPLATE_SPEC.md` | Template catalog and generation engine. |
+| `GITHUB_INTEGRATION_SPEC.md` | GitHub App OAuth and later GitHub provider workflows. |

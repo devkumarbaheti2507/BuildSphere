@@ -6,7 +6,7 @@
 | Version | 0.1.0 |
 | Status | Draft |
 | Author | BuildSphere Team |
-| Last Updated | 2026-06-28 |
+| Last Updated | 2026-07-09 |
 | Related Documents | 01_SRS.md, 13_BACKLOG.md |
 
 ---
@@ -134,11 +134,24 @@ Exit criteria:
 
 # Phase 6: Advanced integrations
 
-Future features:
+Status: Complete for the tracked GitHub integration milestone.
 
-- GitHub OAuth.
-- GitHub repository creation.
-- GitHub Actions run integration.
+Phase 6 scope:
+
+- GitHub OAuth. Complete.
+- GitHub repository creation. Complete.
+- GitHub Actions run integration. Complete.
+
+Exit criteria:
+
+- A connected user can publish generated files to a durable project repository link.
+- BuildSphere can synchronize and display GitHub Actions workflow runs.
+- Provider secrets remain server-side, expired user tokens rotate safely, and retry behavior is deterministic.
+
+# Post-Phase 6 candidates
+
+These items require separate specifications and backlog milestones:
+
 - Jenkins integration.
 - Helm chart generation.
 - Terraform generation.

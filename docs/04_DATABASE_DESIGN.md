@@ -6,7 +6,7 @@
 | Version | 0.1.0 |
 | Status | Draft |
 | Author | BuildSphere Team |
-| Last Updated | 2026-06-28 |
+| Last Updated | 2026-07-09 |
 | Related Documents | 01_SRS.md, 03_LLD.md, 05_API_SPEC.md |
 
 ---
@@ -34,7 +34,7 @@ Owned by Auth Service.
 | id | uuid | Primary key. |
 | name | text | Required. |
 | email | text | Unique, required. |
-| password_hash | text | Required for password login. |
+| password_hash | text | Nullable for provider-only accounts; required for password login. |
 | role | text | `user` or `admin`. |
 | created_at | timestamptz | Required. |
 | updated_at | timestamptz | Required. |
@@ -42,6 +42,65 @@ Owned by Auth Service.
 Indexes:
 
 - Unique index on `email`.
+
+## github_connections
+
+Owned by Auth Service.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| user_id | uuid | Primary key and reference to `users.id`. |
+| github_user_id | text | Unique stable GitHub user identifier. |
+| login | text | Current GitHub login name. |
+| avatar_url | text | Optional GitHub avatar URL. |
+| access_token_encrypted | text | AES-GCM encrypted GitHub user token. |
+| refresh_token_encrypted | text | Optional encrypted refresh token. |
+| access_token_expires_at | timestamptz | Optional token expiry. |
+| refresh_token_expires_at | timestamptz | Optional refresh-token expiry. |
+| created_at | timestamptz | Required. |
+| updated_at | timestamptz | Required. |
+
+Provider secrets are never stored in plaintext. A dedicated environment key encrypts GitHub tokens before repository writes.
+
+## project_github_repositories
+
+Owned by Auth Service because repository operations require provider tokens.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| project_id | uuid | Primary key; logical Project Service reference. |
+| user_id | uuid | Project owner and GitHub connection owner. |
+| github_repository_id | bigint | Unique stable GitHub repository ID. |
+| owner_login | text | GitHub repository owner login. |
+| name | text | Repository name. |
+| full_name | text | Unique `owner/name` value. |
+| private | boolean | Repository visibility. |
+| default_branch | text | GitHub default branch. |
+| html_url | text | Browser URL. |
+| published_files | integer | Files written by the latest successful publish. |
+| last_published_at | timestamptz | Last successful artifact publish. |
+| created_at | timestamptz | Required. |
+| updated_at | timestamptz | Required. |
+
+## github_workflow_runs
+
+Owned by Auth Service.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| github_run_id | bigint | Primary key from GitHub. |
+| project_id | uuid | References `project_github_repositories.project_id`. |
+| name | text | Workflow display name. |
+| status | text | Stable BuildSphere run status. |
+| conclusion | text | Optional GitHub conclusion. |
+| branch | text | Optional head branch. |
+| head_sha | text | Commit SHA. |
+| run_number | integer | GitHub sequence number. |
+| event | text | Trigger event. |
+| html_url | text | Browser URL. |
+| started_at | timestamptz | Optional start time. |
+| created_at | timestamptz | GitHub creation time. |
+| updated_at | timestamptz | GitHub update time. |
 
 ## projects
 
@@ -158,7 +217,6 @@ Owned by Notification Service.
 - organizations
 - teams
 - environments
-- provider_connections
 - deployment_targets
 - audit_logs
 - cost_estimates

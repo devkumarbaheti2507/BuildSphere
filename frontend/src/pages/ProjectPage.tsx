@@ -4,6 +4,8 @@ import type {
   DeploymentTarget,
   GeneratedArtifact,
   GeneratedFile,
+  GitHubRepositorySummary,
+  GitHubWorkflowRun,
   ManifestValidationResult,
   PipelineDefinition,
   PipelineExecutionSummary,
@@ -14,7 +16,13 @@ import type {
 import { api, ApiClientError } from "../api";
 import { navigate } from "../navigation";
 
-type Tab = "overview" | "files" | "pipeline" | "suggestions" | "deployment";
+type Tab =
+  | "overview"
+  | "files"
+  | "pipeline"
+  | "github"
+  | "suggestions"
+  | "deployment";
 const terminalStatuses = ["succeeded", "failed", "cancelled"];
 
 export function ProjectPage({
@@ -29,6 +37,10 @@ export function ProjectPage({
   const [pipelines, setPipelines] = useState<PipelineDefinition[]>([]);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [targets, setTargets] = useState<DeploymentTarget[]>([]);
+  const [githubRepository, setGitHubRepository] =
+    useState<GitHubRepositorySummary>();
+  const [githubRuns, setGitHubRuns] = useState<GitHubWorkflowRun[]>([]);
+  const [githubEnabled, setGitHubEnabled] = useState(false);
   const [execution, setExecution] = useState<PipelineExecutionSummary>();
   const [logs, setLogs] = useState<PipelineLog[]>([]);
   const [tab, setTab] = useState<Tab>("overview");
@@ -37,6 +49,8 @@ export function ProjectPage({
   const [targetName, setTargetName] = useState("Local cluster");
   const [environment, setEnvironment] =
     useState<DeploymentEnvironment>("development");
+  const [repositoryName, setRepositoryName] = useState("");
+  const [repositoryPrivate, setRepositoryPrivate] = useState(true);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
 
@@ -60,6 +74,15 @@ export function ProjectPage({
       setPipelines(nextPipelines);
       setSuggestions(nextSuggestions);
       setTargets(nextTargets);
+      setRepositoryName(
+        (current) =>
+          current ||
+          nextProject.name
+            .toLowerCase()
+            .replace(/[^a-z0-9._-]+/g, "-")
+            .replace(/^-|-$/g, ""),
+      );
+      setRepositoryPrivate(nextProject.visibility === "private");
       if (!selectedFile && nextArtifacts[0]?.files[0])
         setSelectedFile(nextArtifacts[0].files[0]);
       if (nextPipelines[0]) {
@@ -68,6 +91,21 @@ export function ProjectPage({
           setExecution(executions[0]);
           setLogs(await api.logs(token, executions[0].id));
         }
+      }
+      const providers = await api.authProviders().catch(() => ({
+        github: { enabled: false },
+      }));
+      setGitHubEnabled(providers.github.enabled);
+      if (providers.github.enabled) {
+        const linked = await api
+          .githubRepository(token, projectId)
+          .catch(() => null);
+        setGitHubRepository(linked ?? undefined);
+        setGitHubRuns(
+          linked
+            ? await api.githubRuns(token, projectId).catch(() => [])
+            : [],
+        );
       }
     } catch (caught) {
       setError(
@@ -186,6 +224,48 @@ export function ProjectPage({
     }
   };
 
+  const publishToGitHub = async () => {
+    if (!artifact || !project) return;
+    setBusy("github-publish");
+    setError("");
+    try {
+      const linked = await api.publishGitHubRepository(token, projectId, {
+        name: repositoryName,
+        description: project.description,
+        private: repositoryPrivate,
+        artifactId: artifact.id,
+      });
+      setGitHubRepository(linked);
+      setRepositoryName(linked.name);
+      setRepositoryPrivate(linked.private);
+      setTab("github");
+    } catch (caught) {
+      setError(
+        caught instanceof ApiClientError
+          ? caught.message
+          : "GitHub publishing failed",
+      );
+    } finally {
+      setBusy("");
+    }
+  };
+
+  const synchronizeGitHubRuns = async () => {
+    setBusy("github-sync");
+    setError("");
+    try {
+      setGitHubRuns(await api.synchronizeGitHubRuns(token, projectId));
+    } catch (caught) {
+      setError(
+        caught instanceof ApiClientError
+          ? caught.message
+          : "GitHub Actions synchronization failed",
+      );
+    } finally {
+      setBusy("");
+    }
+  };
+
   if (!project)
     return <div className="loading-state">{error || "Loading project..."}</div>;
   const artifact = artifacts[0];
@@ -236,6 +316,7 @@ export function ProjectPage({
             "overview",
             "files",
             "pipeline",
+            "github",
             "suggestions",
             "deployment",
           ] as Tab[]
@@ -425,6 +506,147 @@ export function ProjectPage({
               )}
             </div>
           </aside>
+        </section>
+      )}
+
+      {tab === "github" && (
+        <section className="github-workspace">
+          {!githubEnabled ? (
+            <div className="empty-state">
+              <h3>GitHub integration is not configured</h3>
+              <p>The provider becomes available after the GitHub App settings are configured.</p>
+            </div>
+          ) : (
+            <>
+              <div className="content-band github-publisher">
+                <div className="band-heading">
+                  <div>
+                    <h2>Repository publishing</h2>
+                    <span>
+                      {githubRepository
+                        ? `${githubRepository.publishedFiles} files published`
+                        : "No repository linked"}
+                    </span>
+                  </div>
+                  {githubRepository && (
+                    <a
+                      className="secondary-button"
+                      href={githubRepository.htmlUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Open repository
+                    </a>
+                  )}
+                </div>
+                <div className="inline-form github-publish-form">
+                  <label>
+                    Repository name
+                    <input
+                      value={repositoryName}
+                      disabled={Boolean(githubRepository)}
+                      maxLength={100}
+                      onChange={(event) => setRepositoryName(event.target.value)}
+                    />
+                  </label>
+                  <label className="checkbox-field">
+                    <input
+                      type="checkbox"
+                      checked={repositoryPrivate}
+                      disabled={Boolean(githubRepository)}
+                      onChange={(event) =>
+                        setRepositoryPrivate(event.target.checked)
+                      }
+                    />
+                    Private repository
+                  </label>
+                  <button
+                    className="primary-button"
+                    disabled={
+                      !artifact ||
+                      !repositoryName ||
+                      busy === "github-publish"
+                    }
+                    onClick={publishToGitHub}
+                  >
+                    {busy === "github-publish"
+                      ? "Publishing..."
+                      : githubRepository
+                        ? "Publish latest files"
+                        : "Create and publish"}
+                  </button>
+                </div>
+                {githubRepository && (
+                  <dl className="review-list github-repository-details">
+                    <div>
+                      <dt>Repository</dt>
+                      <dd>{githubRepository.fullName}</dd>
+                    </div>
+                    <div>
+                      <dt>Default branch</dt>
+                      <dd>{githubRepository.defaultBranch}</dd>
+                    </div>
+                    <div>
+                      <dt>Visibility</dt>
+                      <dd>{githubRepository.private ? "private" : "public"}</dd>
+                    </div>
+                    <div>
+                      <dt>Last published</dt>
+                      <dd>
+                        {githubRepository.lastPublishedAt
+                          ? new Date(
+                              githubRepository.lastPublishedAt,
+                            ).toLocaleString()
+                          : "Pending"}
+                      </dd>
+                    </div>
+                  </dl>
+                )}
+              </div>
+              <div className="content-band github-actions-runs">
+                <div className="band-heading">
+                  <div>
+                    <h2>GitHub Actions runs</h2>
+                    <span>{githubRuns.length} synchronized</span>
+                  </div>
+                  <button
+                    className="secondary-button"
+                    disabled={!githubRepository || busy === "github-sync"}
+                    onClick={synchronizeGitHubRuns}
+                  >
+                    {busy === "github-sync" ? "Synchronizing..." : "Synchronize"}
+                  </button>
+                </div>
+                {githubRuns.length ? (
+                  <div className="github-run-list">
+                    {githubRuns.map((run) => (
+                      <a
+                        key={run.githubRunId}
+                        href={run.htmlUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        <span className={`status ${run.status}`}>
+                          {run.status}
+                        </span>
+                        <strong>{run.name}</strong>
+                        <span>#{run.runNumber}</span>
+                        <span>{run.branch ?? "detached"}</span>
+                        <span>{run.event}</span>
+                        <time>{new Date(run.createdAt).toLocaleString()}</time>
+                      </a>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="quiet">
+                    {githubRepository
+                      ? "Synchronize to load workflow runs."
+                      : "Publish the project before synchronizing workflow runs."}
+                  </p>
+                )}
+              </div>
+            </>
+          )}
         </section>
       )}
 

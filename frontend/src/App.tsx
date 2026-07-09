@@ -11,6 +11,7 @@ import { navigate, projectIdFromPath } from "./navigation";
 import { AuthPage } from "./pages/AuthPage";
 import { CreateProjectPage } from "./pages/CreateProjectPage";
 import { DashboardPage } from "./pages/DashboardPage";
+import { GitHubCallbackPage } from "./pages/GitHubCallbackPage";
 import { ProjectPage } from "./pages/ProjectPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { TemplatesPage } from "./pages/TemplatesPage";
@@ -68,6 +69,8 @@ export function App() {
     navigate("/login");
   };
 
+  if (!session && pathname === "/auth/github/callback")
+    return <GitHubCallbackPage onAuthenticated={authenticated} />;
   if (!session)
     return (
       <AuthPage

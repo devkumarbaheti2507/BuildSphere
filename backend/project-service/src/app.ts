@@ -23,6 +23,10 @@ import {
   NoopDeliveryCoordinator,
   type DeliveryCoordinator,
 } from "./delivery-coordinator.js";
+import {
+  UnavailableGitHubIntegrationGateway,
+  type GitHubIntegrationGateway,
+} from "./github-integration.js";
 
 const projectSchema = z.object({
   name: z.string().trim().min(2).max(100),
@@ -73,6 +77,12 @@ const toolsSchema = z.object({
 const generationSchema = z.object({
   variables: z.record(z.union([z.string(), z.number()])).optional(),
 });
+const githubRepositorySchema = z.object({
+  name: z.string().trim().min(1).max(100),
+  description: z.string().trim().max(500).optional(),
+  private: z.boolean(),
+  artifactId: z.string().uuid().optional(),
+});
 
 const validated = <T>(schema: z.ZodType<T>, input: unknown): T => {
   const result = schema.safeParse(input);
@@ -90,10 +100,11 @@ export const createProjectApp = (
   logger: Logger = createLogger("project-service"),
   notifications: NotificationPublisher = new NoopNotificationPublisher(),
   delivery: DeliveryCoordinator = new NoopDeliveryCoordinator(),
+  github: GitHubIntegrationGateway = new UnavailableGitHubIntegrationGateway(),
 ): Express => {
   const app = express();
   const templates = new TemplateCatalogService(repoRoot);
-  const service = new ProjectService(repository, templates);
+  const service = new ProjectService(repository, templates, github);
   const authenticate = requireAuthentication(accessSecret);
 
   app.use(express.json({ limit: "200kb" }));
@@ -229,6 +240,61 @@ export const createProjectApp = (
         `attachment; filename="buildsphere-${artifact.projectId}.tar"`,
       );
       response.send(createTarArchive(artifact.files));
+    }),
+  );
+
+  app.post(
+    "/projects/:projectId/github/repository",
+    asyncHandler(async (request, response) => {
+      const input = validated(githubRepositorySchema, request.body);
+      response.json({
+        data: await service.publishToGitHub(
+          authenticatedUser(response).userId,
+          request.params.projectId,
+          input,
+        ),
+        meta: {},
+      });
+    }),
+  );
+
+  app.get(
+    "/projects/:projectId/github/repository",
+    asyncHandler(async (request, response) => {
+      response.json({
+        data:
+          (await service.githubRepository(
+            authenticatedUser(response).userId,
+            request.params.projectId,
+          )) ?? null,
+        meta: {},
+      });
+    }),
+  );
+
+  app.post(
+    "/projects/:projectId/github/actions/sync",
+    asyncHandler(async (request, response) => {
+      response.json({
+        data: await service.synchronizeGitHubRuns(
+          authenticatedUser(response).userId,
+          request.params.projectId,
+        ),
+        meta: {},
+      });
+    }),
+  );
+
+  app.get(
+    "/projects/:projectId/github/actions/runs",
+    asyncHandler(async (request, response) => {
+      response.json({
+        data: await service.githubRuns(
+          authenticatedUser(response).userId,
+          request.params.projectId,
+        ),
+        meta: {},
+      });
     }),
   );
 

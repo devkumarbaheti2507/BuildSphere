@@ -73,13 +73,14 @@ const catalog: CatalogEntry[] = [
     key: "github-actions-node",
     category: "github-actions",
     displayName: "GitHub Actions pipeline",
-    description: "Installs, tests, builds, and packages a Node.js application.",
+    description:
+      "Validates generated files and builds available Node.js and Docker inputs.",
     supportedVariables: ["imageName"],
     outputPath: ".github/workflows/ci.yml",
     sourcePath: "templates/github-actions/node-docker-k8s.yml",
     language: "yaml",
     explanation:
-      "Turns the project quality checks into an automated pull-request pipeline.",
+      "Validates the generated artifact and runs available project quality checks automatically.",
   },
   ...[
     [

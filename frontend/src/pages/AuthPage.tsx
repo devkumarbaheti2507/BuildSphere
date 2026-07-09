@@ -1,6 +1,11 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import type { AuthSession } from "@buildsphere/shared-types";
 import { api, ApiClientError } from "../api";
+import {
+  clearGitHubVerifier,
+  createGitHubPkce,
+  storeGitHubVerifier,
+} from "../github-auth";
 import { navigate } from "../navigation";
 
 export function AuthPage({
@@ -15,6 +20,34 @@ export function AuthPage({
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [githubEnabled, setGitHubEnabled] = useState(false);
+  const [githubBusy, setGitHubBusy] = useState(false);
+
+  useEffect(() => {
+    void api
+      .authProviders()
+      .then((providers) => setGitHubEnabled(providers.github.enabled))
+      .catch(() => setGitHubEnabled(false));
+  }, []);
+
+  const startGitHubLogin = async () => {
+    setGitHubBusy(true);
+    setError("");
+    try {
+      const pkce = await createGitHubPkce();
+      storeGitHubVerifier(pkce.verifier);
+      const authorization = await api.githubAuthorization(pkce.challenge);
+      window.location.assign(authorization.authorizationUrl);
+    } catch (caught) {
+      clearGitHubVerifier();
+      setError(
+        caught instanceof ApiClientError
+          ? caught.message
+          : "Unable to start GitHub authentication",
+      );
+      setGitHubBusy(false);
+    }
+  };
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     setBusy(true);
@@ -108,6 +141,21 @@ export function AuthPage({
                 ? "Create account"
                 : "Sign in"}
           </button>
+          {githubEnabled && (
+            <>
+              <div className="auth-divider">
+                <span>or</span>
+              </div>
+              <button
+                type="button"
+                className="secondary-button full"
+                disabled={busy || githubBusy}
+                onClick={startGitHubLogin}
+              >
+                {githubBusy ? "Connecting..." : "Continue with GitHub"}
+              </button>
+            </>
+          )}
           <p className="auth-switch">
             {mode === "signup"
               ? "Already have an account?"

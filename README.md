@@ -105,10 +105,24 @@ pnpm -r --parallel dev
 
 Open `http://localhost:5173`. The API Gateway listens on `http://localhost:8080/api`.
 
+GitHub integration is optional. To enable it, create a GitHub App with Email
+read, Administration/Contents/Workflows write, and Actions read permissions;
+install it for the repositories BuildSphere will manage; and register
+`http://localhost:5173/auth/github/callback` as its callback URL, and fill in
+the `GITHUB_*` values documented in `.env.example`. Generate the token
+encryption key with `openssl rand -base64 32`.
+
 Verify the complete workspace:
 
 ```bash
 ./scripts/verify-workspace.sh
+```
+
+After PostgreSQL migrations are applied, verify the Phase 6 provider
+persistence layer without making external GitHub changes:
+
+```bash
+pnpm smoke:phase6:postgres
 ```
 
 For a non-durable smoke run without PostgreSQL, set `STORAGE_DRIVER=memory` in the environment together with local JWT and internal service tokens, start the workspace, then run:
@@ -131,9 +145,9 @@ A feature is not considered complete until its code, tests, docs, and memory fil
 
 ## Current status
 
-Status: Local-first MVP implemented and release-verified through roadmap Phase 5.
+Status: Local-first MVP implemented through roadmap Phase 6. GitHub App authentication, generated repository publishing, and GitHub Actions run synchronization are complete.
 
-Implemented workflows include authentication, project and tool configuration, generated DevOps files, simulated pipelines and logs, rule-based suggestions, deployment target definitions, Kubernetes manifest checks, health aggregation, and notifications. Real cloud deployment and external CI provider execution remain Phase 6 work.
+Implemented workflows include local and GitHub authentication, project and tool configuration, generated DevOps files, GitHub repository publishing, simulated pipelines, synchronized GitHub Actions runs, rule-based suggestions, deployment target definitions, Kubernetes manifest checks, health aggregation, and notifications. Real cloud deployment and additional provider integrations remain future work.
 
 ## License
 

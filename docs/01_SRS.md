@@ -6,7 +6,7 @@
 | Version | 0.1.0 |
 | Status | Draft |
 | Author | BuildSphere Team |
-| Last Updated | 2026-06-28 |
+| Last Updated | 2026-07-09 |
 | Related Documents | 00_PROJECT_VISION.md, 02_HLD.md, specs/* |
 
 ---
@@ -126,6 +126,46 @@ MVP notification types:
 - Pipeline generated.
 - Pipeline execution failed.
 - Suggestion created.
+
+## FR-011 GitHub identity integration
+
+BuildSphere shall allow users to authenticate with a GitHub App before enabling repository and workflow integrations.
+
+Acceptance criteria:
+
+- The login screen only offers GitHub authentication when the provider is configured.
+- The authorization request uses signed state and PKCE.
+- The callback accepts only a valid, unexpired state bound to the PKCE verifier.
+- BuildSphere requires a verified GitHub email address.
+- A verified GitHub identity can create a new BuildSphere user or link to an existing user with the same verified email.
+- GitHub provider tokens are encrypted before durable storage.
+- Successful GitHub authentication returns the same BuildSphere access and refresh token session used by password login.
+
+## FR-012 GitHub repository publishing
+
+BuildSphere shall publish the latest generated artifact bundle to a repository
+owned by the authenticated user's connected GitHub account.
+
+Acceptance criteria:
+
+- Only the project owner can start publishing.
+- A project can be linked to one GitHub repository and retries reuse that repository.
+- Repository visibility, name, description, default branch, and URL are stored.
+- Generated file paths are validated and contents are written serially.
+- Partial file-write failures preserve the repository link so publishing can be retried safely.
+- Expired GitHub user tokens are refreshed and replacement tokens are encrypted before storage.
+
+## FR-013 GitHub Actions synchronization
+
+BuildSphere shall synchronize workflow runs from a linked GitHub repository.
+
+Acceptance criteria:
+
+- Only the project owner can synchronize or inspect workflow runs.
+- GitHub run ID, workflow name, branch, commit, trigger, status, conclusion, timestamps, and URL are persisted.
+- Repeated synchronization updates existing runs without creating duplicates.
+- GitHub statuses and conclusions map to stable BuildSphere run states.
+- The project interface links users to the source workflow run on GitHub.
 
 # Non-functional requirements
 

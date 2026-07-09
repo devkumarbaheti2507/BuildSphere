@@ -11,12 +11,47 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Validate generated project files
+        run: |
+          test -f .env.example
+          test -f backend/Dockerfile
+          test -f docker-compose.yml
+          test -f kubernetes/deployment.yaml
+          test -f kubernetes/service.yaml
+      - name: Detect optional build inputs
+        id: build_inputs
+        run: |
+          if [[ -f package.json ]]; then
+            echo "node=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "node=false" >> "$GITHUB_OUTPUT"
+          fi
+          if [[ -f Dockerfile ]]; then
+            echo "docker=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "docker=false" >> "$GITHUB_OUTPUT"
+          fi
       - uses: actions/setup-node@v4
+        if: steps.build_inputs.outputs.node == 'true'
         with:
           node-version: 22
-      - run: corepack enable
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm test
-      - run: pnpm build
+      - name: Enable Corepack
+        if: steps.build_inputs.outputs.node == 'true'
+        run: corepack enable
+      - name: Install dependencies
+        if: steps.build_inputs.outputs.node == 'true'
+        run: |
+          if [[ -f pnpm-lock.yaml ]]; then
+            pnpm install --frozen-lockfile
+          else
+            pnpm install --no-frozen-lockfile
+          fi
+      - name: Test Node project
+        if: steps.build_inputs.outputs.node == 'true'
+        run: pnpm run --if-present test
+      - name: Build Node project
+        if: steps.build_inputs.outputs.node == 'true'
+        run: pnpm run --if-present build
       - name: Build Docker image
+        if: steps.build_inputs.outputs.docker == 'true'
         run: docker build -t {{imageName}}:${{ github.sha }} .

@@ -6,7 +6,7 @@
 | Version | 0.1.0 |
 | Status | Draft |
 | Author | BuildSphere Team |
-| Last Updated | 2026-06-28 |
+| Last Updated | 2026-07-09 |
 | Related Documents | ../07_ARCHITECTURE_DECISIONS.md |
 
 ---
@@ -23,3 +23,5 @@ Architecture Decision Records explain important BuildSphere design choices.
 - ADR-004: Communication.
 - ADR-005: AI.
 - ADR-006: Shared service core and SQL migrations.
+- ADR-007: GitHub App OAuth.
+- ADR-008: GitHub integration service boundary.

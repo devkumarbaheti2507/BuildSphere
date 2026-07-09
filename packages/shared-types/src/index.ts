@@ -18,6 +18,55 @@ export interface AuthSession extends AuthTokens {
   user: UserSummary;
 }
 
+export interface AuthProviderAvailability {
+  github: {
+    enabled: boolean;
+  };
+}
+
+export interface GitHubAuthorization {
+  authorizationUrl: string;
+  expiresAt: string;
+}
+
+export interface GitHubRepositorySummary {
+  projectId: string;
+  githubRepositoryId: string;
+  ownerLogin: string;
+  name: string;
+  fullName: string;
+  private: boolean;
+  defaultBranch: string;
+  htmlUrl: string;
+  publishedFiles: number;
+  lastPublishedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PublishGitHubRepositoryInput {
+  name: string;
+  description?: string;
+  private: boolean;
+  artifactId?: string;
+}
+
+export interface GitHubWorkflowRun {
+  githubRunId: string;
+  projectId: string;
+  name: string;
+  status: PipelineExecutionStatus;
+  conclusion?: string;
+  branch?: string;
+  headSha: string;
+  runNumber: number;
+  event: string;
+  htmlUrl: string;
+  startedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AuthenticatedUser {
   userId: string;
   email: string;

@@ -1,8 +1,12 @@
 import type {
+  AuthProviderAvailability,
   AuthSession,
   CreateProjectInput,
   DeploymentTarget,
   GeneratedArtifact,
+  GitHubAuthorization,
+  GitHubRepositorySummary,
+  GitHubWorkflowRun,
   ManifestValidationResult,
   Notification,
   PipelineDefinition,
@@ -53,6 +57,22 @@ const request = async <T>(
 };
 
 export const api = {
+  authProviders: () =>
+    request<AuthProviderAvailability>("/auth/providers"),
+  githubAuthorization: (codeChallenge: string) =>
+    request<GitHubAuthorization>("/auth/github/authorize", undefined, {
+      method: "POST",
+      body: JSON.stringify({ codeChallenge }),
+    }),
+  githubCallback: (input: {
+    code: string;
+    state: string;
+    codeVerifier: string;
+  }) =>
+    request<AuthSession>("/auth/github/callback", undefined, {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
   register: (input: { name: string; email: string; password: string }) =>
     request<AuthSession>("/auth/register", undefined, {
       method: "POST",
@@ -98,6 +118,37 @@ export const api = {
     }),
   artifacts: (token: string, projectId: string) =>
     request<GeneratedArtifact[]>(`/projects/${projectId}/artifacts`, token),
+  githubRepository: (token: string, projectId: string) =>
+    request<GitHubRepositorySummary | null>(
+      `/projects/${projectId}/github/repository`,
+      token,
+    ),
+  publishGitHubRepository: (
+    token: string,
+    projectId: string,
+    input: {
+      name: string;
+      description?: string;
+      private: boolean;
+      artifactId?: string;
+    },
+  ) =>
+    request<GitHubRepositorySummary>(
+      `/projects/${projectId}/github/repository`,
+      token,
+      { method: "POST", body: JSON.stringify(input) },
+    ),
+  githubRuns: (token: string, projectId: string) =>
+    request<GitHubWorkflowRun[]>(
+      `/projects/${projectId}/github/actions/runs`,
+      token,
+    ),
+  synchronizeGitHubRuns: (token: string, projectId: string) =>
+    request<GitHubWorkflowRun[]>(
+      `/projects/${projectId}/github/actions/sync`,
+      token,
+      { method: "POST", body: "{}" },
+    ),
   createPipeline: (token: string, projectId: string, name: string) =>
     request<PipelineDefinition>("/pipelines", token, {
       method: "POST",

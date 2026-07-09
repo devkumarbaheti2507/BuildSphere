@@ -4,16 +4,17 @@ BuildSphere is an AI-assisted Developer Experience Platform for designing, gener
 
 Current implementation status:
 
-- Local-first MVP code is implemented through roadmap Phase 5.
-- Authentication, projects, generation, pipelines, logs, suggestions, deployment targets, monitoring, notifications, and frontend workflows are present.
+- Local-first MVP code is implemented through roadmap Phase 6.
+- Local and GitHub App authentication, project repository publishing, GitHub Actions synchronization, projects, generation, pipelines, logs, suggestions, deployment targets, monitoring, notifications, and frontend workflows are present.
 - Frozen dependency installation, lint, production builds, and automated tests pass.
 - Memory and PostgreSQL gateway smoke workflows pass.
 - Live migration, persistence after restart, and desktop/mobile browser verification are complete.
+- Phase 6 migrations, PostgreSQL provider persistence, token rotation, workflow-run upserts, and cleanup pass with provider doubles.
 - Database-backed services use a shared idempotent graceful-shutdown helper.
 
 Primary goal now:
 
-Choose the first Phase 6 integration deliberately and document its requirements before implementation.
+Select and specify the next post-Phase 6 milestone before implementation.
 
 Default stack:
 

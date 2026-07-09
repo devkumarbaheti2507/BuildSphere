@@ -34,3 +34,26 @@
 - Added root ESLint configuration for all TypeScript and TSX sources and made lint part of `pnpm verify`.
 - Added a shared idempotent graceful-shutdown helper and regression coverage, preventing duplicate PostgreSQL pool closure when multiple termination signals arrive.
 - Installed Node `v22.23.1` through NVM and passed the complete verification gate on both Node 22 and Node 24.
+
+## 2026-07-09
+
+- Completed BS-501, the first Phase 6 slice: users can authenticate through a GitHub App and receive normal BuildSphere access and refresh tokens.
+- Added signed expiring OAuth state, PKCE S256 binding, verified-email enforcement, stable GitHub identity lookup, and safe linking to existing users by verified email.
+- Added AES-256-GCM provider token encryption and an additive `github_connections` migration; GitHub-only users can be stored without a local password.
+- Added public provider discovery plus GitHub authorization and callback endpoints, frontend login/callback handling, shared contracts, configuration examples, and operational documentation.
+- Added ADR-007 and the GitHub integration specification to establish GitHub Apps as the Phase 6 provider model.
+- Passed the complete Node 22 verification gate: frozen installation, lint, all production builds, and 29 automated tests, including 10 Auth Service tests.
+- Passed the live memory-mode gateway workflow after the OAuth changes with 10 generated files, 7 pipeline stages, 14 logs, suggestions, 8 health checks, and 4 notifications; disabled GitHub provider discovery also passed through the gateway.
+- Live GitHub authorization completed successfully against the locally configured GitHub App.
+- Completed BS-502: project owners can create or reuse a linked GitHub repository and serially publish a selected generated artifact with safe path, file-size, and retry handling.
+- Added expiring GitHub user-token refresh with encrypted replacement-token persistence and explicit reauthorization failures.
+- Completed BS-503: linked projects can synchronize, normalize, persist, and display GitHub Actions workflow runs without duplicate records.
+- Added internal-token-protected Auth Service provider operations, Project Service ownership enforcement, frontend repository/Actions controls, ADR-008, and migration 003.
+- Passed frozen installation, lint, every production build, all automated tests, and the complete live memory-mode gateway smoke after Phase 6 completion.
+- Created a private live GitHub repository, published all 10 generated files, and synchronized the resulting workflow runs into PostgreSQL.
+- Started Docker Desktop through its configured context, applied migrations 002 and 003, and confirmed a second migration run is idempotent.
+- Verified the Phase 6 PostgreSQL schema, migration history, indexes, nullable provider password behavior, and encrypted-token columns directly.
+- Passed the complete PostgreSQL-backed gateway workflow and confirmed its project and all eight tool selections remain available through the API after a full service restart.
+- Added and passed `pnpm smoke:phase6:postgres`, which validates real PostgreSQL token rotation, repository-link persistence, workflow-run upserts, and cleanup with provider doubles.
+- Corrected the live workflow to support template-only MVP artifacts; synchronized run 10 completed successfully.
+- GitHub publication now skips unchanged blobs, writes workflow files last, and uses extended synchronous proxy timeouts. A repeated live publish created no extra commit or Actions run.

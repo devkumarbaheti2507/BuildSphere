@@ -9,6 +9,7 @@ import {
 } from "@buildsphere/service-core";
 import { createProjectApp } from "./app.js";
 import { HttpDeliveryCoordinator } from "./delivery-coordinator.js";
+import { HttpGitHubIntegrationGateway } from "./github-integration.js";
 import {
   InMemoryProjectRepository,
   PostgresProjectRepository,
@@ -24,13 +25,14 @@ loadEnvironment(path.join(repoRoot, ".env"));
 const serviceName = process.env.SERVICE_NAME ?? "project-service";
 const port = Number(process.env.PORT ?? 8082);
 const logger = createLogger(serviceName);
+const internalToken = requiredEnvironment("INTERNAL_SERVICE_TOKEN");
 const database =
   process.env.STORAGE_DRIVER === "memory"
     ? undefined
     : (await import("@buildsphere/service-core/database")).createDatabasePool();
 const notifications = new HttpNotificationPublisher(
   process.env.NOTIFICATION_SERVICE_URL ?? "http://localhost:8089",
-  requiredEnvironment("INTERNAL_SERVICE_TOKEN"),
+  internalToken,
   logger,
 );
 const delivery = new HttpDeliveryCoordinator(
@@ -47,6 +49,10 @@ const app = createProjectApp(
   logger,
   notifications,
   delivery,
+  new HttpGitHubIntegrationGateway(
+    process.env.AUTH_SERVICE_URL ?? "http://localhost:8081",
+    internalToken,
+  ),
 );
 const server = app.listen(port, () =>
   logger.info({ port }, "Project service listening"),

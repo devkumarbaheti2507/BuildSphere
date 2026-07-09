@@ -21,7 +21,7 @@ export interface GatewayTargets {
   notifications: string;
 }
 
-const proxyRequest = (target: string): RequestHandler =>
+const proxyRequest = (target: string, timeoutMs = 10_000): RequestHandler =>
   asyncHandler(async (request, response) => {
     const targetPath = request.originalUrl.replace(/^\/api/, "");
     const headers = new Headers();
@@ -41,7 +41,7 @@ const proxyRequest = (target: string): RequestHandler =>
           ["GET", "HEAD"].includes(request.method) || request.body === undefined
             ? undefined
             : JSON.stringify(request.body),
-        signal: AbortSignal.timeout(10_000),
+        signal: AbortSignal.timeout(timeoutMs),
       });
     } catch (error) {
       throw new ApiError(
@@ -102,6 +102,10 @@ export const createGatewayApp = (
   app.use(cors(allowedOrigin));
   app.get("/health", healthHandler("api-gateway"));
 
+  app.use(
+    /^\/api\/projects\/[^/]+\/github\/repository\/?$/,
+    proxyRequest(targets.projects, 120_000),
+  );
   app.use(
     /^\/api\/projects\/[^/]+\/pipelines(?:\/|$)/,
     proxyRequest(targets.pipelines),

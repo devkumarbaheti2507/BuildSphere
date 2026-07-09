@@ -6,7 +6,7 @@
 | Version | 0.1.0 |
 | Status | Draft |
 | Author | BuildSphere Team |
-| Last Updated | 2026-06-28 |
+| Last Updated | 2026-07-09 |
 | Related Documents | 01_SRS.md, 03_LLD.md, 04_DATABASE_DESIGN.md |
 
 ---
@@ -55,6 +55,18 @@ API Gateway
 | AI Service | Rule-based and LLM-assisted suggestions. |
 | Notification Service | User notifications and event messages. |
 | Analytics Service | Product usage and engineering metrics. |
+
+# External provider boundary
+
+Phase 6 begins with a GitHub App. The browser starts the GitHub web application flow through Auth Service, GitHub redirects to the frontend callback, and Auth Service performs the code exchange and identity lookup. GitHub credentials and provider tokens never enter generated project files or frontend storage.
+
+The GitHub App model is used instead of a classic OAuth App so later repository and Actions integrations can use fine-grained installation permissions and short-lived tokens.
+
+Project Service owns the public project-scoped GitHub endpoints. It validates
+project ownership and selects the generated artifact, then calls an
+internal-token-protected Auth Service API. Auth Service alone decrypts or
+refreshes GitHub user tokens, calls GitHub, and stores repository and workflow
+run synchronization records. Provider tokens never cross the service boundary.
 
 # Data stores
 

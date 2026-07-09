@@ -6,7 +6,7 @@
 | Version | 0.1.0 |
 | Status | Draft |
 | Author | BuildSphere Team |
-| Last Updated | 2026-06-28 |
+| Last Updated | 2026-07-09 |
 | Related Documents | 01_SRS.md, specs/AUTH_SPEC.md |
 
 ---
@@ -32,9 +32,19 @@ MVP:
 - JWT access tokens.
 - Refresh tokens.
 
+Phase 6:
+
+- GitHub App OAuth with signed, expiring state.
+- PKCE using `S256`.
+- Verified GitHub email required for account creation or linking.
+- GitHub user and refresh tokens encrypted with AES-256-GCM before storage.
+- GitHub client secrets and token-encryption keys loaded only from environment variables.
+- Expired GitHub user tokens refreshed server-side with replacement access and refresh tokens encrypted atomically.
+- Repository publishing and Actions synchronization exposed publicly only through owner-checked Project Service routes.
+- Internal provider operations protected by `INTERNAL_SERVICE_TOKEN`; plaintext provider tokens remain inside Auth Service.
+
 Future:
 
-- GitHub OAuth.
 - Organization SSO.
 - Fine-grained RBAC.
 
@@ -83,6 +93,13 @@ Before sending data to an AI provider:
 | Secret leakage in generated files | Use placeholders and warnings. |
 | Prompt injection through project files | Treat input as untrusted data. |
 | Broken deployment config | Validate generated YAML before use. |
+| OAuth callback forgery | Signed expiring state and PKCE verifier binding. |
+| Provider token disclosure | AES-GCM encryption at rest and no frontend token exposure. |
+| Account-link takeover | Link only from a verified GitHub email or an existing stable GitHub user ID. |
+| Cross-project repository publishing | Project Service verifies ownership before invoking internal provider operations. |
+| Generated path traversal | Reject absolute, empty, duplicate, and parent-traversal file paths before GitHub writes. |
+| Partial repository publish | Persist the repository link immediately and make later publishes idempotent file updates. |
+| Stale provider credentials | Refresh before expiry and require reauthorization when the refresh token is absent or expired. |
 
 # Audit logs
 

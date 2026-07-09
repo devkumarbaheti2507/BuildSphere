@@ -6,7 +6,7 @@
 | Version | 0.1.0 |
 | Status | Draft |
 | Author | BuildSphere Team |
-| Last Updated | 2026-06-28 |
+| Last Updated | 2026-07-09 |
 | Related Documents | 02_HLD.md, specs/* |
 
 ---
@@ -65,6 +65,11 @@ Responsibilities:
 - JWT issuing.
 - Token refresh.
 - Current user profile.
+- GitHub App OAuth authorization and callback handling.
+- GitHub identity linking and encrypted provider-token persistence.
+- GitHub user-token refresh.
+- GitHub repository creation and generated-file publishing.
+- GitHub Actions run synchronization.
 
 Core modules:
 
@@ -73,6 +78,51 @@ Core modules:
 - `UserRepository`
 - `TokenService`
 - `PasswordService`
+- `GitHubOAuthService`
+- `GitHubOAuthClient`
+- `ProviderTokenCipher`
+- `GitHubIntegrationService`
+- `GitHubApiClient`
+
+## Sequence: GitHub login
+
+```text
+Frontend -> Auth Service: GET /auth/providers
+Frontend: generate PKCE verifier and challenge
+Frontend -> Auth Service: POST /auth/github/authorize
+Auth Service -> Frontend: signed state and GitHub authorization URL
+Frontend -> GitHub: redirect user to authorization URL
+GitHub -> Frontend: callback with code and state
+Frontend -> Auth Service: POST /auth/github/callback with code, state, verifier
+Auth Service -> GitHub: exchange code using client secret and verifier
+Auth Service -> GitHub API: fetch user and verified email
+Auth Service -> PostgreSQL: create/link identity and store encrypted tokens
+Auth Service -> Frontend: BuildSphere access and refresh token session
+```
+
+## Sequence: publish generated files to GitHub
+
+```text
+Frontend -> Project Service: POST /projects/{id}/github/repository
+Project Service -> PostgreSQL: verify owner and load latest artifact
+Project Service -> Auth Service: internal publish request with generated files
+Auth Service -> PostgreSQL: load connected GitHub identity
+Auth Service -> GitHub: refresh expired user token when needed
+Auth Service -> GitHub: create repository unless already linked
+Auth Service -> GitHub: create or update generated files serially
+Auth Service -> PostgreSQL: store repository link and publish result
+Auth Service -> Project Service -> Frontend: repository summary
+```
+
+## Sequence: synchronize GitHub Actions
+
+```text
+Frontend -> Project Service: POST /projects/{id}/github/actions/sync
+Project Service -> Auth Service: internal owner-scoped sync request
+Auth Service -> GitHub: list repository workflow runs
+Auth Service -> PostgreSQL: upsert runs by stable GitHub run ID
+Auth Service -> Project Service -> Frontend: synchronized run summaries
+```
 
 # Project Service
 

@@ -6,7 +6,7 @@
 | Version           | 0.1.0                  |
 | Status            | Draft                  |
 | Author            | BuildSphere Team       |
-| Last Updated      | 2026-07-08             |
+| Last Updated      | 2026-07-09             |
 | Related Documents | 12_ROADMAP.md, specs/* |
 
 ---
@@ -254,3 +254,61 @@ Status: Done
 
 Verification outcome:
 The complete browser workflow passed from signup through deployment target creation. Desktop and mobile screenshots covered authentication, dashboard, and project views, and automated viewport checks found no page-level horizontal overflow.
+
+# Phase 6 tickets
+
+## BS-501: Add GitHub App OAuth login
+
+Priority: High
+Milestone: Phase 6
+Status: Done
+
+Description:
+Allow a user to authenticate through a GitHub App and receive a normal BuildSphere session.
+
+Acceptance criteria:
+
+- Provider availability is discoverable without exposing secrets.
+- Authorization uses signed state and PKCE.
+- Callback processing requires a verified GitHub email.
+- Existing users are linked by verified email and new users can be created without a local password.
+- GitHub provider tokens are encrypted before PostgreSQL storage.
+- Frontend login and callback states are complete and tested.
+
+Verification outcome:
+The complete Node 22 workspace gate passes for provider discovery, PKCE and signed-state validation, verified-email account creation and linking, encrypted token storage, and disabled-provider behavior. A live GitHub callback completed successfully against the configured local GitHub App on 2026-07-09.
+
+## BS-502: Create GitHub repositories from generated artifacts
+
+Priority: High
+Milestone: Phase 6
+Status: Done
+
+Acceptance criteria:
+
+- Project ownership and generated artifact selection are enforced by Project Service.
+- The connected GitHub user token is refreshed before expiry when possible.
+- Repository links are durable and one-to-one with BuildSphere projects.
+- Generated files are validated and created or updated serially.
+- Publishing can safely retry after partial provider failures.
+- Repository creation and file publishing are covered by provider-double API tests.
+
+Verification outcome:
+Project ownership, artifact selection, token rotation, serial publishing, partial-failure retry, internal service authentication, unsafe-path rejection, unchanged-file skipping, and workflow-last ordering pass in automated tests. Migration 003 and the PostgreSQL provider verifier pass. A private live repository was created with 10 generated files, corrected through the same durable project link, and republished idempotently without creating another commit or repository.
+
+## BS-503: Track GitHub Actions workflow runs
+
+Priority: High
+Milestone: Phase 6
+Status: Done
+
+Acceptance criteria:
+
+- Synchronization is restricted to the project owner and linked repository.
+- GitHub workflow runs are normalized and durably upserted by GitHub run ID.
+- Repeated synchronization updates records without duplication.
+- The frontend displays status, branch, run number, trigger, and GitHub URL.
+- Provider failures and disconnected projects return structured errors.
+
+Verification outcome:
+Workflow-run status normalization, durable PostgreSQL upsert behavior, repeated synchronization without duplicates, project-owner enforcement, internal API behavior, and frontend compilation pass. Live synchronization persisted the repository's push runs, and corrected run 10 completed with a `success` conclusion.
