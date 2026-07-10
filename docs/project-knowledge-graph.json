@@ -1,12 +1,12 @@
 {
   "schemaVersion": "1.0.0",
-  "snapshotDate": "2026-07-09",
+  "snapshotDate": "2026-07-10",
   "project": {
     "id": "buildsphere",
     "name": "BuildSphere",
     "version": "0.1.0",
     "kind": "AI-assisted Developer Experience Platform",
-    "status": "Local-first MVP complete through tracked Phase 6 GitHub milestone",
+    "status": "Local-first platform complete through Phase 7 Helm chart generation",
     "primaryAudience": [
       "learning developer",
       "backend or DevOps portfolio builder",
@@ -33,7 +33,7 @@
       "type": "product",
       "name": "BuildSphere",
       "status": "implemented",
-      "description": "Guided platform for project configuration, DevOps asset generation, explainable delivery workflows, recommendations, validation, and GitHub integration.",
+      "description": "Guided platform for project configuration, selection-aware DevOps and Helm asset generation, explainable delivery workflows, recommendations, validation, and GitHub integration.",
       "evidence": ["README.md", "docs/00_PROJECT_VISION.md"]
     },
     {
@@ -66,7 +66,7 @@
       "name": "React frontend",
       "status": "implemented",
       "port": 5173,
-      "responsibility": "Authentication, dashboard, project wizard, artifact inspection, pipeline UI, suggestions, deployment UI, and GitHub workspace.",
+      "responsibility": "Authentication, dashboard, project wizard with optional Helm packaging, artifact inspection, pipeline UI, suggestions, deployment UI, and GitHub workspace.",
       "evidence": ["frontend/src/App.tsx", "frontend/src/pages/ProjectPage.tsx"]
     },
     {
@@ -97,7 +97,7 @@
       "name": "Project Service",
       "status": "implemented",
       "port": 8082,
-      "responsibility": "Projects, tool selections, template rendering, generated artifacts, TAR downloads, coordination, and public project-scoped GitHub routes.",
+      "responsibility": "Projects, dependency-checked tool selections, selection-aware template and Helm rendering, generated artifacts, TAR downloads, coordination, and public project-scoped GitHub routes.",
       "evidence": [
         "backend/project-service/src/project-service.ts",
         "backend/project-service/src/template-catalog.ts"
@@ -279,7 +279,7 @@
       "type": "capability",
       "name": "Template generation and artifacts",
       "status": "implemented",
-      "evidence": ["specs/TEMPLATE_SPEC.md"]
+      "evidence": ["specs/TEMPLATE_SPEC.md", "specs/HELM_SPEC.md"]
     },
     {
       "id": "capability.pipeline",
@@ -471,7 +471,7 @@
     {
       "id": "workflow.project_generation",
       "type": "workflow",
-      "name": "Project generation and delivery coordination",
+      "name": "Selection-aware project and Helm generation",
       "status": "implemented"
     },
     {
@@ -603,10 +603,12 @@
       "status": "future"
     },
     {
-      "id": "future.helm",
-      "type": "future_candidate",
-      "name": "Helm chart generation",
-      "status": "future"
+      "id": "technology.helm",
+      "type": "technology",
+      "name": "Helm",
+      "status": "implemented",
+      "reason": "Packages generated Kubernetes workloads as configurable chart source without cluster access.",
+      "evidence": ["specs/HELM_SPEC.md", "templates/helm/"]
     },
     {
       "id": "future.terraform",
@@ -1215,9 +1217,9 @@
       "to": "future.jenkins"
     },
     {
-      "from": "product.buildsphere",
-      "relation": "may_evolve_to",
-      "to": "future.helm"
+      "from": "capability.generation",
+      "relation": "generates",
+      "to": "technology.helm"
     },
     {
       "from": "product.buildsphere",
@@ -1245,7 +1247,7 @@
     "storage": "PostgreSQL generated_artifacts.files JSONB",
     "checksum": "SHA-256 of serialized files",
     "archive": "In-memory TAR download",
-    "dynamicSelectionLimitation": "Tool selections are validated but the current catalog renders a fixed ten-file bundle.",
+    "selectionBehavior": "Catalog entries are filtered by saved tool keys; Helm requires Kubernetes and adds seven chart files.",
     "files": [
       "frontend/README.md",
       "backend/README.md",
@@ -1256,6 +1258,13 @@
       "kubernetes/deployment.yaml",
       "kubernetes/service.yaml",
       "kubernetes/ingress.yaml",
+      "helm/Chart.yaml",
+      "helm/values.yaml",
+      "helm/templates/_helpers.tpl",
+      "helm/templates/deployment.yaml",
+      "helm/templates/service.yaml",
+      "helm/templates/ingress.yaml",
+      "helm/templates/NOTES.txt",
       ".env.example"
     ]
   },
@@ -1269,14 +1278,16 @@
     "validate_kubernetes_manifests"
   ],
   "verification": {
-    "automatedTests": 39,
+    "automatedTests": 41,
     "testFiles": 14,
     "gates": [
       "pnpm install --frozen-lockfile",
       "pnpm lint",
       "pnpm -r build",
       "pnpm -r test",
-      "memory gateway smoke",
+      "Phase 7 memory gateway smoke with 17 generated files",
+      "Helm v4.2.2 strict lint and template rendering",
+      "Phase 7 PostgreSQL gateway smoke with restart persistence",
       "PostgreSQL gateway smoke",
       "migration idempotency",
       "restart persistence",
@@ -1288,6 +1299,7 @@
     "Generated output is delivery/configuration scaffolding, not a complete application source tree.",
     "The internal pipeline is simulated.",
     "Kubernetes deployment is generated and validated but not applied.",
+    "Helm charts are linted and rendered locally but are not installed or validated against a live Kubernetes cluster.",
     "External AI provider calls are not implemented.",
     "Redis, MinIO, and MailHog are not consumed by active services.",
     "Artifacts are stored in PostgreSQL JSONB rather than object storage.",

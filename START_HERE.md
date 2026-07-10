@@ -6,7 +6,9 @@ Use this file first when opening the project with Codex.
 
 BuildSphere is an AI-assisted Developer Experience Platform for designing, generating, deploying, observing, and improving microservice applications.
 
-It is a documentation-first, Codex-friendly local MVP implemented through the tracked roadmap Phase 6 GitHub milestone.
+It is a documentation-first, Codex-friendly local platform implemented through
+roadmap Phase 7, including the tracked GitHub milestone and optional Helm chart
+generation.
 
 ## First reading order
 
@@ -56,6 +58,7 @@ Before coding, verify:
 12. Implement rule-based suggestions.
 13. Implement deployment, monitoring, and notification foundations.
 14. Implement GitHub App authentication, repository publishing, and Actions synchronization.
+15. Implement selection-aware generation and optional Helm chart packaging.
 
 ## Learning and presentation pack
 

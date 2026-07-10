@@ -59,6 +59,7 @@ const main = async (): Promise<void> => {
     ["container", "docker"],
     ["deployment", "kubernetes"],
     ["monitoring", "prometheus"],
+    ["packaging", "helm"],
   ].map(([category, toolKey]) => ({ category, toolKey, config: {} }));
   await request(`/projects/${project.id}/tool-selections`, token, {
     method: "POST",
@@ -73,6 +74,15 @@ const main = async (): Promise<void> => {
     body: "{}",
   });
   assert.ok(artifact.files.some((file) => file.path === "backend/Dockerfile"));
+  assert.equal(artifact.files.length, 17);
+  assert.ok(artifact.files.some((file) => file.path === "helm/Chart.yaml"));
+  assert.ok(
+    artifact.files.some(
+      (file) =>
+        file.path === "helm/templates/deployment.yaml" &&
+        file.content.includes("{{ .Values.replicaCount }}"),
+    ),
+  );
 
   const pipelines = await request<Array<{ id: string; stages: unknown[] }>>(
     `/projects/${project.id}/pipelines`,

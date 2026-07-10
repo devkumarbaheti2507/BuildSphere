@@ -58,6 +58,7 @@ const toolsSchema = z.object({
           "container",
           "deployment",
           "monitoring",
+          "packaging",
         ]),
         toolKey: z.enum([
           "react",
@@ -68,6 +69,7 @@ const toolsSchema = z.object({
           "docker",
           "kubernetes",
           "prometheus",
+          "helm",
         ]),
         config: z.record(z.unknown()).default({}),
       }),

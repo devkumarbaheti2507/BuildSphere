@@ -9,25 +9,55 @@ import { validateKubernetesManifests } from "./validator.js";
 test("generated Kubernetes-shaped manifests pass structural validation", () => {
   const result = validateKubernetesManifests([
     {
-      path: "namespace.yaml",
+      path: "kubernetes/namespace.yaml",
       content: "apiVersion: v1\nkind: Namespace\nmetadata:\n  name: demo\n",
     },
     {
-      path: "deployment.yaml",
+      path: "kubernetes/deployment.yaml",
       content:
         "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: demo\n  labels:\n    app: demo\nspec:\n  template:\n    spec:\n      containers: []\n      readinessProbe: {}\n      livenessProbe: {}\n      resources: {}\n",
     },
     {
-      path: "service.yaml",
+      path: "kubernetes/service.yaml",
       content: "apiVersion: v1\nkind: Service\nmetadata:\n  name: demo\n",
     },
     {
-      path: "ingress.yaml",
+      path: "kubernetes/ingress.yaml",
       content:
         "apiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: demo\n",
     },
+    {
+      path: "helm/Chart.yaml",
+      content:
+        "apiVersion: v2\nname: demo\nversion: 0.1.0\nappVersion: latest\n",
+    },
+    {
+      path: "helm/templates/deployment.yaml",
+      content:
+        'apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: {{ include "demo.fullname" . }}\n',
+    },
   ]);
   assert.equal(result.valid, true);
+  assert.equal(
+    result.errors.some((error) => error.includes("helm/")),
+    false,
+  );
+});
+
+test("Helm chart sources are not accepted as rendered Kubernetes manifests", () => {
+  const result = validateKubernetesManifests([
+    {
+      path: "helm/Chart.yaml",
+      content: "apiVersion: v2\nname: demo\nversion: 0.1.0\n",
+    },
+    {
+      path: "helm/templates/service.yaml",
+      content:
+        'apiVersion: v1\nkind: Service\nmetadata:\n  name: {{ include "demo.fullname" . }}\n',
+    },
+  ]);
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.includes("No Kubernetes YAML files were provided."));
 });
 
 test("deployment targets are authenticated and user scoped", async () => {

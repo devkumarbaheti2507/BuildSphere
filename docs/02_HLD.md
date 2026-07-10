@@ -1,12 +1,12 @@
 # Document Information
 
-| Field | Value |
-| --- | --- |
-| Document | High Level Design |
-| Version | 0.1.0 |
-| Status | Draft |
-| Author | BuildSphere Team |
-| Last Updated | 2026-07-09 |
+| Field             | Value                                       |
+| ----------------- | ------------------------------------------- |
+| Document          | High Level Design                           |
+| Version           | 0.1.0                                       |
+| Status            | Draft                                       |
+| Author            | BuildSphere Team                            |
+| Last Updated      | 2026-07-10                                  |
 | Related Documents | 01_SRS.md, 03_LLD.md, 04_DATABASE_DESIGN.md |
 
 ---
@@ -43,18 +43,26 @@ API Gateway
 
 # Main services
 
-| Service | Responsibility |
-| --- | --- |
-| API Gateway | Single entry point for frontend calls. Routes requests to backend services. |
-| Auth Service | User registration, login, tokens, authorization helpers. |
-| Project Service | Projects, tool selections, generated asset metadata. |
-| Pipeline Service | Pipeline definitions, stages, executions, statuses. |
-| Deployment Service | Deployment target definitions and generated deployment assets. |
-| Logging Service | Log ingestion, storage, and streaming model. |
-| Monitoring Service | Health, metrics, and future Prometheus/Grafana integration. |
-| AI Service | Rule-based and LLM-assisted suggestions. |
-| Notification Service | User notifications and event messages. |
-| Analytics Service | Product usage and engineering metrics. |
+| Service              | Responsibility                                                              |
+| -------------------- | --------------------------------------------------------------------------- |
+| API Gateway          | Single entry point for frontend calls. Routes requests to backend services. |
+| Auth Service         | User registration, login, tokens, authorization helpers.                    |
+| Project Service      | Projects, tool selections, generated asset metadata.                        |
+| Pipeline Service     | Pipeline definitions, stages, executions, statuses.                         |
+| Deployment Service   | Deployment target definitions and generated deployment assets.              |
+| Logging Service      | Log ingestion, storage, and streaming model.                                |
+| Monitoring Service   | Health, metrics, and future Prometheus/Grafana integration.                 |
+| AI Service           | Rule-based and LLM-assisted suggestions.                                    |
+| Notification Service | User notifications and event messages.                                      |
+| Analytics Service    | Product usage and engineering metrics.                                      |
+
+# Generation boundary
+
+Project Service owns selection-aware artifact generation through its template
+catalog. Phase 7 adds Helm chart source as an optional packaging output when a
+project also selects Kubernetes. Helm generation reuses the existing artifact
+preview, archive, and GitHub publishing paths; it does not add a service or
+grant cluster access.
 
 # External provider boundary
 
@@ -70,10 +78,10 @@ run synchronization records. Provider tokens never cross the service boundary.
 
 # Data stores
 
-| Store | Purpose |
-| --- | --- |
-| PostgreSQL | Durable application data. |
-| Redis | Cache, sessions, lightweight queues, live status. |
+| Store          | Purpose                                                                  |
+| -------------- | ------------------------------------------------------------------------ |
+| PostgreSQL     | Durable application data.                                                |
+| Redis          | Cache, sessions, lightweight queues, live status.                        |
 | Object storage | Generated artifacts and archives. MVP can use local filesystem or MinIO. |
 
 # Communication model
@@ -104,6 +112,10 @@ Future production:
 - Helm charts manage deployment.
 - Prometheus and Grafana handle observability.
 
+The generated Phase 7 chart is an inspectable deployment asset. Real Helm
+install, upgrade, rollback, and Kubernetes credential handling remain outside
+the generation boundary.
+
 # Major workflows
 
 ## Project generation flow
@@ -112,6 +124,8 @@ Future production:
 User selects stack
     -> Frontend sends request to API Gateway
     -> Project Service stores project configuration
+    -> Template catalog resolves only assets for selected tools
+    -> Optional Helm selection adds a reusable Kubernetes chart
     -> Pipeline Service creates pipeline definition
     -> Deployment Service creates deployment asset metadata
     -> AI Service generates initial recommendations

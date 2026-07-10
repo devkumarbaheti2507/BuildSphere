@@ -1,12 +1,12 @@
 # Document Information
 
-| Field | Value |
-| --- | --- |
-| Document | Low Level Design |
-| Version | 0.1.0 |
-| Status | Draft |
-| Author | BuildSphere Team |
-| Last Updated | 2026-07-09 |
+| Field             | Value              |
+| ----------------- | ------------------ |
+| Document          | Low Level Design   |
+| Version           | 0.1.0              |
+| Status            | Draft              |
+| Author            | BuildSphere Team   |
+| Last Updated      | 2026-07-10         |
 | Related Documents | 02_HLD.md, specs/* |
 
 ---
@@ -130,6 +130,9 @@ Responsibilities:
 
 - Project CRUD.
 - Tool selections.
+- Cross-tool dependency validation.
+- Selection-aware template resolution.
+- Kubernetes and optional Helm asset generation.
 - Generated artifact metadata.
 - Project ownership validation.
 
@@ -252,8 +255,15 @@ Project Service -> Frontend: project summary
 ```text
 Frontend -> API Gateway: POST /api/projects/{id}/generate
 API Gateway -> Project Service: generate assets
-Project Service -> TemplateCatalogService: resolve templates
+Project Service -> TemplateCatalogService: resolve templates for saved tools
+TemplateCatalogService: resolve BuildSphere placeholders and preserve Helm expressions
 Project Service -> ArtifactStore: write generated archive
 Project Service -> Pipeline Service: attach workflow metadata
 Project Service -> Frontend: generated artifact summary
 ```
+
+Helm is stored as the `packaging/helm` tool selection. Project Service rejects
+that selection unless `deployment/kubernetes` is also present. The Deployment
+Service validates rendered raw files under `kubernetes/`; Helm chart templates
+under `helm/` remain source inputs for a later Helm render and are not parsed as
+raw manifests.

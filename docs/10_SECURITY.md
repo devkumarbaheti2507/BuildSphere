@@ -1,12 +1,12 @@
 # Document Information
 
-| Field | Value |
-| --- | --- |
-| Document | Security Design |
-| Version | 0.1.0 |
-| Status | Draft |
-| Author | BuildSphere Team |
-| Last Updated | 2026-07-09 |
+| Field             | Value                         |
+| ----------------- | ----------------------------- |
+| Document          | Security Design               |
+| Version           | 0.1.0                         |
+| Status            | Draft                         |
+| Author            | BuildSphere Team              |
+| Last Updated      | 2026-07-10                    |
 | Related Documents | 01_SRS.md, specs/AUTH_SPEC.md |
 
 ---
@@ -65,6 +65,9 @@ Rules:
 - Do not store plaintext API keys.
 - Use `.env.example` for examples only.
 - Generated files must use placeholders.
+- Generated Helm charts must not contain credentials or Kubernetes Secret
+  values; operators provide sensitive values through an external secret
+  workflow.
 
 # API security
 
@@ -86,20 +89,21 @@ Before sending data to an AI provider:
 
 # Threat model highlights
 
-| Threat | Control |
-| --- | --- |
-| Stolen password | Hash passwords, enforce minimum length. |
-| Unauthorized project access | Owner checks on project APIs. |
-| Secret leakage in generated files | Use placeholders and warnings. |
-| Prompt injection through project files | Treat input as untrusted data. |
-| Broken deployment config | Validate generated YAML before use. |
-| OAuth callback forgery | Signed expiring state and PKCE verifier binding. |
-| Provider token disclosure | AES-GCM encryption at rest and no frontend token exposure. |
-| Account-link takeover | Link only from a verified GitHub email or an existing stable GitHub user ID. |
-| Cross-project repository publishing | Project Service verifies ownership before invoking internal provider operations. |
-| Generated path traversal | Reject absolute, empty, duplicate, and parent-traversal file paths before GitHub writes. |
-| Partial repository publish | Persist the repository link immediately and make later publishes idempotent file updates. |
-| Stale provider credentials | Refresh before expiry and require reauthorization when the refresh token is absent or expired. |
+| Threat                                 | Control                                                                                                              |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Stolen password                        | Hash passwords, enforce minimum length.                                                                              |
+| Unauthorized project access            | Owner checks on project APIs.                                                                                        |
+| Secret leakage in generated files      | Use placeholders and warnings.                                                                                       |
+| Prompt injection through project files | Treat input as untrusted data.                                                                                       |
+| Broken deployment config               | Validate generated YAML before use.                                                                                  |
+| OAuth callback forgery                 | Signed expiring state and PKCE verifier binding.                                                                     |
+| Provider token disclosure              | AES-GCM encryption at rest and no frontend token exposure.                                                           |
+| Account-link takeover                  | Link only from a verified GitHub email or an existing stable GitHub user ID.                                         |
+| Cross-project repository publishing    | Project Service verifies ownership before invoking internal provider operations.                                     |
+| Generated path traversal               | Reject absolute, empty, duplicate, and parent-traversal file paths before GitHub writes.                             |
+| Partial repository publish             | Persist the repository link immediately and make later publishes idempotent file updates.                            |
+| Stale provider credentials             | Refresh before expiry and require reauthorization when the refresh token is absent or expired.                       |
+| Helm source treated as deployed YAML   | Validate only rendered raw Kubernetes manifests; Helm expressions remain source until an operator renders the chart. |
 
 # Audit logs
 

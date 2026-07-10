@@ -25,6 +25,7 @@ const supportedTools: Record<ToolCategory, string[]> = {
   container: ["docker"],
   deployment: ["kubernetes"],
   monitoring: ["prometheus"],
+  packaging: ["helm"],
 };
 
 export class ProjectService {
@@ -113,6 +114,17 @@ export class ProjectService {
         );
       }
     }
+    const selectedTools = new Set(
+      selections.map((selection) => selection.toolKey),
+    );
+    if (selectedTools.has("helm") && !selectedTools.has("kubernetes")) {
+      throw new ApiError(
+        400,
+        "TOOL_DEPENDENCY_REQUIRED",
+        "Helm packaging requires Kubernetes deployment",
+        { toolKey: "helm", requiredToolKey: "kubernetes" },
+      );
+    }
     await this.repository.replaceToolSelections(projectId, selections);
     return this.getOwned(ownerId, projectId);
   }
@@ -157,7 +169,10 @@ export class ProjectService {
       dbPassword: "replace_me",
       ...overrides,
     };
-    const files = await this.templates.render(variables);
+    const files = await this.templates.render(
+      variables,
+      project.toolSelections,
+    );
     const checksum = createHash("sha256")
       .update(JSON.stringify(files))
       .digest("hex");

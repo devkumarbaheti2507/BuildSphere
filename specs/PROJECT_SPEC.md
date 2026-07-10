@@ -1,12 +1,12 @@
 # Document Information
 
-| Field | Value |
-| --- | --- |
-| Document | Project Spec |
-| Version | 0.1.0 |
-| Status | Draft |
-| Author | BuildSphere Team |
-| Last Updated | 2026-06-28 |
+| Field             | Value                               |
+| ----------------- | ----------------------------------- |
+| Document          | Project Spec                        |
+| Version           | 0.1.0                               |
+| Status            | Draft                               |
+| Author            | BuildSphere Team                    |
+| Last Updated      | 2026-07-10                          |
 | Related Documents | ../docs/01_SRS.md, TEMPLATE_SPEC.md |
 
 ---
@@ -32,6 +32,7 @@ Define project management and tool selection behavior.
 - container
 - deployment
 - monitoring
+- packaging
 
 # MVP supported tools
 
@@ -43,7 +44,9 @@ Define project management and tool selection behavior.
   "cache": ["redis"],
   "ci": ["github-actions"],
   "container": ["docker"],
-  "deployment": ["kubernetes"]
+  "deployment": ["kubernetes"],
+  "monitoring": ["prometheus"],
+  "packaging": ["helm"]
 }
 ```
 
@@ -52,6 +55,8 @@ Define project management and tool selection behavior.
 - Project names must be unique per owner.
 - Archived projects cannot generate new artifacts.
 - Tool selections must use supported tool keys.
+- Helm requires the Kubernetes deployment selection.
+- Generated artifacts include only templates implied by saved tool selections.
 
 # Acceptance criteria
 

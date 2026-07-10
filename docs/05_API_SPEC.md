@@ -1,12 +1,12 @@
 # Document Information
 
-| Field | Value |
-| --- | --- |
-| Document | API Specification |
-| Version | 0.1.0 |
-| Status | Draft |
-| Author | BuildSphere Team |
-| Last Updated | 2026-07-09 |
+| Field             | Value                         |
+| ----------------- | ----------------------------- |
+| Document          | API Specification             |
+| Version           | 0.1.0                         |
+| Status            | Draft                         |
+| Author            | BuildSphere Team              |
+| Last Updated      | 2026-07-10                    |
 | Related Documents | 01_SRS.md, 03_LLD.md, specs/* |
 
 ---
@@ -173,11 +173,14 @@ Updates project metadata.
 
 ## POST /projects/{projectId}/tool-selections
 
-Saves selected tools.
+Saves selected tools. `packaging/helm` is accepted only when
+`deployment/kubernetes` is selected in the same request.
 
 ## POST /projects/{projectId}/generate
 
-Generates project assets from templates.
+Generates project assets from templates implied by the saved tool selections.
+Helm-enabled Kubernetes projects receive chart source under `helm/` while Helm
+Go-template expressions remain unresolved for later Helm rendering.
 
 ## GET /projects/{projectId}/artifacts
 
@@ -272,7 +275,8 @@ Marks notification as read.
 
 - `POST /deployments/targets` creates a Kubernetes deployment target definition.
 - `GET /projects/{projectId}/deployment-targets` lists owned targets.
-- `POST /deployments/validate` performs structural checks on generated Kubernetes YAML.
+- `POST /deployments/validate` performs structural checks on rendered
+  Kubernetes YAML and excludes Helm chart source templates.
 
 # Monitoring endpoints
 

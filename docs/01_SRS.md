@@ -1,12 +1,12 @@
 # Document Information
 
-| Field | Value |
-| --- | --- |
-| Document | Software Requirements Specification |
-| Version | 0.1.0 |
-| Status | Draft |
-| Author | BuildSphere Team |
-| Last Updated | 2026-07-09 |
+| Field             | Value                                    |
+| ----------------- | ---------------------------------------- |
+| Document          | Software Requirements Specification      |
+| Version           | 0.1.0                                    |
+| Status            | Draft                                    |
+| Author            | BuildSphere Team                         |
+| Last Updated      | 2026-07-10                               |
 | Related Documents | 00_PROJECT_VISION.md, 02_HLD.md, specs/* |
 
 ---
@@ -166,6 +166,25 @@ Acceptance criteria:
 - Repeated synchronization updates existing runs without creating duplicates.
 - GitHub statuses and conclusions map to stable BuildSphere run states.
 - The project interface links users to the source workflow run on GitHub.
+
+## FR-014 Helm chart generation
+
+BuildSphere shall optionally generate a Helm chart for projects that select
+Kubernetes deployment.
+
+Acceptance criteria:
+
+- Helm is represented as an optional packaging tool and requires Kubernetes.
+- Generated assets follow the project's saved tool selections.
+- The chart uses Helm chart API version 2 and includes values, workload,
+  service, ingress, reusable helpers, and installation notes.
+- BuildSphere variables are resolved while Helm template expressions remain
+  intact for later rendering by Helm.
+- Raw Kubernetes manifest validation ignores Helm template source files.
+- Generated Helm files are previewable, downloadable, and publishable through
+  the existing artifact and GitHub workflows.
+- BuildSphere does not install or upgrade the chart in a real cluster as part
+  of this milestone.
 
 # Non-functional requirements
 

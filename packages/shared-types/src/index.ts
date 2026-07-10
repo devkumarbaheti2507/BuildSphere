@@ -101,7 +101,8 @@ export type ToolCategory =
   | "ci"
   | "container"
   | "deployment"
-  | "monitoring";
+  | "monitoring"
+  | "packaging";
 
 export type SupportedToolKey =
   | "react"
@@ -111,7 +112,8 @@ export type SupportedToolKey =
   | "github-actions"
   | "docker"
   | "kubernetes"
-  | "prometheus";
+  | "prometheus"
+  | "helm";
 
 export interface ToolSelection {
   category: ToolCategory;
@@ -147,7 +149,7 @@ export interface UpdateProjectInput {
 }
 
 export type TemplateCategory =
-  "frontend" | "backend" | "docker" | "github-actions" | "kubernetes";
+  "frontend" | "backend" | "docker" | "github-actions" | "kubernetes" | "helm";
 
 export interface TemplateMetadata {
   key: string;

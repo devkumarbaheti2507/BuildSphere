@@ -8,7 +8,15 @@ export const validateKubernetesManifests = (
 ): ManifestValidationResult => {
   const errors: string[] = [];
   const warnings: string[] = [];
-  const manifests = files.filter((file) => /\.ya?ml$/i.test(file.path));
+  const yamlFiles = files.filter((file) => /\.ya?ml$/i.test(file.path));
+  const kubernetesFiles = yamlFiles.filter((file) =>
+    /^kubernetes\//i.test(file.path.replaceAll("\\", "/")),
+  );
+  const manifests = kubernetesFiles.length
+    ? kubernetesFiles
+    : yamlFiles.filter(
+        (file) => !/^helm\//i.test(file.path.replaceAll("\\", "/")),
+      );
   if (!manifests.length) errors.push("No Kubernetes YAML files were provided.");
 
   const kinds = new Set<string>();

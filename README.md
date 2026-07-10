@@ -10,7 +10,7 @@ BuildSphere guides a user through the full software delivery lifecycle:
 
 1. Create a project.
 2. Select architecture, language, framework, database, CI/CD provider, container registry, and deployment target.
-3. Generate starter project files, Dockerfiles, CI/CD workflows, Kubernetes manifests, and documentation.
+3. Generate starter project files, Dockerfiles, CI/CD workflows, Kubernetes manifests, optional Helm charts, and documentation.
 4. Run or connect to pipeline executions.
 5. Stream build and deployment logs.
 6. Explain each pipeline stage in learning mode.
@@ -23,7 +23,8 @@ The first version focuses on a practical developer workflow:
 - User authentication.
 - Project creation wizard.
 - Tool selection wizard.
-- Template-based generation for Node.js, React, Docker, GitHub Actions, and Kubernetes.
+- Selection-aware template generation for Node.js, React, Docker, GitHub
+  Actions, Kubernetes, and optional Helm charts.
 - Pipeline definition storage.
 - Live log model and mock log streaming.
 - AI suggestion framework using prompt templates and rule-based checks.
@@ -41,6 +42,7 @@ This repository is prepared for a TypeScript-first implementation:
 | Cache and queues | Redis initially, Kafka optional later                                       | Redis keeps the MVP simple; Kafka can be added for event-heavy flows. |
 | Containerization | Docker                                                                      | Required for generated workloads and BuildSphere services.            |
 | Orchestration    | Kubernetes                                                                  | Primary target for production deployment templates.                   |
+| Packaging        | Helm                                                                        | Configurable Kubernetes application charts without automatic install. |
 | CI/CD            | GitHub Actions first                                                        | Common, accessible, and portfolio-friendly.                           |
 | Monitoring       | Prometheus + Grafana planned                                                | Standard cloud-native observability stack.                            |
 
@@ -155,9 +157,16 @@ The pack excludes `.env`, credentials, provider tokens, personal account data, a
 
 ## Current status
 
-Status: Local-first MVP implemented through roadmap Phase 6. GitHub App authentication, generated repository publishing, and GitHub Actions run synchronization are complete.
+Status: Local-first platform implemented through roadmap Phase 7. GitHub App
+authentication, generated repository publishing, Actions synchronization, and
+optional Helm chart generation are complete.
 
-Implemented workflows include local and GitHub authentication, project and tool configuration, generated DevOps files, GitHub repository publishing, simulated pipelines, synchronized GitHub Actions runs, rule-based suggestions, deployment target definitions, Kubernetes manifest checks, health aggregation, and notifications. Real cloud deployment and additional provider integrations remain future work.
+Implemented workflows include local and GitHub authentication, project and
+tool configuration, selection-aware DevOps and Helm generation, GitHub
+repository publishing, simulated pipelines, synchronized GitHub Actions runs,
+rule-based suggestions, deployment target definitions, Kubernetes manifest
+checks, health aggregation, and notifications. Real Helm installation, cloud
+deployment, and additional provider integrations remain future work.
 
 ## License
 

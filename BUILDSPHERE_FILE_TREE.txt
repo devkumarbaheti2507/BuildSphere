@@ -165,6 +165,7 @@ specs/PIPELINE_SPEC.md
 specs/PROJECT_SPEC.md
 specs/README.md
 specs/TEMPLATE_SPEC.md
+specs/HELM_SPEC.md
 specs/USER_SPEC.md
 templates/docker/Dockerfile.node.template
 templates/docker/README.md
@@ -172,6 +173,14 @@ templates/docker/docker-compose.node-postgres.template.yml
 templates/github-actions/README.md
 templates/github-actions/node-docker-k8s.yml
 templates/github-actions/springboot-docker-k8s.yml
+templates/helm/Chart.yaml
+templates/helm/README.md
+templates/helm/templates/NOTES.txt
+templates/helm/templates/_helpers.tpl
+templates/helm/templates/deployment.yaml
+templates/helm/templates/ingress.yaml
+templates/helm/templates/service.yaml
+templates/helm/values.yaml
 templates/jenkins/Jenkinsfile.node
 templates/jenkins/README.md
 templates/kubernetes/README.md

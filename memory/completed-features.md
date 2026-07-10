@@ -60,3 +60,34 @@
 - Added and passed `pnpm smoke:phase6:postgres`, which validates real PostgreSQL token rotation, repository-link persistence, workflow-run upserts, and cleanup with provider doubles.
 - Corrected the live workflow to support template-only MVP artifacts; synchronized run 10 completed successfully.
 - GitHub publication now skips unchanged blobs, writes workflow files last, and uses extended synchronous proxy timeouts. A repeated live publish created no extra commit or Actions run.
+
+## 2026-07-10
+
+- Completed BS-601 and roadmap Phase 7: Kubernetes projects can optionally
+  select `packaging/helm` and generate a configurable Helm chart through the
+  existing preview, TAR download, and GitHub publication workflows.
+- Added selection-aware template resolution so artifacts contain only files
+  implied by saved tools; existing projects without Helm receive no `helm/`
+  paths.
+- Added Helm API v2 chart metadata, values, namespaced helpers, Deployment,
+  Service, Ingress, and installation notes with configurable replicas, image,
+  ports, ingress, probes, and resources.
+- Added structured Helm-to-Kubernetes dependency validation, preserved Helm
+  Go-template expressions during BuildSphere rendering, and isolated Helm chart
+  source from raw Kubernetes validation.
+- Updated the project wizard and generated GitHub Actions checks for optional
+  Helm packaging.
+- Passed frozen installation, zero-warning lint, every production build, and
+  all 41 automated tests on Node 24; Node 22 remains the preferred toolchain.
+- Passed the complete memory-mode gateway smoke with 17 generated files, 7
+  stages, 14 logs, suggestions, Kubernetes validation, 8 monitored services,
+  and 4 notifications.
+- Downloaded the official Helm v4.2.2 Linux binary to `/tmp`, verified its
+  published SHA-256 checksum, passed `helm lint --strict` with zero failures,
+  and rendered the chart's Deployment, Service, and Ingress successfully.
+- Passed the same Helm-enabled 17-file gateway workflow against PostgreSQL,
+  confirmed migrations 001-003 remained idempotent, and retrieved the project,
+  Helm selection, artifact, and pipeline after a full application restart.
+- Re-ran `pnpm smoke:phase6:postgres`; repository-link persistence,
+  workflow-run upsert, token refresh, publication, and cleanup all passed.
+- No chart was installed into a Kubernetes cluster.

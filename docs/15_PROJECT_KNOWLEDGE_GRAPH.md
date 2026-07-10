@@ -5,8 +5,8 @@
 | Field                  | Value                                                                                    |
 | ---------------------- | ---------------------------------------------------------------------------------------- |
 | Purpose                | Self-contained technical and product context for learning, presentation, and AI tutoring |
-| Snapshot date          | 2026-07-09                                                                               |
-| Current milestone      | Local-first MVP complete through the tracked Phase 6 GitHub milestone                    |
+| Snapshot date          | 2026-07-10                                                                               |
+| Current milestone      | Local-first platform complete through Phase 7 Helm chart generation                      |
 | Intended readers       | Project owner, reviewers, interviewers, mentors, and ChatGPT                             |
 | Structured companion   | `docs/project-knowledge-graph.json`                                                      |
 | Presentation companion | `docs/16_PRESENTATION_AND_LEARNING_GUIDE.md`                                             |
@@ -21,8 +21,9 @@ uploaded to an AI tutor without uploading the local secret-bearing `.env` file.
 
 BuildSphere is a documentation-first, AI-assisted Developer Experience Platform
 that guides a developer from project configuration to generated DevOps assets,
-explainable pipeline simulation, recommendations, deployment validation, and
-optional real GitHub repository and Actions integration.
+explainable pipeline simulation, recommendations, deployment validation,
+optional Helm packaging, and optional real GitHub repository and Actions
+integration.
 
 ## What problem it solves
 
@@ -49,7 +50,8 @@ Use these labels throughout this graph:
 | ------------------------ | --------------------------------------------- | ------------------------------------------------------------------ |
 | Roadmap Phases 1-5       | Implemented                                   | `docs/12_ROADMAP.md`, `docs/13_BACKLOG.md`                         |
 | Phase 6 GitHub milestone | Implemented and live-validated                | `specs/GITHUB_INTEGRATION_SPEC.md`, `memory/completed-features.md` |
-| Automated verification   | 39 tests plus lint and production builds pass | `docs/11_TESTING.md`, `memory/next-session.md`                     |
+| Phase 7 Helm generation  | Implemented and gateway-validated             | `specs/HELM_SPEC.md`, `memory/completed-features.md`               |
+| Automated verification   | 41 tests plus lint and production builds pass | `docs/11_TESTING.md`, `memory/next-session.md`                     |
 | PostgreSQL persistence   | Implemented and restart-tested                | migrations and smoke scripts                                       |
 | Browser workflow         | Implemented and desktop/mobile checked        | `memory/completed-features.md`                                     |
 | Real deployment          | Future                                        | generated and validated manifests only                             |
@@ -120,33 +122,34 @@ flowchart LR
 
 ## Why each technology is used
 
-| Technology             | Where it appears                                  | Why it was chosen                                     | How it helps this project                                               | Status                                                 |
-| ---------------------- | ------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------ |
-| TypeScript             | Frontend, services, shared packages, scripts      | One typed language across the workspace               | Shared contracts catch integration mistakes during compilation          | Active                                                 |
-| Node.js 22             | All TypeScript runtime services and scripts       | Mature async I/O and strong tooling                   | Runs many small HTTP services with one toolchain                        | Active                                                 |
-| React 18               | Frontend                                          | Component model and broad ecosystem                   | Organizes the wizard, dashboards, tabs, and stateful workflows          | Active                                                 |
-| Vite 5                 | Frontend dev/build                                | Fast local server and simple production bundling      | Keeps the local feedback loop short                                     | Active                                                 |
-| Express 4              | Gateway and services                              | Small, explicit REST framework                        | Makes routing, middleware, and service boundaries easy to inspect       | Active                                                 |
-| Zod 3                  | Request validation                                | Runtime data validation complements TypeScript        | Rejects malformed API input before business logic                       | Active                                                 |
-| Pino 9                 | Backend logging                                   | Structured, low-overhead JSON logging                 | Adds service, correlation ID, status, and duration to requests          | Active                                                 |
-| PostgreSQL 16          | Durable product state                             | Relational constraints, transactions, auditability    | Stores users, projects, runs, suggestions, targets, and events          | Active                                                 |
-| `pg`                   | Service Core data access                          | Direct and transparent PostgreSQL driver              | Keeps SQL and ownership visible without an ORM                          | Active                                                 |
-| PNPM workspaces        | Monorepo package management                       | Efficient workspace linking and reproducible installs | Coordinates 14 workspace packages from one lockfile                     | Active                                                 |
-| Docker Compose         | Local infrastructure                              | Repeatable local dependencies                         | Starts PostgreSQL, Redis, MinIO, and MailHog consistently               | PostgreSQL active; others prepared                     |
-| Docker templates       | Generated delivery assets and service Dockerfiles | Portable runtime packaging                            | Teaches image construction and prepares deployments                     | Active generation                                      |
-| Kubernetes YAML        | Generated deployment assets                       | Standard cloud-native deployment model                | Produces inspectable Namespace, Deployment, Service, and Ingress files  | Active generation/validation                           |
-| GitHub Actions         | BuildSphere CI and generated workflows            | Accessible CI/CD with strong portfolio value          | Validates BuildSphere and connects generated repositories to real runs  | Active                                                 |
-| GitHub App OAuth       | Optional identity and provider integration        | Fine-grained permissions and short-lived user tokens  | Supports secure login, repository creation, publishing, and run sync    | Active and live-tested                                 |
-| JWT HS256              | BuildSphere sessions                              | Stateless access-token validation across services     | Lets each service enforce user ownership without a session service call | Active                                                 |
-| scrypt                 | Password hashing                                  | Memory-hard password derivation                       | Protects stored passwords with per-password random salts                | Active                                                 |
-| AES-256-GCM            | GitHub provider token encryption                  | Authenticated encryption at rest                      | Keeps provider tokens confidential and detects tampering                | Active                                                 |
-| SHA-256                | Artifact checksums and refresh-token hashing      | Stable one-way digest                                 | Detects artifact identity and avoids plaintext refresh-token storage    | Active                                                 |
-| Git blob SHA-1         | GitHub publish idempotency                        | GitHub Contents API identifies blobs this way         | Skips unchanged files and prevents needless commits/runs                | Active                                                 |
-| Prometheus text format | Monitoring `/metrics`                             | Standard scrape format                                | Exposes service-up and response-time gauges                             | Active foundation                                      |
-| Redis                  | Compose and project tool model                    | Intended cache and lightweight coordination           | Future ephemeral state and queues                                       | Prepared, not used by runtime code                     |
-| MinIO/S3 settings      | Compose and environment examples                  | Intended object storage                               | Future external storage for artifact archives                           | Prepared, artifacts currently live in PostgreSQL JSONB |
-| MailHog                | Compose                                           | Intended local email capture                          | Future notification delivery testing                                    | Prepared, not used by runtime code                     |
-| Helm and Terraform     | Infrastructure/template placeholders              | Planned packaging and infrastructure generation       | Post-Phase 6 expansion points                                           | Future                                                 |
+| Technology             | Where it appears                                  | Why it was chosen                                      | How it helps this project                                               | Status                                                 |
+| ---------------------- | ------------------------------------------------- | ------------------------------------------------------ | ----------------------------------------------------------------------- | ------------------------------------------------------ |
+| TypeScript             | Frontend, services, shared packages, scripts      | One typed language across the workspace                | Shared contracts catch integration mistakes during compilation          | Active                                                 |
+| Node.js 22             | All TypeScript runtime services and scripts       | Mature async I/O and strong tooling                    | Runs many small HTTP services with one toolchain                        | Active                                                 |
+| React 18               | Frontend                                          | Component model and broad ecosystem                    | Organizes the wizard, dashboards, tabs, and stateful workflows          | Active                                                 |
+| Vite 5                 | Frontend dev/build                                | Fast local server and simple production bundling       | Keeps the local feedback loop short                                     | Active                                                 |
+| Express 4              | Gateway and services                              | Small, explicit REST framework                         | Makes routing, middleware, and service boundaries easy to inspect       | Active                                                 |
+| Zod 3                  | Request validation                                | Runtime data validation complements TypeScript         | Rejects malformed API input before business logic                       | Active                                                 |
+| Pino 9                 | Backend logging                                   | Structured, low-overhead JSON logging                  | Adds service, correlation ID, status, and duration to requests          | Active                                                 |
+| PostgreSQL 16          | Durable product state                             | Relational constraints, transactions, auditability     | Stores users, projects, runs, suggestions, targets, and events          | Active                                                 |
+| `pg`                   | Service Core data access                          | Direct and transparent PostgreSQL driver               | Keeps SQL and ownership visible without an ORM                          | Active                                                 |
+| PNPM workspaces        | Monorepo package management                       | Efficient workspace linking and reproducible installs  | Coordinates 14 workspace packages from one lockfile                     | Active                                                 |
+| Docker Compose         | Local infrastructure                              | Repeatable local dependencies                          | Starts PostgreSQL, Redis, MinIO, and MailHog consistently               | PostgreSQL active; others prepared                     |
+| Docker templates       | Generated delivery assets and service Dockerfiles | Portable runtime packaging                             | Teaches image construction and prepares deployments                     | Active generation                                      |
+| Kubernetes YAML        | Generated deployment assets                       | Standard cloud-native deployment model                 | Produces inspectable Namespace, Deployment, Service, and Ingress files  | Active generation/validation                           |
+| GitHub Actions         | BuildSphere CI and generated workflows            | Accessible CI/CD with strong portfolio value           | Validates BuildSphere and connects generated repositories to real runs  | Active                                                 |
+| GitHub App OAuth       | Optional identity and provider integration        | Fine-grained permissions and short-lived user tokens   | Supports secure login, repository creation, publishing, and run sync    | Active and live-tested                                 |
+| JWT HS256              | BuildSphere sessions                              | Stateless access-token validation across services      | Lets each service enforce user ownership without a session service call | Active                                                 |
+| scrypt                 | Password hashing                                  | Memory-hard password derivation                        | Protects stored passwords with per-password random salts                | Active                                                 |
+| AES-256-GCM            | GitHub provider token encryption                  | Authenticated encryption at rest                       | Keeps provider tokens confidential and detects tampering                | Active                                                 |
+| SHA-256                | Artifact checksums and refresh-token hashing      | Stable one-way digest                                  | Detects artifact identity and avoids plaintext refresh-token storage    | Active                                                 |
+| Git blob SHA-1         | GitHub publish idempotency                        | GitHub Contents API identifies blobs this way          | Skips unchanged files and prevents needless commits/runs                | Active                                                 |
+| Prometheus text format | Monitoring `/metrics`                             | Standard scrape format                                 | Exposes service-up and response-time gauges                             | Active foundation                                      |
+| Redis                  | Compose and project tool model                    | Intended cache and lightweight coordination            | Future ephemeral state and queues                                       | Prepared, not used by runtime code                     |
+| MinIO/S3 settings      | Compose and environment examples                  | Intended object storage                                | Future external storage for artifact archives                           | Prepared, artifacts currently live in PostgreSQL JSONB |
+| MailHog                | Compose                                           | Intended local email capture                           | Future notification delivery testing                                    | Prepared, not used by runtime code                     |
+| Helm                   | Optional generated Kubernetes packaging           | Configurable application charts without cluster access | Produces API v2 chart metadata, values, helpers, resources, and notes   | Active generation                                      |
+| Terraform              | Prepared template placeholder                     | Planned infrastructure generation                      | Post-Phase 7 expansion point                                            | Future                                                 |
 
 ## Architecture decisions
 
@@ -210,8 +213,8 @@ database foreign key because the owning services intentionally remain separate.
 2. Register with email/password or use the optional GitHub App login.
 3. View projects, platform health, and notifications on the dashboard.
 4. Create a project through five UI steps: basics, architecture, application, delivery, and review.
-5. Select React, Node.js, PostgreSQL, GitHub Actions, Docker, and Kubernetes; optionally select Redis and Prometheus.
-6. Generate the current 10-file artifact bundle.
+5. Select React, Node.js, PostgreSQL, GitHub Actions, Docker, and Kubernetes; optionally select Redis, Prometheus, and Helm.
+6. Generate a selection-aware artifact bundle; the default Helm-enabled wizard produces 17 files.
 7. Preview files and explanations or download a TAR archive.
 8. Run the seven-stage simulated pipeline, inspect learning notes and logs, or deliberately simulate a test-stage failure.
 9. Review, accept, or dismiss rule-based suggestions.
@@ -269,8 +272,8 @@ sequenceDiagram
   UI->>Project: create project + save tool selections
   Project->>DB: persist project and tools
   UI->>Project: generate
-  Project->>Templates: render variables into catalog
-  Templates-->>Project: 10 generated files
+  Project->>Templates: resolve selected categories and render variables
+  Templates-->>Project: selected files, including optional seven-file Helm chart
   Project->>DB: save files JSONB + SHA-256 checksum
   par best-effort coordination
     Project->>Pipeline: create default simulated pipeline
@@ -346,22 +349,29 @@ sequenceDiagram
 
 ## Generated artifact graph
 
-The current generator emits a fixed catalog after at least one valid tool
-selection is stored. Selections are validated, but they do not yet filter the
-catalog dynamically.
+The current generator resolves catalog entries from saved tool selections.
+Helm is optional, requires Kubernetes, and adds seven chart files while
+preserving Helm expressions for later rendering by the Helm CLI.
 
-| Output                       | Source template                             | Purpose                                                               |
-| ---------------------------- | ------------------------------------------- | --------------------------------------------------------------------- |
-| `frontend/README.md`         | `templates/react/README.template.md`        | React setup guidance                                                  |
-| `backend/README.md`          | `templates/nodejs/README.template.md`       | Node service guidance and health endpoint                             |
-| `backend/Dockerfile`         | `templates/docker/Dockerfile.node.template` | Two-stage Node container definition                                   |
-| `docker-compose.yml`         | Docker Compose template                     | Generated service plus PostgreSQL topology                            |
-| `.github/workflows/ci.yml`   | GitHub Actions template                     | Validate generated files and conditionally build available app inputs |
-| `kubernetes/namespace.yaml`  | Kubernetes namespace template               | Workload isolation                                                    |
-| `kubernetes/deployment.yaml` | Kubernetes deployment template              | Replicas, probes, resources, image, and port                          |
-| `kubernetes/service.yaml`    | Kubernetes service template                 | Stable in-cluster networking                                          |
-| `kubernetes/ingress.yaml`    | Kubernetes ingress template                 | External HTTP routing                                                 |
-| `.env.example`               | Inline Project Service template             | Configuration names with placeholder values                           |
+| Output                           | Source template                             | Purpose                                                               |
+| -------------------------------- | ------------------------------------------- | --------------------------------------------------------------------- |
+| `frontend/README.md`             | `templates/react/README.template.md`        | React setup guidance                                                  |
+| `backend/README.md`              | `templates/nodejs/README.template.md`       | Node service guidance and health endpoint                             |
+| `backend/Dockerfile`             | `templates/docker/Dockerfile.node.template` | Two-stage Node container definition                                   |
+| `docker-compose.yml`             | Docker Compose template                     | Generated service plus PostgreSQL topology                            |
+| `.github/workflows/ci.yml`       | GitHub Actions template                     | Validate generated files and conditionally build available app inputs |
+| `kubernetes/namespace.yaml`      | Kubernetes namespace template               | Workload isolation                                                    |
+| `kubernetes/deployment.yaml`     | Kubernetes deployment template              | Replicas, probes, resources, image, and port                          |
+| `kubernetes/service.yaml`        | Kubernetes service template                 | Stable in-cluster networking                                          |
+| `kubernetes/ingress.yaml`        | Kubernetes ingress template                 | External HTTP routing                                                 |
+| `helm/Chart.yaml`                | Helm chart template                         | API v2 chart identity and versions                                    |
+| `helm/values.yaml`               | Helm values template                        | Image, replicas, networking, probes, ingress, and resources           |
+| `helm/templates/_helpers.tpl`    | Helm helpers template                       | Namespaced resource names, selectors, and labels                      |
+| `helm/templates/deployment.yaml` | Helm workload template                      | Configurable Deployment rendered later by Helm                        |
+| `helm/templates/service.yaml`    | Helm networking template                    | Configurable ClusterIP Service                                        |
+| `helm/templates/ingress.yaml`    | Helm routing template                       | Values-controlled external routing                                    |
+| `helm/templates/NOTES.txt`       | Helm notes template                         | Post-install endpoint and port-forward guidance                       |
+| `.env.example`                   | Inline Project Service template             | Configuration names with placeholder values                           |
 
 Generation variables include project/service names, port `8080`, image name,
 image tag, namespace, replica count `2`, local host name, and placeholder
@@ -547,15 +557,17 @@ flowchart LR
   Lint --> Build[pnpm -r build]
   Build --> Tests[pnpm -r test]
   Tests --> MemorySmoke[Gateway smoke in memory mode]
-  Tests --> PostgresSmoke[Gateway + Phase 6 PostgreSQL verification]
+  Tests --> HelmLint[Helm v4.2.2 strict lint + template]
+  Tests --> PostgresSmoke[17-file gateway + Phase 6 PostgreSQL verification]
   PostgresSmoke --> Browser[Desktop/mobile browser workflow]
   PostgresSmoke --> LiveGitHub[Live OAuth, private repo, publish, Actions sync]
 ```
 
-The repository contains 14 test files and 39 automated tests covering shared
+The repository contains 14 test files and 41 automated tests covering shared
 authentication and shutdown, gateway forwarding, every service's principal
 behavior, pipeline state/cancellation, generation, validation, OAuth security,
-GitHub publication idempotency, token refresh, and workflow-run upserts.
+GitHub publication idempotency, token refresh, workflow-run upserts, Helm
+dependency validation, selection-aware rendering, and validation isolation.
 
 Primary commands:
 
@@ -601,7 +613,8 @@ publish that created no extra run.
 
 - Password and GitHub App authentication.
 - Project ownership, project wizard, tool selection, archive/restore.
-- Fixed 10-file template generation, preview, explanation, checksum, and TAR download.
+- Selection-aware template generation, preview, explanation, checksum, and TAR download.
+- Optional seven-file Helm chart generation for Kubernetes projects.
 - Seven-stage explainable simulated pipelines with success, failure, cancellation, and logs.
 - Thirteen deterministic recommendation rules and suggestion lifecycle.
 - Kubernetes target records and manifest validation.
@@ -622,7 +635,6 @@ publish that created no extra run.
 ### Future candidates
 
 - Jenkins integration.
-- Helm chart generation.
 - Terraform generation.
 - Real Kubernetes deployment and rollback.
 - Cost estimation.
@@ -632,7 +644,8 @@ publish that created no extra run.
 ## Important limitations to state honestly
 
 1. The generated bundle is DevOps/configuration scaffolding, not a complete application source tree.
-2. Tool selections are validated but do not yet dynamically filter the fixed template catalog.
+2. Helm charts pass strict lint and local template rendering, but BuildSphere
+   does not install chart releases or validate them against a live cluster.
 3. The internal pipeline runner is simulated; GitHub Actions is the only connected real CI provider.
 4. Deployment targets and validation do not apply files to a Kubernetes cluster.
 5. AI suggestions are deterministic rules or mock data; no external model is called.
@@ -648,7 +661,7 @@ publish that created no extra run.
 
 > BuildSphere is a TypeScript microservice platform that teaches and automates
 > the path from a project idea to delivery configuration. A user chooses a
-> stack, generates Docker, CI, and Kubernetes assets, studies an explainable
+> stack, generates Docker, CI, Kubernetes, and optional Helm assets, studies an explainable
 > pipeline, receives deterministic engineering recommendations, validates
 > deployment manifests, and can publish the result to GitHub and synchronize
 > real Actions runs. The MVP is local-first and deliberately generates and

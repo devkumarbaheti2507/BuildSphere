@@ -1,12 +1,12 @@
 # Document Information
 
-| Field | Value |
-| --- | --- |
-| Document | Roadmap |
-| Version | 0.1.0 |
-| Status | Draft |
-| Author | BuildSphere Team |
-| Last Updated | 2026-07-09 |
+| Field             | Value                    |
+| ----------------- | ------------------------ |
+| Document          | Roadmap                  |
+| Version           | 0.1.0                    |
+| Status            | Draft                    |
+| Author            | BuildSphere Team         |
+| Last Updated      | 2026-07-10               |
 | Related Documents | 01_SRS.md, 13_BACKLOG.md |
 
 ---
@@ -148,12 +148,35 @@ Exit criteria:
 - BuildSphere can synchronize and display GitHub Actions workflow runs.
 - Provider secrets remain server-side, expired user tokens rotate safely, and retry behavior is deterministic.
 
-# Post-Phase 6 candidates
+# Phase 7: Helm chart generation
+
+Status: Complete.
+
+Goal: Package generated Kubernetes workloads as a configurable, reusable Helm
+chart without performing a real cluster deployment.
+
+Features:
+
+1. Optional Helm tool selection with a Kubernetes dependency.
+2. Selection-aware template catalog resolution.
+3. Helm chart metadata, values, helpers, workload, service, ingress, and notes.
+4. Preserved Helm Go-template expressions in generated artifacts.
+5. Raw Kubernetes validation isolated from Helm source templates.
+6. Chart-aware generated CI checks and regression coverage.
+
+Exit criteria:
+
+- A Kubernetes project can opt into Helm and inspect, download, or publish a
+  complete chart through existing artifact workflows.
+- A project without Helm does not receive Helm files.
+- Invalid Helm-without-Kubernetes selections fail with a structured error.
+- Existing Phase 0-6 verification remains green.
+
+# Post-Phase 7 candidates
 
 These items require separate specifications and backlog milestones:
 
 - Jenkins integration.
-- Helm chart generation.
 - Terraform generation.
 - Real Kubernetes deployment.
 - Cost estimation.

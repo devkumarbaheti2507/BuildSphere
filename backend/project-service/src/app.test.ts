@@ -135,6 +135,7 @@ test("project workflow creates, configures, and generates inspectable files", ()
             { category: "ci", toolKey: "github-actions", config: {} },
             { category: "container", toolKey: "docker", config: {} },
             { category: "deployment", toolKey: "kubernetes", config: {} },
+            { category: "packaging", toolKey: "helm", config: {} },
           ],
         }),
       },
@@ -151,6 +152,7 @@ test("project workflow creates, configures, and generates inspectable files", ()
         data: { files: Array<{ path: string; content: string }> };
       }
     ).data;
+    assert.equal(artifact.files.length, 17);
     assert.ok(
       artifact.files.some((file) => file.path === "backend/Dockerfile"),
     );
@@ -164,6 +166,121 @@ test("project workflow creates, configures, and generates inspectable files", ()
           file.content.includes("readinessProbe"),
       ),
     );
+    const chart = artifact.files.find(
+      (file) => file.path === "helm/Chart.yaml",
+    );
+    assert.deepEqual(
+      artifact.files
+        .filter((file) => file.path.startsWith("helm/"))
+        .map((file) => file.path),
+      [
+        "helm/Chart.yaml",
+        "helm/values.yaml",
+        "helm/templates/_helpers.tpl",
+        "helm/templates/deployment.yaml",
+        "helm/templates/service.yaml",
+        "helm/templates/ingress.yaml",
+        "helm/templates/NOTES.txt",
+      ],
+    );
+    for (const file of artifact.files.filter((file) =>
+      file.path.startsWith("helm/"),
+    )) {
+      assert.doesNotMatch(
+        file.content,
+        /{{\s*(?:projectName|serviceName|containerPort|imageName|imageTag|namespace|replicas|host|dbName|dbUser|dbPassword)\s*}}/,
+      );
+    }
+    assert.match(chart?.content ?? "", /^apiVersion: v2$/m);
+    assert.match(chart?.content ?? "", /^name: order-platform$/m);
+    const values = artifact.files.find(
+      (file) => file.path === "helm/values.yaml",
+    );
+    assert.match(values?.content ?? "", /repository: order-platform-service/);
+    assert.match(values?.content ?? "", /host: order-platform\.local/);
+    const helmDeployment = artifact.files.find(
+      (file) => file.path === "helm/templates/deployment.yaml",
+    );
+    assert.match(helmDeployment?.content ?? "", /{{ \.Values\.replicaCount }}/);
+    assert.match(
+      helmDeployment?.content ?? "",
+      /include "order-platform\.fullname"/,
+    );
+    const workflow = artifact.files.find(
+      (file) => file.path === ".github/workflows/ci.yml",
+    );
+    assert.match(workflow?.content ?? "", /\[\[ -f helm\/Chart\.yaml \]\]/);
+  }));
+
+test("tool dependencies and saved selections control generated files", () =>
+  withServer(async (baseUrl) => {
+    const created = await authenticatedFetch(`${baseUrl}/projects`, {
+      method: "POST",
+      body: JSON.stringify({
+        name: "Focused Service",
+        architectureType: "monolith",
+        visibility: "private",
+      }),
+    });
+    const projectId = ((await created.json()) as { data: { id: string } }).data
+      .id;
+
+    const invalidHelm = await authenticatedFetch(
+      `${baseUrl}/projects/${projectId}/tool-selections`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          selections: [
+            { category: "backend", toolKey: "nodejs", config: {} },
+            { category: "packaging", toolKey: "helm", config: {} },
+          ],
+        }),
+      },
+    );
+    assert.equal(invalidHelm.status, 400);
+    assert.equal(
+      ((await invalidHelm.json()) as { error: { code: string } }).error.code,
+      "TOOL_DEPENDENCY_REQUIRED",
+    );
+
+    const configured = await authenticatedFetch(
+      `${baseUrl}/projects/${projectId}/tool-selections`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          selections: [
+            { category: "backend", toolKey: "nodejs", config: {} },
+            { category: "ci", toolKey: "github-actions", config: {} },
+          ],
+        }),
+      },
+    );
+    assert.equal(configured.status, 200);
+
+    const generated = await authenticatedFetch(
+      `${baseUrl}/projects/${projectId}/generate`,
+      { method: "POST", body: "{}" },
+    );
+    assert.equal(generated.status, 201);
+    const files = (
+      (await generated.json()) as {
+        data: { files: Array<{ path: string }> };
+      }
+    ).data.files.map((file) => file.path);
+    assert.deepEqual(files, [
+      "backend/README.md",
+      ".github/workflows/ci.yml",
+      ".env.example",
+    ]);
+    assert.equal(
+      files.some((file) => file.startsWith("kubernetes/")),
+      false,
+    );
+    assert.equal(
+      files.some((file) => file.startsWith("helm/")),
+      false,
+    );
+    assert.equal(files.includes("backend/Dockerfile"), false);
   }));
 
 test("project APIs enforce authentication, ownership, validation, and unique names", () =>
@@ -212,15 +329,18 @@ test("project GitHub endpoints publish owned artifacts and synchronize workflow 
     });
     const projectId = ((await created.json()) as { data: { id: string } }).data
       .id;
-    await authenticatedFetch(`${baseUrl}/projects/${projectId}/tool-selections`, {
-      method: "POST",
-      body: JSON.stringify({
-        selections: [
-          { category: "backend", toolKey: "nodejs", config: {} },
-          { category: "ci", toolKey: "github-actions", config: {} },
-        ],
-      }),
-    });
+    await authenticatedFetch(
+      `${baseUrl}/projects/${projectId}/tool-selections`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          selections: [
+            { category: "backend", toolKey: "nodejs", config: {} },
+            { category: "ci", toolKey: "github-actions", config: {} },
+          ],
+        }),
+      },
+    );
     await authenticatedFetch(`${baseUrl}/projects/${projectId}/generate`, {
       method: "POST",
       body: "{}",
@@ -234,7 +354,10 @@ test("project GitHub endpoints publish owned artifacts and synchronize workflow 
       },
     );
     assert.equal(published.status, 200);
-    assert.equal((await published.json()).data.fullName, "octocat/order-platform");
+    assert.equal(
+      (await published.json()).data.fullName,
+      "octocat/order-platform",
+    );
     assert.equal(github.published?.userId, "owner-1");
     assert.ok(github.published?.files.length);
 

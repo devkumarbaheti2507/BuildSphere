@@ -149,18 +149,21 @@ Use the system graph from `docs/15_PROJECT_KNOWLEDGE_GRAPH.md`.
 
 - Frozen lockfile install.
 - ESLint and all production builds.
-- 39 automated tests.
+- 41 automated tests.
 - Memory and PostgreSQL gateway smoke workflows.
 - Migration idempotency and restart persistence.
 - Desktop/mobile browser checks.
 - Real GitHub integration validation.
+- Strict Helm v4.2.2 lint, rendered manifests, and PostgreSQL restart
+  persistence for the 17-file artifact.
 
 ### Slide 12: Boundaries and roadmap
 
+- Selection-aware generation and optional Helm packaging are implemented.
 - No real cluster apply or cloud deployment.
 - No external LLM yet.
 - Redis/MinIO/MailHog prepared but not active.
-- Next candidates: Jenkins, Helm, Terraform, real Kubernetes, cost, collaboration.
+- Next candidates: Jenkins, Terraform, real Kubernetes, cost, collaboration.
 - Explain that these are intentional roadmap boundaries, not hidden claims.
 
 ## Ten-minute live demonstration
@@ -487,7 +490,9 @@ scenario questions about failures, security boundaries, and future design.
 - Distinguish simulated pipeline execution from real GitHub Actions.
 - Distinguish generated scaffolding from complete application source.
 - Mention security controls with their purpose, not as a vocabulary list.
-- Show quality evidence: 39 tests, builds, smoke workflows, persistence, browser checks, and live GitHub validation.
+- Show quality evidence: 41 tests, builds, smoke workflows, persistence,
+  browser checks, live GitHub validation, and a 17-file Helm-enabled generation
+  run.
 - Name at least two tradeoffs and two future milestones.
 - Keep secrets and `.env` off screen.
 - End with what you learned and the next bounded improvement.

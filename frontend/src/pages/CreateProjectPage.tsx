@@ -16,6 +16,7 @@ export function CreateProjectPage({ token }: { token: string }) {
   const [visibility, setVisibility] = useState<ProjectVisibility>("private");
   const [redis, setRedis] = useState(true);
   const [prometheus, setPrometheus] = useState(true);
+  const [helm, setHelm] = useState(true);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const selections = (): ToolSelection[] => [
@@ -25,6 +26,15 @@ export function CreateProjectPage({ token }: { token: string }) {
     { category: "ci", toolKey: "github-actions", config: {} },
     { category: "container", toolKey: "docker", config: {} },
     { category: "deployment", toolKey: "kubernetes", config: {} },
+    ...(helm
+      ? [
+          {
+            category: "packaging",
+            toolKey: "helm",
+            config: {},
+          } as ToolSelection,
+        ]
+      : []),
     ...(redis
       ? [{ category: "cache", toolKey: "redis", config: {} } as ToolSelection]
       : []),
@@ -198,6 +208,17 @@ export function CreateProjectPage({ token }: { token: string }) {
                 <span>Deployment</span>
                 <strong>Kubernetes manifests</strong>
               </div>
+              <label className="toggle-row">
+                <span>
+                  <strong>Helm chart</strong>
+                  <small>Configurable Kubernetes application package</small>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={helm}
+                  onChange={(event) => setHelm(event.target.checked)}
+                />
+              </label>
               <label className="toggle-row">
                 <span>
                   <strong>Prometheus</strong>

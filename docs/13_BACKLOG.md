@@ -6,7 +6,7 @@
 | Version           | 0.1.0                  |
 | Status            | Draft                  |
 | Author            | BuildSphere Team       |
-| Last Updated      | 2026-07-09             |
+| Last Updated      | 2026-07-10             |
 | Related Documents | 12_ROADMAP.md, specs/* |
 
 ---
@@ -312,3 +312,39 @@ Acceptance criteria:
 
 Verification outcome:
 Workflow-run status normalization, durable PostgreSQL upsert behavior, repeated synchronization without duplicates, project-owner enforcement, internal API behavior, and frontend compilation pass. Live synchronization persisted the repository's push runs, and corrected run 10 completed with a `success` conclusion.
+
+# Phase 7 tickets
+
+## BS-601: Generate configurable Helm charts
+
+Priority: High
+Milestone: Phase 7
+Status: Done
+
+Description:
+Allow Kubernetes projects to optionally generate a standard Helm chart through
+the existing project artifact workflow.
+
+Acceptance criteria:
+
+- Helm is a supported packaging selection that requires Kubernetes.
+- Template resolution follows saved tool selections.
+- Generated chart files include Chart metadata, values, helpers, Deployment,
+  Service, Ingress, and installation notes.
+- BuildSphere placeholders resolve without consuming Helm expressions.
+- Raw Kubernetes validation excludes Helm source templates.
+- Generated CI checks the optional chart structure.
+- Project Service, Deployment Service, frontend, and full workspace regression
+  tests pass.
+
+Verification outcome:
+The generated catalog follows saved selections, Helm requires Kubernetes, and
+Helm-enabled projects produce a complete seven-file chart in a 17-file default
+bundle. Frozen installation, lint, every production build, all 41 automated
+tests, and the complete memory-mode gateway smoke passed on 2026-07-10. The
+smoke retained the existing seven pipeline stages, 14 logs, deployment
+validation, suggestions, eight health checks, and four notifications. A
+checksum-verified Helm v4.2.2 binary then passed strict lint and template
+rendering. The same 17-file workflow passed against PostgreSQL, persisted
+through an application restart, and remained compatible with the Phase 6
+PostgreSQL provider verifier.

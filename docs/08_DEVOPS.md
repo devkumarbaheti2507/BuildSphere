@@ -1,12 +1,12 @@
 # Document Information
 
-| Field | Value |
-| --- | --- |
-| Document | DevOps Plan |
-| Version | 0.1.0 |
-| Status | Draft |
-| Author | BuildSphere Team |
-| Last Updated | 2026-06-28 |
+| Field             | Value                    |
+| ----------------- | ------------------------ |
+| Document          | DevOps Plan              |
+| Version           | 0.1.0                    |
+| Status            | Draft                    |
+| Author            | BuildSphere Team         |
+| Last Updated      | 2026-07-10               |
 | Related Documents | 02_HLD.md, 12_ROADMAP.md |
 
 ---
@@ -72,7 +72,8 @@ Minimum container requirements:
 
 # Kubernetes strategy
 
-MVP includes generic templates under `templates/kubernetes/`.
+BuildSphere includes raw templates under `templates/kubernetes/` and optional
+Helm chart source under `templates/helm/`.
 
 Future BuildSphere deployment will use:
 
@@ -107,13 +108,17 @@ BuildSphere will generate:
 - Kubernetes deployment.
 - Kubernetes service.
 - Kubernetes ingress.
+- Optional Helm chart metadata, values, workload templates, and install notes.
 - README instructions.
+
+Generated charts are packaging assets only. BuildSphere does not run Helm
+install, upgrade, rollback, or uninstall commands in Phase 7.
 
 # Environments
 
-| Environment | Purpose |
-| --- | --- |
-| local | Developer machine. |
-| dev | Shared development, future. |
-| staging | Pre-production, future. |
-| production | Real users, future. |
+| Environment | Purpose                     |
+| ----------- | --------------------------- |
+| local       | Developer machine.          |
+| dev         | Shared development, future. |
+| staging     | Pre-production, future.     |
+| production  | Real users, future.         |
