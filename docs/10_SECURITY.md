@@ -68,6 +68,8 @@ Rules:
 - Generated Helm charts must not contain credentials or Kubernetes Secret
   values; operators provide sensitive values through an external secret
   workflow.
+- Generated Terraform must not contain AWS credentials, active backend values,
+  state, plans, kubeconfig, or provider tokens.
 
 # API security
 
@@ -89,21 +91,23 @@ Before sending data to an AI provider:
 
 # Threat model highlights
 
-| Threat                                 | Control                                                                                                              |
-| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Stolen password                        | Hash passwords, enforce minimum length.                                                                              |
-| Unauthorized project access            | Owner checks on project APIs.                                                                                        |
-| Secret leakage in generated files      | Use placeholders and warnings.                                                                                       |
-| Prompt injection through project files | Treat input as untrusted data.                                                                                       |
-| Broken deployment config               | Validate generated YAML before use.                                                                                  |
-| OAuth callback forgery                 | Signed expiring state and PKCE verifier binding.                                                                     |
-| Provider token disclosure              | AES-GCM encryption at rest and no frontend token exposure.                                                           |
-| Account-link takeover                  | Link only from a verified GitHub email or an existing stable GitHub user ID.                                         |
-| Cross-project repository publishing    | Project Service verifies ownership before invoking internal provider operations.                                     |
-| Generated path traversal               | Reject absolute, empty, duplicate, and parent-traversal file paths before GitHub writes.                             |
-| Partial repository publish             | Persist the repository link immediately and make later publishes idempotent file updates.                            |
-| Stale provider credentials             | Refresh before expiry and require reauthorization when the refresh token is absent or expired.                       |
-| Helm source treated as deployed YAML   | Validate only rendered raw Kubernetes manifests; Helm expressions remain source until an operator renders the chart. |
+| Threat                                  | Control                                                                                                                                                                      |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Stolen password                         | Hash passwords, enforce minimum length.                                                                                                                                      |
+| Unauthorized project access             | Owner checks on project APIs.                                                                                                                                                |
+| Secret leakage in generated files       | Use placeholders and warnings.                                                                                                                                               |
+| Prompt injection through project files  | Treat input as untrusted data.                                                                                                                                               |
+| Broken deployment config                | Validate generated YAML before use.                                                                                                                                          |
+| OAuth callback forgery                  | Signed expiring state and PKCE verifier binding.                                                                                                                             |
+| Provider token disclosure               | AES-GCM encryption at rest and no frontend token exposure.                                                                                                                   |
+| Account-link takeover                   | Link only from a verified GitHub email or an existing stable GitHub user ID.                                                                                                 |
+| Cross-project repository publishing     | Project Service verifies ownership before invoking internal provider operations.                                                                                             |
+| Generated path traversal                | Reject absolute, empty, duplicate, and parent-traversal file paths before GitHub writes.                                                                                     |
+| Partial repository publish              | Persist the repository link immediately and make later publishes idempotent file updates.                                                                                    |
+| Stale provider credentials              | Refresh before expiry and require reauthorization when the refresh token is absent or expired.                                                                               |
+| Helm source treated as deployed YAML    | Validate only rendered raw Kubernetes manifests; Helm expressions remain source until an operator renders the chart.                                                         |
+| Accidental Terraform cloud provisioning | Default `enable_cluster` to false; keep generated CI to format/init-without-backend/validate and require explicit IAM, endpoint, state, and cost review outside BuildSphere. |
+| Terraform state or credential leakage   | Generate only non-secret examples, keep the backend example inactive, and ignore private variables, local state, plans, caches, and crash files.                             |
 
 # Audit logs
 

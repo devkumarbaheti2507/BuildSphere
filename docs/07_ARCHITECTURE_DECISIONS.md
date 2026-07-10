@@ -1,13 +1,13 @@
 # Document Information
 
-| Field | Value |
-| --- | --- |
-| Document | Architecture Decision Records Index |
-| Version | 0.1.0 |
-| Status | Draft |
-| Author | BuildSphere Team |
-| Last Updated | 2026-07-09 |
-| Related Documents | docs/adr/* |
+| Field             | Value                               |
+| ----------------- | ----------------------------------- |
+| Document          | Architecture Decision Records Index |
+| Version           | 0.1.0                               |
+| Status            | Draft                               |
+| Author            | BuildSphere Team                    |
+| Last Updated      | 2026-07-10                          |
+| Related Documents | docs/adr/*                          |
 
 ---
 
@@ -29,16 +29,17 @@ Create an ADR when a decision affects:
 
 # Current ADRs
 
-| ADR | Decision | Status |
-| --- | --- | --- |
-| ADR-001 | Repository structure | Accepted |
-| ADR-002 | Microservice-oriented architecture | Accepted |
-| ADR-003 | PostgreSQL as primary database | Accepted |
-| ADR-004 | REST-first communication | Accepted |
-| ADR-005 | AI service design | Accepted |
-| ADR-006 | Shared Service Core and ordered SQL migrations | Accepted |
+| ADR     | Decision                                                                | Status   |
+| ------- | ----------------------------------------------------------------------- | -------- |
+| ADR-001 | Repository structure                                                    | Accepted |
+| ADR-002 | Microservice-oriented architecture                                      | Accepted |
+| ADR-003 | PostgreSQL as primary database                                          | Accepted |
+| ADR-004 | REST-first communication                                                | Accepted |
+| ADR-005 | AI service design                                                       | Accepted |
+| ADR-006 | Shared Service Core and ordered SQL migrations                          | Accepted |
 | ADR-007 | GitHub App OAuth with signed state, PKCE, and encrypted provider tokens | Accepted |
-| ADR-008 | Project/Auth service boundary for GitHub operations | Accepted |
+| ADR-008 | Project/Auth service boundary for GitHub operations                     | Accepted |
+| ADR-009 | Generate-only AWS EKS Terraform boundary                                | Accepted |
 
 # ADR template
 

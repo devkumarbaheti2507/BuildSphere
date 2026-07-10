@@ -30,3 +30,4 @@ Specs are implementation-focused instructions for Codex and developers.
 | `TEMPLATE_SPEC.md`           | Template catalog and generation engine.                |
 | `GITHUB_INTEGRATION_SPEC.md` | GitHub App OAuth and later GitHub provider workflows.  |
 | `HELM_SPEC.md`               | Optional Helm packaging and chart generation behavior. |
+| `TERRAFORM_SPEC.md`          | Safe AWS EKS Terraform generation behavior.            |

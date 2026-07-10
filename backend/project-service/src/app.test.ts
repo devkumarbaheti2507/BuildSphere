@@ -136,6 +136,11 @@ test("project workflow creates, configures, and generates inspectable files", ()
             { category: "container", toolKey: "docker", config: {} },
             { category: "deployment", toolKey: "kubernetes", config: {} },
             { category: "packaging", toolKey: "helm", config: {} },
+            {
+              category: "infrastructure",
+              toolKey: "terraform-aws-eks",
+              config: {},
+            },
           ],
         }),
       },
@@ -152,7 +157,7 @@ test("project workflow creates, configures, and generates inspectable files", ()
         data: { files: Array<{ path: string; content: string }> };
       }
     ).data;
-    assert.equal(artifact.files.length, 17);
+    assert.equal(artifact.files.length, 26);
     assert.ok(
       artifact.files.some((file) => file.path === "backend/Dockerfile"),
     );
@@ -210,6 +215,82 @@ test("project workflow creates, configures, and generates inspectable files", ()
       (file) => file.path === ".github/workflows/ci.yml",
     );
     assert.match(workflow?.content ?? "", /\[\[ -f helm\/Chart\.yaml \]\]/);
+    const terraformFiles = artifact.files.filter((file) =>
+      file.path.startsWith("terraform/"),
+    );
+    assert.deepEqual(
+      terraformFiles.map((file) => file.path),
+      [
+        "terraform/versions.tf",
+        "terraform/providers.tf",
+        "terraform/variables.tf",
+        "terraform/main.tf",
+        "terraform/outputs.tf",
+        "terraform/terraform.tfvars.example",
+        "terraform/backend.tf.example",
+        "terraform/.gitignore",
+        "terraform/README.md",
+      ],
+    );
+    for (const file of terraformFiles) {
+      assert.doesNotMatch(
+        file.content,
+        /{{\s*(?:serviceName|awsRegion|environment)\s*}}/,
+      );
+      assert.doesNotMatch(
+        file.content,
+        /(?:access_key|secret_key|session_token)\s*=/i,
+      );
+    }
+    const terraformVariables = terraformFiles.find(
+      (file) => file.path === "terraform/variables.tf",
+    );
+    assert.match(
+      terraformVariables?.content ?? "",
+      /variable "enable_cluster"[\s\S]*?default\s*=\s*false/,
+    );
+    assert.match(
+      terraformVariables?.content ?? "",
+      /variable "cluster_name"[\s\S]*?default\s*=\s*"order-platform"/,
+    );
+    const terraformMain = terraformFiles.find(
+      (file) => file.path === "terraform/main.tf",
+    );
+    assert.match(
+      terraformMain?.content ?? "",
+      /source\s*=\s*"terraform-aws-modules\/vpc\/aws"[\s\S]*?version\s*=\s*"6\.6\.1"/,
+    );
+    assert.match(
+      terraformMain?.content ?? "",
+      /source\s*=\s*"terraform-aws-modules\/eks\/aws"[\s\S]*?version\s*=\s*"21\.24\.0"/,
+    );
+    const terraformValues = terraformFiles.find(
+      (file) => file.path === "terraform/terraform.tfvars.example",
+    );
+    assert.match(terraformValues?.content ?? "", /^enable_cluster = false$/m);
+    assert.match(
+      terraformValues?.content ?? "",
+      /^aws_region\s*= "us-east-1"$/m,
+    );
+    const terraformGitignore = terraformFiles.find(
+      (file) => file.path === "terraform/.gitignore",
+    );
+    assert.match(terraformGitignore?.content ?? "", /^\*\.tfvars$/m);
+    assert.doesNotMatch(
+      terraformGitignore?.content ?? "",
+      /^\.terraform\.lock\.hcl$/m,
+    );
+    assert.match(workflow?.content ?? "", /hashicorp\/setup-terraform@v4/);
+    assert.match(workflow?.content ?? "", /terraform fmt -check -recursive/);
+    assert.match(
+      workflow?.content ?? "",
+      /terraform init -backend=false -input=false -no-color/,
+    );
+    assert.match(workflow?.content ?? "", /terraform validate -no-color/);
+    assert.doesNotMatch(
+      workflow?.content ?? "",
+      /terraform (?:plan|apply|destroy)/,
+    );
   }));
 
 test("tool dependencies and saved selections control generated files", () =>
@@ -242,6 +323,32 @@ test("tool dependencies and saved selections control generated files", () =>
       ((await invalidHelm.json()) as { error: { code: string } }).error.code,
       "TOOL_DEPENDENCY_REQUIRED",
     );
+
+    const invalidTerraform = await authenticatedFetch(
+      `${baseUrl}/projects/${projectId}/tool-selections`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          selections: [
+            { category: "backend", toolKey: "nodejs", config: {} },
+            {
+              category: "infrastructure",
+              toolKey: "terraform-aws-eks",
+              config: {},
+            },
+          ],
+        }),
+      },
+    );
+    assert.equal(invalidTerraform.status, 400);
+    const terraformError = (await invalidTerraform.json()) as {
+      error: { code: string; details: Record<string, unknown> };
+    };
+    assert.equal(terraformError.error.code, "TOOL_DEPENDENCY_REQUIRED");
+    assert.deepEqual(terraformError.error.details, {
+      toolKey: "terraform-aws-eks",
+      requiredToolKey: "kubernetes",
+    });
 
     const configured = await authenticatedFetch(
       `${baseUrl}/projects/${projectId}/tool-selections`,
@@ -278,6 +385,10 @@ test("tool dependencies and saved selections control generated files", () =>
     );
     assert.equal(
       files.some((file) => file.startsWith("helm/")),
+      false,
+    );
+    assert.equal(
+      files.some((file) => file.startsWith("terraform/")),
       false,
     );
     assert.equal(files.includes("backend/Dockerfile"), false);

@@ -127,6 +127,16 @@ MVP notification types:
 - Pipeline execution failed.
 - Suggestion created.
 
+Acceptance criteria:
+
+- The authenticated workspace displays an unread notification count.
+- Users can open a notification center and read the complete title, message,
+  event type, and timestamp for every notification.
+- Users can mark one notification or all currently unread notifications as
+  read, and all visible unread counts update immediately.
+- Notification history and read actions remain scoped to the authenticated
+  user.
+
 ## FR-011 GitHub identity integration
 
 BuildSphere shall allow users to authenticate with a GitHub App before enabling repository and workflow integrations.
@@ -185,6 +195,30 @@ Acceptance criteria:
   the existing artifact and GitHub workflows.
 - BuildSphere does not install or upgrade the chart in a real cluster as part
   of this milestone.
+
+## FR-015 Terraform AWS EKS generation
+
+BuildSphere shall optionally generate a reviewable Terraform root module for
+an AWS EKS deployment target.
+
+Acceptance criteria:
+
+- Terraform AWS EKS is represented as an infrastructure tool and requires the
+  Kubernetes deployment selection.
+- Generated configuration separates Terraform/provider requirements,
+  variables, infrastructure, outputs, example values, backend guidance, ignore
+  rules, and operator documentation.
+- AWS, VPC, and EKS dependencies use explicit source addresses and version
+  constraints.
+- The generated default is inert and cannot create infrastructure until an
+  operator explicitly enables cluster creation.
+- Generated files contain no AWS credentials, active remote-state backend, or
+  secret values.
+- Generated CI may run format, initialization without a backend, and static
+  validation, but must not run Terraform plan or apply.
+- Terraform files use the existing artifact preview, download, and GitHub
+  publishing workflows.
+- BuildSphere does not call AWS or run Terraform plan/apply in this milestone.
 
 # Non-functional requirements
 

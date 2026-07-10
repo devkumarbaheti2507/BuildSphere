@@ -33,6 +33,7 @@ Define project management and tool selection behavior.
 - deployment
 - monitoring
 - packaging
+- infrastructure
 
 # MVP supported tools
 
@@ -46,7 +47,8 @@ Define project management and tool selection behavior.
   "container": ["docker"],
   "deployment": ["kubernetes"],
   "monitoring": ["prometheus"],
-  "packaging": ["helm"]
+  "packaging": ["helm"],
+  "infrastructure": ["terraform-aws-eks"]
 }
 ```
 
@@ -56,6 +58,7 @@ Define project management and tool selection behavior.
 - Archived projects cannot generate new artifacts.
 - Tool selections must use supported tool keys.
 - Helm requires the Kubernetes deployment selection.
+- Terraform AWS EKS requires the Kubernetes deployment selection.
 - Generated artifacts include only templates implied by saved tool selections.
 
 # Acceptance criteria

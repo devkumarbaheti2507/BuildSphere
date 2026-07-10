@@ -6,7 +6,7 @@
     "name": "BuildSphere",
     "version": "0.1.0",
     "kind": "AI-assisted Developer Experience Platform",
-    "status": "Local-first platform complete through Phase 7 Helm chart generation",
+    "status": "Local-first platform complete through Phase 8 AWS EKS Terraform generation",
     "primaryAudience": [
       "learning developer",
       "backend or DevOps portfolio builder",
@@ -33,7 +33,7 @@
       "type": "product",
       "name": "BuildSphere",
       "status": "implemented",
-      "description": "Guided platform for project configuration, selection-aware DevOps and Helm asset generation, explainable delivery workflows, recommendations, validation, and GitHub integration.",
+      "description": "Guided platform for project configuration, selection-aware DevOps, Helm, and disabled AWS EKS Terraform asset generation, explainable delivery workflows, recommendations, validation, and GitHub integration.",
       "evidence": ["README.md", "docs/00_PROJECT_VISION.md"]
     },
     {
@@ -66,7 +66,7 @@
       "name": "React frontend",
       "status": "implemented",
       "port": 5173,
-      "responsibility": "Authentication, dashboard, project wizard with optional Helm packaging, artifact inspection, pipeline UI, suggestions, deployment UI, and GitHub workspace.",
+      "responsibility": "Authentication, dashboard, project wizard with optional Helm and Terraform generation, artifact inspection, pipeline UI, suggestions, deployment UI, and GitHub workspace.",
       "evidence": ["frontend/src/App.tsx", "frontend/src/pages/ProjectPage.tsx"]
     },
     {
@@ -97,7 +97,7 @@
       "name": "Project Service",
       "status": "implemented",
       "port": 8082,
-      "responsibility": "Projects, dependency-checked tool selections, selection-aware template and Helm rendering, generated artifacts, TAR downloads, coordination, and public project-scoped GitHub routes.",
+      "responsibility": "Projects, dependency-checked tool selections, selection-aware template, Helm, and Terraform rendering, generated artifacts, TAR downloads, coordination, and public project-scoped GitHub routes.",
       "evidence": [
         "backend/project-service/src/project-service.ts",
         "backend/project-service/src/template-catalog.ts"
@@ -279,7 +279,11 @@
       "type": "capability",
       "name": "Template generation and artifacts",
       "status": "implemented",
-      "evidence": ["specs/TEMPLATE_SPEC.md", "specs/HELM_SPEC.md"]
+      "evidence": [
+        "specs/TEMPLATE_SPEC.md",
+        "specs/HELM_SPEC.md",
+        "specs/TERRAFORM_SPEC.md"
+      ]
     },
     {
       "id": "capability.pipeline",
@@ -319,9 +323,13 @@
     {
       "id": "capability.notifications",
       "type": "capability",
-      "name": "User notifications",
+      "name": "User notifications and read-state center",
       "status": "implemented",
-      "evidence": ["specs/NOTIFICATION_SPEC.md"]
+      "evidence": [
+        "specs/NOTIFICATION_SPEC.md",
+        "frontend/src/components/NotificationCenter.tsx",
+        "scripts/smoke-mvp.ts"
+      ]
     },
     {
       "id": "capability.github_oauth",
@@ -471,7 +479,7 @@
     {
       "id": "workflow.project_generation",
       "type": "workflow",
-      "name": "Selection-aware project and Helm generation",
+      "name": "Selection-aware project, Helm, and Terraform generation",
       "status": "implemented"
     },
     {
@@ -611,10 +619,15 @@
       "evidence": ["specs/HELM_SPEC.md", "templates/helm/"]
     },
     {
-      "id": "future.terraform",
-      "type": "future_candidate",
-      "name": "Terraform generation",
-      "status": "future"
+      "id": "technology.terraform",
+      "type": "technology",
+      "name": "Terraform 1.x",
+      "status": "implemented",
+      "reason": "Generates and statically validates disabled AWS EKS infrastructure source without cloud credentials or execution authority.",
+      "evidence": [
+        "specs/TERRAFORM_SPEC.md",
+        "templates/terraform/aws-eks-basic/"
+      ]
     },
     {
       "id": "future.real_kubernetes",
@@ -1222,9 +1235,9 @@
       "to": "technology.helm"
     },
     {
-      "from": "product.buildsphere",
-      "relation": "may_evolve_to",
-      "to": "future.terraform"
+      "from": "capability.generation",
+      "relation": "generates",
+      "to": "technology.terraform"
     },
     {
       "from": "product.buildsphere",
@@ -1247,7 +1260,7 @@
     "storage": "PostgreSQL generated_artifacts.files JSONB",
     "checksum": "SHA-256 of serialized files",
     "archive": "In-memory TAR download",
-    "selectionBehavior": "Catalog entries are filtered by saved tool keys; Helm requires Kubernetes and adds seven chart files.",
+    "selectionBehavior": "Catalog entries are filtered by saved tool keys; Helm requires Kubernetes and adds seven chart files; Terraform AWS EKS requires Kubernetes and adds nine disabled-by-default files.",
     "files": [
       "frontend/README.md",
       "backend/README.md",
@@ -1265,6 +1278,15 @@
       "helm/templates/service.yaml",
       "helm/templates/ingress.yaml",
       "helm/templates/NOTES.txt",
+      "terraform/versions.tf",
+      "terraform/providers.tf",
+      "terraform/variables.tf",
+      "terraform/main.tf",
+      "terraform/outputs.tf",
+      "terraform/terraform.tfvars.example",
+      "terraform/backend.tf.example",
+      "terraform/.gitignore",
+      "terraform/README.md",
       ".env.example"
     ]
   },
@@ -1288,10 +1310,12 @@
       "Phase 7 memory gateway smoke with 17 generated files",
       "Helm v4.2.2 strict lint and template rendering",
       "Phase 7 PostgreSQL gateway smoke with restart persistence",
-      "PostgreSQL gateway smoke",
+      "Terraform v1.15.8 format, backend-disabled initialization, exact module resolution, and static validation",
+      "Phase 8 PostgreSQL gateway smoke with 26 generated files and restart persistence",
       "migration idempotency",
       "restart persistence",
       "desktop and mobile browser verification",
+      "PostgreSQL notification read persistence and desktop/mobile individual plus bulk read interactions",
       "live GitHub OAuth, private repository publication, successful Actions synchronization, and no-op republish"
     ]
   },
@@ -1300,6 +1324,7 @@
     "The internal pipeline is simulated.",
     "Kubernetes deployment is generated and validated but not applied.",
     "Helm charts are linted and rendered locally but are not installed or validated against a live Kubernetes cluster.",
+    "Terraform is formatted and statically validated with its backend disabled, but BuildSphere does not run plan, apply, destroy, state operations, AWS calls, or own remote state.",
     "External AI provider calls are not implemented.",
     "Redis, MinIO, and MailHog are not consumed by active services.",
     "Artifacts are stored in PostgreSQL JSONB rather than object storage.",

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type {
   Notification,
   PlatformHealth,
@@ -9,12 +10,27 @@ export function DashboardPage({
   projects,
   health,
   notifications,
+  onMarkNotificationRead,
 }: {
   projects: ProjectSummary[];
   health?: PlatformHealth;
   notifications: Notification[];
+  onMarkNotificationRead: (notificationId: string) => Promise<void>;
 }) {
   const unread = notifications.filter((item) => !item.readAt);
+  const [busyNotificationId, setBusyNotificationId] = useState<string>();
+  const [notificationError, setNotificationError] = useState("");
+  const markRead = async (notificationId: string) => {
+    setBusyNotificationId(notificationId);
+    setNotificationError("");
+    try {
+      await onMarkNotificationRead(notificationId);
+    } catch {
+      setNotificationError("The notification could not be marked as read.");
+    } finally {
+      setBusyNotificationId(undefined);
+    }
+  };
   return (
     <>
       <div className="page-heading">
@@ -104,6 +120,11 @@ export function DashboardPage({
           <h2>Recent notifications</h2>
           <span>{unread.length} unread</span>
         </div>
+        {notificationError && (
+          <p className="form-error" role="alert">
+            {notificationError}
+          </p>
+        )}
         {notifications.length === 0 ? (
           <p className="quiet">No events have been recorded.</p>
         ) : (
@@ -114,11 +135,24 @@ export function DashboardPage({
                 className={item.readAt ? "notification read" : "notification"}
               >
                 <span className="event-dot" />
-                <div>
+                <div className="notification-copy">
                   <strong>{item.title}</strong>
                   <p>{item.message}</p>
-                  <small>{new Date(item.createdAt).toLocaleString()}</small>
+                  <time dateTime={item.createdAt}>
+                    {new Date(item.createdAt).toLocaleString()}
+                  </time>
                 </div>
+                {!item.readAt && (
+                  <button
+                    className="small-button notification-action"
+                    onClick={() => void markRead(item.id)}
+                    disabled={Boolean(busyNotificationId)}
+                  >
+                    {busyNotificationId === item.id
+                      ? "Marking..."
+                      : "Mark read"}
+                  </button>
+                )}
               </div>
             ))}
           </div>

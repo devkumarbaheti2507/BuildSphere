@@ -1,12 +1,12 @@
 # Document Information
 
-| Field | Value |
-| --- | --- |
-| Document | ADR Index |
-| Version | 0.1.0 |
-| Status | Draft |
-| Author | BuildSphere Team |
-| Last Updated | 2026-07-09 |
+| Field             | Value                           |
+| ----------------- | ------------------------------- |
+| Document          | ADR Index                       |
+| Version           | 0.1.0                           |
+| Status            | Draft                           |
+| Author            | BuildSphere Team                |
+| Last Updated      | 2026-07-10                      |
 | Related Documents | ../07_ARCHITECTURE_DECISIONS.md |
 
 ---
@@ -25,3 +25,4 @@ Architecture Decision Records explain important BuildSphere design choices.
 - ADR-006: Shared service core and SQL migrations.
 - ADR-007: GitHub App OAuth.
 - ADR-008: GitHub integration service boundary.
+- ADR-009: Generate-only AWS EKS Terraform boundary.

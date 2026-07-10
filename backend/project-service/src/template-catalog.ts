@@ -227,6 +227,123 @@ const catalog: CatalogEntry[] = [
     language: "gotemplate",
     explanation: "Shows the operator how to reach the installed application.",
   },
+  ...[
+    {
+      key: "versions",
+      file: "versions.tf",
+      displayName: "Terraform version constraints",
+      description: "Pins compatible Terraform and AWS provider versions.",
+      supportedVariables: [],
+      language: "hcl",
+      explanation:
+        "Keeps Terraform and provider upgrades deliberate and reproducible.",
+    },
+    {
+      key: "providers",
+      file: "providers.tf",
+      displayName: "Terraform AWS provider",
+      description: "Configures the AWS region and common resource tags.",
+      supportedVariables: [],
+      language: "hcl",
+      explanation:
+        "Applies consistent ownership metadata without embedding credentials.",
+    },
+    {
+      key: "variables",
+      file: "variables.tf",
+      displayName: "Terraform input variables",
+      description: "Defines guarded EKS, network, access, and scaling inputs.",
+      supportedVariables: ["serviceName", "awsRegion", "environment"],
+      language: "hcl",
+      explanation:
+        "Makes cloud-sensitive settings explicit and keeps provisioning disabled by default.",
+    },
+    {
+      key: "main",
+      file: "main.tf",
+      displayName: "Terraform AWS EKS module",
+      description: "Defines the guarded VPC and managed EKS cluster modules.",
+      supportedVariables: [],
+      language: "hcl",
+      explanation:
+        "Provides reviewable AWS infrastructure source without running cloud operations.",
+    },
+    {
+      key: "outputs",
+      file: "outputs.tf",
+      displayName: "Terraform outputs",
+      description:
+        "Exposes useful cluster and network values after provisioning.",
+      supportedVariables: [],
+      language: "hcl",
+      explanation:
+        "Documents the identifiers operators need after an approved Terraform apply.",
+    },
+    {
+      key: "example-values",
+      file: "terraform.tfvars.example",
+      displayName: "Terraform example values",
+      description: "Shows safe, non-secret project inputs.",
+      supportedVariables: ["serviceName", "awsRegion", "environment"],
+      language: "hcl",
+      explanation:
+        "Provides an inert starting point that requires deliberate operator changes.",
+    },
+    {
+      key: "backend-example",
+      file: "backend.tf.example",
+      displayName: "Terraform backend example",
+      description: "Documents optional remote state configuration.",
+      supportedVariables: ["serviceName", "awsRegion"],
+      language: "hcl",
+      explanation:
+        "Keeps state setup visible but inactive until an operator configures it.",
+    },
+    {
+      key: "gitignore",
+      file: ".gitignore",
+      displayName: "Terraform ignore rules",
+      description: "Excludes local state, plans, caches, and crash logs.",
+      supportedVariables: [],
+      language: "gitignore",
+      explanation:
+        "Prevents sensitive local Terraform artifacts from entering source control.",
+    },
+    {
+      key: "readme",
+      file: "README.md",
+      sourceFile: "README.template.md",
+      displayName: "Terraform operator guide",
+      description:
+        "Explains validation, review, state, access, and cost boundaries.",
+      supportedVariables: ["serviceName", "awsRegion", "environment"],
+      language: "markdown",
+      explanation:
+        "Guides an operator through safe validation before any approved cloud action.",
+    },
+  ].map(
+    ({
+      key,
+      file,
+      sourceFile,
+      displayName,
+      description,
+      supportedVariables,
+      language,
+      explanation,
+    }): CatalogEntry => ({
+      key: `terraform-aws-eks-${key}`,
+      category: "terraform",
+      displayName,
+      description,
+      supportedVariables,
+      requiredTools: ["terraform-aws-eks", "kubernetes"],
+      outputPath: `terraform/${file}`,
+      sourcePath: `templates/terraform/aws-eks-basic/${sourceFile ?? file}`,
+      language,
+      explanation,
+    }),
+  ),
   {
     key: "environment-example",
     category: "backend",

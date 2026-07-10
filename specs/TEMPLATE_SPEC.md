@@ -61,6 +61,14 @@ Each template should have:
 - Deployment, Service, and optional Ingress templates.
 - Installation notes.
 
+# Phase 8 templates
+
+- Terraform and AWS provider requirements.
+- AWS provider configuration and default resource tags.
+- Validated inputs and disabled-by-default example values.
+- Versioned VPC and EKS modules with managed nodes and explicit access.
+- Outputs, state ignore rules, remote-backend example, and operator README.
+
 # Acceptance criteria
 
 - Template catalog lists available templates.

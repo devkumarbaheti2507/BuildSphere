@@ -64,6 +64,12 @@ project also selects Kubernetes. Helm generation reuses the existing artifact
 preview, archive, and GitHub publishing paths; it does not add a service or
 grant cluster access.
 
+Phase 8 adds an AWS EKS Terraform root module as optional infrastructure source
+for Kubernetes projects. Project Service continues to render and store plain
+files only. Terraform CLI validation can run locally or in generated CI, but
+AWS credentials, state, plans, applies, and cloud API calls remain outside the
+BuildSphere runtime boundary.
+
 # External provider boundary
 
 Phase 6 begins with a GitHub App. The browser starts the GitHub web application flow through Auth Service, GitHub redirects to the frontend callback, and Auth Service performs the code exchange and identity lookup. GitHub credentials and provider tokens never enter generated project files or frontend storage.
@@ -126,6 +132,7 @@ User selects stack
     -> Project Service stores project configuration
     -> Template catalog resolves only assets for selected tools
     -> Optional Helm selection adds a reusable Kubernetes chart
+    -> Optional Terraform AWS EKS selection adds inert infrastructure source
     -> Pipeline Service creates pipeline definition
     -> Deployment Service creates deployment asset metadata
     -> AI Service generates initial recommendations

@@ -6,7 +6,7 @@
 | ---------------------- | ---------------------------------------------------------------------------------------- |
 | Purpose                | Self-contained technical and product context for learning, presentation, and AI tutoring |
 | Snapshot date          | 2026-07-10                                                                               |
-| Current milestone      | Local-first platform complete through Phase 7 Helm chart generation                      |
+| Current milestone      | Local-first platform complete through Phase 8 AWS EKS Terraform generation               |
 | Intended readers       | Project owner, reviewers, interviewers, mentors, and ChatGPT                             |
 | Structured companion   | `docs/project-knowledge-graph.json`                                                      |
 | Presentation companion | `docs/16_PRESENTATION_AND_LEARNING_GUIDE.md`                                             |
@@ -22,8 +22,8 @@ uploaded to an AI tutor without uploading the local secret-bearing `.env` file.
 BuildSphere is a documentation-first, AI-assisted Developer Experience Platform
 that guides a developer from project configuration to generated DevOps assets,
 explainable pipeline simulation, recommendations, deployment validation,
-optional Helm packaging, and optional real GitHub repository and Actions
-integration.
+optional Helm packaging, disabled-by-default AWS EKS Terraform generation, and
+optional real GitHub repository and Actions integration.
 
 ## What problem it solves
 
@@ -46,16 +46,17 @@ Use these labels throughout this graph:
 
 ## Current status
 
-| Area                     | Status                                        | Evidence                                                           |
-| ------------------------ | --------------------------------------------- | ------------------------------------------------------------------ |
-| Roadmap Phases 1-5       | Implemented                                   | `docs/12_ROADMAP.md`, `docs/13_BACKLOG.md`                         |
-| Phase 6 GitHub milestone | Implemented and live-validated                | `specs/GITHUB_INTEGRATION_SPEC.md`, `memory/completed-features.md` |
-| Phase 7 Helm generation  | Implemented and gateway-validated             | `specs/HELM_SPEC.md`, `memory/completed-features.md`               |
-| Automated verification   | 41 tests plus lint and production builds pass | `docs/11_TESTING.md`, `memory/next-session.md`                     |
-| PostgreSQL persistence   | Implemented and restart-tested                | migrations and smoke scripts                                       |
-| Browser workflow         | Implemented and desktop/mobile checked        | `memory/completed-features.md`                                     |
-| Real deployment          | Future                                        | generated and validated manifests only                             |
-| External LLM             | Future                                        | local `rules` and `mock` modes only                                |
+| Area                     | Status                                                       | Evidence                                                           |
+| ------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------------ |
+| Roadmap Phases 1-5       | Implemented                                                  | `docs/12_ROADMAP.md`, `docs/13_BACKLOG.md`                         |
+| Phase 6 GitHub milestone | Implemented and live-validated                               | `specs/GITHUB_INTEGRATION_SPEC.md`, `memory/completed-features.md` |
+| Phase 7 Helm generation  | Implemented and gateway-validated                            | `specs/HELM_SPEC.md`, `memory/completed-features.md`               |
+| Phase 8 Terraform        | Implemented and statically validated                         | `specs/TERRAFORM_SPEC.md`, `memory/completed-features.md`          |
+| Automated verification   | 41 tests plus lint and production builds pass                | `docs/11_TESTING.md`, `memory/next-session.md`                     |
+| PostgreSQL persistence   | Implemented and restart-tested                               | migrations and smoke scripts                                       |
+| Browser workflow         | Auth, project, and notification flows desktop/mobile checked | `memory/completed-features.md`                                     |
+| Real deployment          | Future                                                       | generated and validated manifests only                             |
+| External LLM             | Future                                                       | local `rules` and `mock` modes only                                |
 
 ## System context graph
 
@@ -104,21 +105,21 @@ flowchart LR
 
 ## Runtime component registry
 
-| Component            | Port | Responsibility                                                                                                                       | Important relationships                                                        | Current maturity              |
-| -------------------- | ---: | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ | ----------------------------- |
-| Frontend             | 5173 | Authentication, dashboard, project wizard, file viewer, pipeline timeline, GitHub workspace, suggestions, deployment UI              | Calls only API Gateway; redirects browser to GitHub for OAuth                  | Implemented                   |
-| API Gateway          | 8080 | Public REST entry point, CORS, correlation propagation, route proxying                                                               | Routes by path to domain services                                              | Implemented                   |
-| Auth Service         | 8081 | Password auth, JWT sessions, refresh-token revocation, GitHub OAuth, provider tokens, repository publishing, Actions synchronization | Calls GitHub; owns provider secret boundary                                    | Implemented                   |
-| Project Service      | 8082 | Projects, tool selections, template rendering, artifact bundles, TAR downloads, project-scoped GitHub endpoints                      | Coordinates Pipeline and AI after generation; calls Auth internally for GitHub | Implemented                   |
-| Pipeline Service     | 8083 | Explainable pipeline definitions, simulated executions, status transitions, cancellation                                             | Writes logs through Logging Service and emits notifications                    | Implemented, simulated runner |
-| Deployment Service   | 8084 | Kubernetes deployment targets and structural manifest validation                                                                     | Reads generated file payloads through API requests                             | Implemented, no cluster apply |
-| Monitoring Service   | 8085 | Aggregates eight service health endpoints and emits Prometheus text metrics                                                          | Polls Gateway and seven domain services                                        | Implemented foundation        |
-| Logging Service      | 8086 | Internal log ingestion and owner-scoped execution log retrieval                                                                      | Receives simulated pipeline logs                                               | Implemented                   |
-| AI Service           | 8087 | Rule-based or mock suggestions, prompt-file loading, suggestion status                                                               | Reads project/artifact context; emits notifications                            | Implemented locally           |
-| Analytics Service    | 8088 | Reserved product analytics boundary                                                                                                  | No database or events yet                                                      | Health-only scaffold          |
-| Notification Service | 8089 | Internal event creation, user-scoped listing, mark-as-read                                                                           | Called by Project, Pipeline, and AI services                                   | Implemented                   |
-| Shared Types         |  n/a | Cross-package TypeScript contracts                                                                                                   | Used by frontend and domain services                                           | Implemented                   |
-| Service Core         |  n/a | JWT, scrypt, errors, logging, PostgreSQL, migrations, notifications, graceful shutdown                                               | Used by backend services                                                       | Implemented                   |
+| Component            | Port | Responsibility                                                                                                                                      | Important relationships                                                        | Current maturity              |
+| -------------------- | ---: | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ----------------------------- |
+| Frontend             | 5173 | Authentication, dashboard, project wizard with Helm/Terraform choices, file viewer, pipeline timeline, GitHub workspace, suggestions, deployment UI | Calls only API Gateway; redirects browser to GitHub for OAuth                  | Implemented                   |
+| API Gateway          | 8080 | Public REST entry point, CORS, correlation propagation, route proxying                                                                              | Routes by path to domain services                                              | Implemented                   |
+| Auth Service         | 8081 | Password auth, JWT sessions, refresh-token revocation, GitHub OAuth, provider tokens, repository publishing, Actions synchronization                | Calls GitHub; owns provider secret boundary                                    | Implemented                   |
+| Project Service      | 8082 | Projects, dependency-checked tool selections, Helm/Terraform rendering, artifact bundles, TAR downloads, project-scoped GitHub endpoints            | Coordinates Pipeline and AI after generation; calls Auth internally for GitHub | Implemented                   |
+| Pipeline Service     | 8083 | Explainable pipeline definitions, simulated executions, status transitions, cancellation                                                            | Writes logs through Logging Service and emits notifications                    | Implemented, simulated runner |
+| Deployment Service   | 8084 | Kubernetes deployment targets and structural manifest validation                                                                                    | Reads generated file payloads through API requests                             | Implemented, no cluster apply |
+| Monitoring Service   | 8085 | Aggregates eight service health endpoints and emits Prometheus text metrics                                                                         | Polls Gateway and seven domain services                                        | Implemented foundation        |
+| Logging Service      | 8086 | Internal log ingestion and owner-scoped execution log retrieval                                                                                     | Receives simulated pipeline logs                                               | Implemented                   |
+| AI Service           | 8087 | Rule-based or mock suggestions, prompt-file loading, suggestion status                                                                              | Reads project/artifact context; emits notifications                            | Implemented locally           |
+| Analytics Service    | 8088 | Reserved product analytics boundary                                                                                                                 | No database or events yet                                                      | Health-only scaffold          |
+| Notification Service | 8089 | Internal event creation, user-scoped listing, mark-as-read                                                                                          | Called by Project, Pipeline, and AI services                                   | Implemented                   |
+| Shared Types         |  n/a | Cross-package TypeScript contracts                                                                                                                  | Used by frontend and domain services                                           | Implemented                   |
+| Service Core         |  n/a | JWT, scrypt, errors, logging, PostgreSQL, migrations, notifications, graceful shutdown                                                              | Used by backend services                                                       | Implemented                   |
 
 ## Why each technology is used
 
@@ -149,7 +150,7 @@ flowchart LR
 | MinIO/S3 settings      | Compose and environment examples                  | Intended object storage                                | Future external storage for artifact archives                           | Prepared, artifacts currently live in PostgreSQL JSONB |
 | MailHog                | Compose                                           | Intended local email capture                           | Future notification delivery testing                                    | Prepared, not used by runtime code                     |
 | Helm                   | Optional generated Kubernetes packaging           | Configurable application charts without cluster access | Produces API v2 chart metadata, values, helpers, resources, and notes   | Active generation                                      |
-| Terraform              | Prepared template placeholder                     | Planned infrastructure generation                      | Post-Phase 7 expansion point                                            | Future                                                 |
+| Terraform 1.x          | Optional generated AWS EKS infrastructure source  | Declarative, reviewable infrastructure configuration   | Produces an inert nine-file root module and supports static validation  | Active generation; no plan/apply                       |
 
 ## Architecture decisions
 
@@ -161,8 +162,11 @@ flowchart LR
 6. **Shared Service Core**: cross-cutting mechanics are reused, while domain behavior remains inside each service.
 7. **GitHub App instead of classic OAuth App**: provider access is fine-grained and suitable for repository automation.
 8. **Project/Auth split for GitHub**: Project Service proves ownership; Auth Service retains decrypted provider tokens.
+9. **Generate-only Terraform boundary**: BuildSphere emits disabled AWS EKS
+   source and may statically validate it, but holds no AWS credentials and runs
+   no plan, apply, destroy, or state operation.
 
-Evidence: `docs/adr/ADR-001-*` through `ADR-008-*`.
+Evidence: `docs/adr/ADR-001-*` through `ADR-009-*`.
 
 ## Domain and data graph
 
@@ -211,10 +215,13 @@ database foreign key because the owning services intentionally remain separate.
 
 1. Open the frontend at `http://localhost:5173`.
 2. Register with email/password or use the optional GitHub App login.
-3. View projects, platform health, and notifications on the dashboard.
+3. View projects, platform health, and recent notifications on the dashboard;
+   open the full notification center and mark one or all events read.
 4. Create a project through five UI steps: basics, architecture, application, delivery, and review.
-5. Select React, Node.js, PostgreSQL, GitHub Actions, Docker, and Kubernetes; optionally select Redis, Prometheus, and Helm.
-6. Generate a selection-aware artifact bundle; the default Helm-enabled wizard produces 17 files.
+5. Select React, Node.js, PostgreSQL, GitHub Actions, Docker, and Kubernetes;
+   optionally select Redis, Prometheus, Helm, and Terraform AWS EKS.
+6. Generate a selection-aware artifact bundle; the default Helm/Terraform
+   wizard produces 26 files with cloud creation disabled.
 7. Preview files and explanations or download a TAR archive.
 8. Run the seven-stage simulated pipeline, inspect learning notes and logs, or deliberately simulate a test-stage failure.
 9. Review, accept, or dismiss rule-based suggestions.
@@ -273,7 +280,7 @@ sequenceDiagram
   Project->>DB: persist project and tools
   UI->>Project: generate
   Project->>Templates: resolve selected categories and render variables
-  Templates-->>Project: selected files, including optional seven-file Helm chart
+  Templates-->>Project: selected files, including optional Helm and Terraform source
   Project->>DB: save files JSONB + SHA-256 checksum
   par best-effort coordination
     Project->>Pipeline: create default simulated pipeline
@@ -351,32 +358,44 @@ sequenceDiagram
 
 The current generator resolves catalog entries from saved tool selections.
 Helm is optional, requires Kubernetes, and adds seven chart files while
-preserving Helm expressions for later rendering by the Helm CLI.
+preserving Helm expressions for later rendering by the Helm CLI. Terraform AWS
+EKS is also optional, requires Kubernetes, and adds nine disabled-by-default
+files without invoking Terraform or AWS during generation.
 
-| Output                           | Source template                             | Purpose                                                               |
-| -------------------------------- | ------------------------------------------- | --------------------------------------------------------------------- |
-| `frontend/README.md`             | `templates/react/README.template.md`        | React setup guidance                                                  |
-| `backend/README.md`              | `templates/nodejs/README.template.md`       | Node service guidance and health endpoint                             |
-| `backend/Dockerfile`             | `templates/docker/Dockerfile.node.template` | Two-stage Node container definition                                   |
-| `docker-compose.yml`             | Docker Compose template                     | Generated service plus PostgreSQL topology                            |
-| `.github/workflows/ci.yml`       | GitHub Actions template                     | Validate generated files and conditionally build available app inputs |
-| `kubernetes/namespace.yaml`      | Kubernetes namespace template               | Workload isolation                                                    |
-| `kubernetes/deployment.yaml`     | Kubernetes deployment template              | Replicas, probes, resources, image, and port                          |
-| `kubernetes/service.yaml`        | Kubernetes service template                 | Stable in-cluster networking                                          |
-| `kubernetes/ingress.yaml`        | Kubernetes ingress template                 | External HTTP routing                                                 |
-| `helm/Chart.yaml`                | Helm chart template                         | API v2 chart identity and versions                                    |
-| `helm/values.yaml`               | Helm values template                        | Image, replicas, networking, probes, ingress, and resources           |
-| `helm/templates/_helpers.tpl`    | Helm helpers template                       | Namespaced resource names, selectors, and labels                      |
-| `helm/templates/deployment.yaml` | Helm workload template                      | Configurable Deployment rendered later by Helm                        |
-| `helm/templates/service.yaml`    | Helm networking template                    | Configurable ClusterIP Service                                        |
-| `helm/templates/ingress.yaml`    | Helm routing template                       | Values-controlled external routing                                    |
-| `helm/templates/NOTES.txt`       | Helm notes template                         | Post-install endpoint and port-forward guidance                       |
-| `.env.example`                   | Inline Project Service template             | Configuration names with placeholder values                           |
+| Output                               | Source template                             | Purpose                                                                  |
+| ------------------------------------ | ------------------------------------------- | ------------------------------------------------------------------------ |
+| `frontend/README.md`                 | `templates/react/README.template.md`        | React setup guidance                                                     |
+| `backend/README.md`                  | `templates/nodejs/README.template.md`       | Node service guidance and health endpoint                                |
+| `backend/Dockerfile`                 | `templates/docker/Dockerfile.node.template` | Two-stage Node container definition                                      |
+| `docker-compose.yml`                 | Docker Compose template                     | Generated service plus PostgreSQL topology                               |
+| `.github/workflows/ci.yml`           | GitHub Actions template                     | Validate generated files and conditionally build available app inputs    |
+| `kubernetes/namespace.yaml`          | Kubernetes namespace template               | Workload isolation                                                       |
+| `kubernetes/deployment.yaml`         | Kubernetes deployment template              | Replicas, probes, resources, image, and port                             |
+| `kubernetes/service.yaml`            | Kubernetes service template                 | Stable in-cluster networking                                             |
+| `kubernetes/ingress.yaml`            | Kubernetes ingress template                 | External HTTP routing                                                    |
+| `helm/Chart.yaml`                    | Helm chart template                         | API v2 chart identity and versions                                       |
+| `helm/values.yaml`                   | Helm values template                        | Image, replicas, networking, probes, ingress, and resources              |
+| `helm/templates/_helpers.tpl`        | Helm helpers template                       | Namespaced resource names, selectors, and labels                         |
+| `helm/templates/deployment.yaml`     | Helm workload template                      | Configurable Deployment rendered later by Helm                           |
+| `helm/templates/service.yaml`        | Helm networking template                    | Configurable ClusterIP Service                                           |
+| `helm/templates/ingress.yaml`        | Helm routing template                       | Values-controlled external routing                                       |
+| `helm/templates/NOTES.txt`           | Helm notes template                         | Post-install endpoint and port-forward guidance                          |
+| `terraform/versions.tf`              | Terraform AWS EKS template                  | Bounded Terraform and AWS provider requirements                          |
+| `terraform/providers.tf`             | Terraform AWS EKS template                  | AWS region and common ownership tags without credentials                 |
+| `terraform/variables.tf`             | Terraform AWS EKS template                  | Inert defaults and validated network, access, endpoint, and node inputs  |
+| `terraform/main.tf`                  | Terraform AWS EKS template                  | Exact VPC and managed EKS module definitions guarded by `enable_cluster` |
+| `terraform/outputs.tf`               | Terraform AWS EKS template                  | Cluster and network values after an operator-approved apply              |
+| `terraform/terraform.tfvars.example` | Terraform AWS EKS template                  | Non-secret example values with cluster creation disabled                 |
+| `terraform/backend.tf.example`       | Terraform AWS EKS template                  | Inactive remote-state guidance                                           |
+| `terraform/.gitignore`               | Terraform AWS EKS template                  | Excludes caches, state, plans, overrides, and crash logs                 |
+| `terraform/README.md`                | Terraform AWS EKS template                  | Validation and operator review guidance                                  |
+| `.env.example`                       | Inline Project Service template             | Configuration names with placeholder values                              |
 
 Generation variables include project/service names, port `8080`, image name,
-image tag, namespace, replica count `2`, local host name, and placeholder
-database values. The bundle is configuration and delivery scaffolding, not a
-complete compilable React/Node application yet.
+image tag, namespace, replica count `2`, local host name, placeholder database
+values, AWS region `us-east-1`, and environment `development`. The bundle is
+configuration and delivery scaffolding, not a complete compilable React/Node
+application yet.
 
 ## Explainable pipeline graph
 
@@ -508,6 +527,11 @@ All public calls use `http://localhost:8080/api`. Protected endpoints require
 - `GET /notifications`
 - `PATCH /notifications/{notificationId}/read`
 
+The frontend keeps one ordered notification state shared by the dashboard,
+topbar unread badge, and full-history drawer. Bulk read reuses the owner-scoped
+per-notification PATCH endpoint so completed updates remain durable even if a
+later update fails.
+
 Every backend service also exposes `GET /health`. Monitoring Service exposes
 `GET /metrics` directly in Prometheus text format.
 
@@ -524,21 +548,23 @@ Every backend service also exposes `GET /health`. Monitoring Service exposes
 
 ## Security graph
 
-| Threat or concern           | Current control                                                              | Remaining work                                               |
-| --------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| Password disclosure         | scrypt with random salt; no password hashes returned                         | Password reset and stronger policy are future                |
-| Stolen access token         | Short default 15-minute JWT expiry                                           | Rate limiting and centralized revocation are future          |
-| Stolen refresh token        | SHA-256 hash in DB, expiry, revocation, rotation                             | Device/session management is future                          |
-| Cross-user data access      | JWT identity plus owner checks in every domain service                       | Team sharing and RBAC are future                             |
-| OAuth callback forgery      | Signed expiring state plus PKCE S256                                         | Multi-provider abstraction is future                         |
-| Provider token leakage      | AES-256-GCM at rest; never sent to frontend or Project Service               | Disconnect/reconnect UI is future                            |
-| GitHub path traversal       | Reject empty, absolute, duplicate, dot, and parent paths                     | Broader policy scanning is future                            |
-| Partial GitHub publish      | Persist link first; serial writes; retries reuse repository                  | Background job model could improve long operations           |
-| Duplicate GitHub commits    | Compare Git blob SHA and skip unchanged content                              | Batched Git tree commits are a future optimization           |
-| Partial-artifact CI runs    | Publish workflow files after other files                                     | Existing external repositories may retain old run history    |
-| Secret leakage in templates | Placeholder values and `.env.example`; `.env` ignored                        | Production secret manager is future                          |
-| Broken Kubernetes YAML      | Structural validation for API version, kind, name, labels, probes, resources | Server-side schema validation and cluster dry-run are future |
-| Untraceable requests        | Correlation ID generated/propagated and logged                               | Distributed tracing is future                                |
+| Threat or concern           | Current control                                                                         | Remaining work                                                |
+| --------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Password disclosure         | scrypt with random salt; no password hashes returned                                    | Password reset and stronger policy are future                 |
+| Stolen access token         | Short default 15-minute JWT expiry                                                      | Rate limiting and centralized revocation are future           |
+| Stolen refresh token        | SHA-256 hash in DB, expiry, revocation, rotation                                        | Device/session management is future                           |
+| Cross-user data access      | JWT identity plus owner checks in every domain service                                  | Team sharing and RBAC are future                              |
+| OAuth callback forgery      | Signed expiring state plus PKCE S256                                                    | Multi-provider abstraction is future                          |
+| Provider token leakage      | AES-256-GCM at rest; never sent to frontend or Project Service                          | Disconnect/reconnect UI is future                             |
+| GitHub path traversal       | Reject empty, absolute, duplicate, dot, and parent paths                                | Broader policy scanning is future                             |
+| Partial GitHub publish      | Persist link first; serial writes; retries reuse repository                             | Background job model could improve long operations            |
+| Duplicate GitHub commits    | Compare Git blob SHA and skip unchanged content                                         | Batched Git tree commits are a future optimization            |
+| Partial-artifact CI runs    | Publish workflow files after other files                                                | Existing external repositories may retain old run history     |
+| Secret leakage in templates | Placeholder values and `.env.example`; `.env` ignored                                   | Production secret manager is future                           |
+| Broken Kubernetes YAML      | Structural validation for API version, kind, name, labels, probes, resources            | Server-side schema validation and cluster dry-run are future  |
+| Accidental cloud creation   | Terraform defaults disabled; generated CI has format/init-without-backend/validate only | Cost/IAM/state review and any execution remain operator-owned |
+| Terraform secret/state leak | No credentials or active backend; generated ignore rules exclude state and plans        | Production secret and remote-state workflows are future       |
+| Untraceable requests        | Correlation ID generated/propagated and logged                                          | Distributed tracing is future                                 |
 
 ## Observability model
 
@@ -558,8 +584,9 @@ flowchart LR
   Build --> Tests[pnpm -r test]
   Tests --> MemorySmoke[Gateway smoke in memory mode]
   Tests --> HelmLint[Helm v4.2.2 strict lint + template]
-  Tests --> PostgresSmoke[17-file gateway + Phase 6 PostgreSQL verification]
-  PostgresSmoke --> Browser[Desktop/mobile browser workflow]
+  Tests --> TerraformValidate[Terraform v1.15.8 fmt + backend-disabled init + validate]
+  Tests --> PostgresSmoke[26-file gateway + Phase 6 PostgreSQL verification]
+  PostgresSmoke --> Browser[Desktop/mobile auth, project, and notification workflows]
   PostgresSmoke --> LiveGitHub[Live OAuth, private repo, publish, Actions sync]
 ```
 
@@ -573,6 +600,7 @@ Primary commands:
 
 ```bash
 pnpm verify
+pnpm verify:terraform
 pnpm smoke
 pnpm smoke:phase6:postgres
 ```
@@ -580,6 +608,12 @@ pnpm smoke:phase6:postgres
 The live GitHub test confirmed OAuth, a private repository, 10 published files,
 a successful corrected Actions run, durable synchronization, and a no-op repeat
 publish that created no extra run.
+
+The notification browser test confirmed complete message rendering, individual
+and bulk read controls, synchronized zero unread counts, three successful PATCH
+responses, no authenticated 401s or runtime exceptions, and no desktop/mobile
+horizontal overflow. The gateway smoke separately confirms PostgreSQL `readAt`
+persistence after relisting.
 
 ## Repository evidence map
 
@@ -615,10 +649,13 @@ publish that created no extra run.
 - Project ownership, project wizard, tool selection, archive/restore.
 - Selection-aware template generation, preview, explanation, checksum, and TAR download.
 - Optional seven-file Helm chart generation for Kubernetes projects.
+- Optional nine-file, disabled AWS EKS Terraform generation for Kubernetes
+  projects with exact VPC/EKS module pins and safe generated CI validation.
 - Seven-stage explainable simulated pipelines with success, failure, cancellation, and logs.
 - Thirteen deterministic recommendation rules and suggestion lifecycle.
 - Kubernetes target records and manifest validation.
-- Health aggregation, Prometheus text metrics, and notifications.
+- Health aggregation, Prometheus text metrics, user-scoped notifications, and a
+  full notification center with durable individual/bulk read interactions.
 - GitHub repository creation/reuse, safe publishing, token refresh, and Actions synchronization.
 - PostgreSQL and in-memory repository implementations.
 
@@ -628,14 +665,13 @@ publish that created no extra run.
 - MinIO/S3 settings and volume.
 - MailHog container.
 - Nginx configuration.
-- Spring Boot, Jenkins, and Terraform starter templates outside the active catalog.
+- Spring Boot and Jenkins starter templates outside the active catalog.
 - External analyzer interface and prompt library.
 - Analytics Service boundary.
 
 ### Future candidates
 
 - Jenkins integration.
-- Terraform generation.
 - Real Kubernetes deployment and rollback.
 - Cost estimation.
 - Team collaboration and template sharing.
@@ -646,22 +682,25 @@ publish that created no extra run.
 1. The generated bundle is DevOps/configuration scaffolding, not a complete application source tree.
 2. Helm charts pass strict lint and local template rendering, but BuildSphere
    does not install chart releases or validate them against a live cluster.
-3. The internal pipeline runner is simulated; GitHub Actions is the only connected real CI provider.
-4. Deployment targets and validation do not apply files to a Kubernetes cluster.
-5. AI suggestions are deterministic rules or mock data; no external model is called.
-6. Redis, MinIO, and MailHog run as optional local infrastructure but are not consumed by current services.
-7. Artifacts are stored as JSONB in PostgreSQL, not in object storage.
-8. Analytics Service exposes health only.
-9. Monitoring does not include Analytics Service and does not yet persist metrics.
-10. The frontend uses session storage and a lightweight custom route helper.
-11. GitHub disconnect, organization SSO, run dispatch/rerun/cancel, and log archive UI are out of scope.
-12. Rate limiting, audit logs, full RBAC, production secret management, and automated checked-in browser E2E tests remain future hardening.
+3. Terraform passes format and static validation with its backend disabled, but
+   BuildSphere does not run plan/apply/destroy, own state, hold AWS credentials,
+   estimate cost, or create EKS resources.
+4. The internal pipeline runner is simulated; GitHub Actions is the only connected real CI provider.
+5. Deployment targets and validation do not apply files to a Kubernetes cluster.
+6. AI suggestions are deterministic rules or mock data; no external model is called.
+7. Redis, MinIO, and MailHog run as optional local infrastructure but are not consumed by current services.
+8. Artifacts are stored as JSONB in PostgreSQL, not in object storage.
+9. Analytics Service exposes health only.
+10. Monitoring does not include Analytics Service and does not yet persist metrics.
+11. The frontend uses session storage and a lightweight custom route helper.
+12. GitHub disconnect, organization SSO, run dispatch/rerun/cancel, and log archive UI are out of scope.
+13. Rate limiting, audit logs, full RBAC, production secret management, and automated checked-in browser E2E tests remain future hardening.
 
 ## Presentation-ready elevator pitch
 
 > BuildSphere is a TypeScript microservice platform that teaches and automates
 > the path from a project idea to delivery configuration. A user chooses a
-> stack, generates Docker, CI, Kubernetes, and optional Helm assets, studies an explainable
+> stack, generates Docker, CI, Kubernetes, optional Helm, and inert Terraform assets, studies an explainable
 > pipeline, receives deterministic engineering recommendations, validates
 > deployment manifests, and can publish the result to GitHub and synchronize
 > real Actions runs. The MVP is local-first and deliberately generates and
@@ -677,7 +716,8 @@ You are my BuildSphere tutor and technical presentation coach. Treat the
 attached BuildSphere knowledge graph as the project-specific source of truth.
 Clearly distinguish implemented, prepared, and future behavior. Never claim
 that simulated pipelines are real deployments, that generated assets form a
-complete application, or that Redis/MinIO/external AI are active integrations.
+complete application, that Terraform has created cloud resources, or that
+Redis/MinIO/external AI are active integrations.
 
 Teach me using this loop:
 1. Explain one concept in simple language.

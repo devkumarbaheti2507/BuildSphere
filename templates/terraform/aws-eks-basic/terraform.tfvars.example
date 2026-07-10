@@ -1,0 +1,24 @@
+# Copy this file to terraform.tfvars only after reviewing every value.
+enable_cluster = false
+
+aws_region   = "{{awsRegion}}"
+cluster_name = "{{serviceName}}"
+environment  = "{{environment}}"
+
+# Pin an EKS-supported Kubernetes minor version before provisioning.
+# kubernetes_version = "1.33"
+
+node_instance_types = ["t3.medium"]
+node_min_size       = 1
+node_desired_size   = 2
+node_max_size       = 3
+
+enable_nat_gateway     = true
+endpoint_public_access = false
+public_access_cidrs    = []
+deletion_protection    = true
+
+# Required before enable_cluster can be changed to true.
+# cluster_admin_principal_arn = "arn:aws:iam::123456789012:role/eks-administrator"
+
+tags = {}

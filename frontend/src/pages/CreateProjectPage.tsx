@@ -17,6 +17,7 @@ export function CreateProjectPage({ token }: { token: string }) {
   const [redis, setRedis] = useState(true);
   const [prometheus, setPrometheus] = useState(true);
   const [helm, setHelm] = useState(true);
+  const [terraformAwsEks, setTerraformAwsEks] = useState(true);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const selections = (): ToolSelection[] => [
@@ -31,6 +32,15 @@ export function CreateProjectPage({ token }: { token: string }) {
           {
             category: "packaging",
             toolKey: "helm",
+            config: {},
+          } as ToolSelection,
+        ]
+      : []),
+    ...(terraformAwsEks
+      ? [
+          {
+            category: "infrastructure",
+            toolKey: "terraform-aws-eks",
             config: {},
           } as ToolSelection,
         ]
@@ -217,6 +227,17 @@ export function CreateProjectPage({ token }: { token: string }) {
                   type="checkbox"
                   checked={helm}
                   onChange={(event) => setHelm(event.target.checked)}
+                />
+              </label>
+              <label className="toggle-row">
+                <span>
+                  <strong>Terraform AWS EKS</strong>
+                  <small>Disabled-by-default cloud infrastructure source</small>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={terraformAwsEks}
+                  onChange={(event) => setTerraformAwsEks(event.target.checked)}
                 />
               </label>
               <label className="toggle-row">

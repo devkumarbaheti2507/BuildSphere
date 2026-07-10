@@ -91,3 +91,51 @@
 - Re-ran `pnpm smoke:phase6:postgres`; repository-link persistence,
   workflow-run upsert, token refresh, publication, and cleanup all passed.
 - No chart was installed into a Kubernetes cluster.
+
+- Completed BS-701 and roadmap Phase 8: Kubernetes projects can optionally
+  select `infrastructure/terraform-aws-eks` and generate a nine-file AWS EKS
+  Terraform root module through preview, TAR download, persistence, and GitHub
+  publication workflows.
+- Added the Terraform tool/category contracts, structured Kubernetes dependency
+  error, wizard toggle, AWS region/environment defaults, and selection-aware
+  catalog entries; projects without the selection receive no `terraform/`
+  paths.
+- Generated exact VPC `6.6.1` and EKS `21.24.0` module definitions with bounded
+  Terraform/AWS provider requirements, managed nodes and add-ons, private API
+  access, explicit administrator access, deletion protection, guarded scaling,
+  non-secret example values, inactive backend guidance, outputs, ignore rules,
+  and an operator README.
+- Kept `enable_cluster` false by default and generated no credentials, active
+  backend, state, plan, apply, destroy, or AWS operation.
+- Added optional generated GitHub Actions checks using
+  `hashicorp/setup-terraform@v4` and Terraform v1.15.8, limited to format,
+  backend-disabled initialization, and static validation.
+- Added `pnpm verify:terraform`, which renders through the real template catalog
+  into a temporary directory, checks nine-file/no-secret invariants, and runs
+  the same safe Terraform commands.
+- Downloaded the official Terraform v1.15.8 Linux binary to `/tmp`, matched its
+  published SHA-256 checksum, initialized VPC `6.6.1`, EKS `21.24.0`, and AWS
+  provider `6.54.0`, and passed format and static validation without AWS
+  credentials.
+- Passed frozen installation, zero-warning lint, every production build, and
+  all 41 automated tests on Node 24.
+- Passed the PostgreSQL-backed gateway smoke with 26 generated files, 7 stages,
+  14 logs, deployment validation, suggestions, 8 monitored services, and 4
+  notifications; the exact 26-file artifact remained in PostgreSQL after
+  application service restarts, and `pnpm smoke:phase6:postgres` also remained
+  green.
+- No Terraform plan/apply/destroy, AWS API call, remote-state change, Helm
+  operation, or Kubernetes cluster operation was performed.
+- Reconciled the learning/presentation pack through Phase 8 and validated its
+  structured companion with 77 nodes, 125 relationships, and no dangling
+  edges.
+- Fixed stale browser-session recovery after backend restarts: the frontend now
+  refreshes stored sessions before protected data loads, deduplicates concurrent
+  refresh attempts, and returns to sign-in when refresh authorization fails.
+- Completed the notification experience: the topbar opens a full-history drawer,
+  recent dashboard events expose individual read actions, and users can mark one
+  or all unread events read while every visible unread count stays synchronized.
+- Extended the PostgreSQL gateway smoke to persist and relist notification
+  `readAt` state. A live browser run verified three successful read updates,
+  complete message rendering, zero final unread counts, no authenticated 401s or
+  runtime exceptions, and contained desktop/mobile layouts.

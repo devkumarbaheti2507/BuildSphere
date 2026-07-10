@@ -1,4 +1,4 @@
-name: Node Docker Kubernetes Pipeline
+name: Node Docker Kubernetes Terraform Pipeline
 
 on:
   push:
@@ -27,6 +27,18 @@ jobs:
             test -f helm/templates/ingress.yaml
             test -f helm/templates/NOTES.txt
           fi
+          if [[ -d terraform ]]; then
+            test -f terraform/versions.tf
+            test -f terraform/providers.tf
+            test -f terraform/variables.tf
+            test -f terraform/main.tf
+            test -f terraform/outputs.tf
+            test -f terraform/terraform.tfvars.example
+            test -f terraform/backend.tf.example
+            test -f terraform/.gitignore
+            test -f terraform/README.md
+            grep -Eq '^\s*default\s*=\s*false$' terraform/variables.tf
+          fi
       - name: Detect optional build inputs
         id: build_inputs
         run: |
@@ -40,6 +52,27 @@ jobs:
           else
             echo "docker=false" >> "$GITHUB_OUTPUT"
           fi
+          if [[ -f terraform/versions.tf ]]; then
+            echo "terraform=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "terraform=false" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: hashicorp/setup-terraform@v4
+        if: steps.build_inputs.outputs.terraform == 'true'
+        with:
+          terraform_version: 1.15.8
+      - name: Check Terraform formatting
+        if: steps.build_inputs.outputs.terraform == 'true'
+        working-directory: terraform
+        run: terraform fmt -check -recursive
+      - name: Initialize Terraform without a backend
+        if: steps.build_inputs.outputs.terraform == 'true'
+        working-directory: terraform
+        run: terraform init -backend=false -input=false -no-color
+      - name: Validate Terraform
+        if: steps.build_inputs.outputs.terraform == 'true'
+        working-directory: terraform
+        run: terraform validate -no-color
       - uses: actions/setup-node@v4
         if: steps.build_inputs.outputs.node == 'true'
         with:

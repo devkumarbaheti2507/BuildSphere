@@ -26,6 +26,7 @@ const supportedTools: Record<ToolCategory, string[]> = {
   deployment: ["kubernetes"],
   monitoring: ["prometheus"],
   packaging: ["helm"],
+  infrastructure: ["terraform-aws-eks"],
 };
 
 export class ProjectService {
@@ -125,6 +126,20 @@ export class ProjectService {
         { toolKey: "helm", requiredToolKey: "kubernetes" },
       );
     }
+    if (
+      selectedTools.has("terraform-aws-eks") &&
+      !selectedTools.has("kubernetes")
+    ) {
+      throw new ApiError(
+        400,
+        "TOOL_DEPENDENCY_REQUIRED",
+        "Terraform AWS EKS infrastructure requires Kubernetes deployment",
+        {
+          toolKey: "terraform-aws-eks",
+          requiredToolKey: "kubernetes",
+        },
+      );
+    }
     await this.repository.replaceToolSelections(projectId, selections);
     return this.getOwned(ownerId, projectId);
   }
@@ -167,6 +182,8 @@ export class ProjectService {
       dbName: slug.replace(/-/g, "_"),
       dbUser: "app_user",
       dbPassword: "replace_me",
+      awsRegion: "us-east-1",
+      environment: "development",
       ...overrides,
     };
     const files = await this.templates.render(

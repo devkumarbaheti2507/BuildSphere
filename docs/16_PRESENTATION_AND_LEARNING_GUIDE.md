@@ -32,7 +32,8 @@ The project is valuable in three ways:
 
 > BuildSphere is a local-first Developer Experience Platform built with React,
 > TypeScript microservices, and PostgreSQL. It guides a user through project and
-> stack selection, generates Docker, GitHub Actions, and Kubernetes assets,
+> stack selection, generates Docker, GitHub Actions, Kubernetes, optional Helm,
+> and disabled AWS EKS Terraform assets,
 > simulates an explainable delivery pipeline, recommends improvements, validates
 > manifests, and can publish the result to GitHub and synchronize real Actions
 > runs.
@@ -42,7 +43,8 @@ The project is valuable in three ways:
 > Modern application delivery requires many tools, but the hard part is often
 > understanding how they fit together. BuildSphere gives learners and portfolio
 > builders one guided workspace. The user creates a project, chooses a stack,
-> generates ten DevOps and configuration files, previews or downloads them,
+> generates a selection-aware bundle of up to 26 DevOps, packaging, and
+> infrastructure files, previews or downloads them,
 > follows a seven-stage pipeline with learning notes and logs, receives
 > deterministic architecture and DevOps suggestions, and validates Kubernetes
 > manifests.
@@ -60,8 +62,10 @@ The project is valuable in three ways:
 > ownership while Auth Service keeps the provider secret boundary. Generated
 > files can be published idempotently to a private repository, and GitHub
 > Actions runs are synchronized back into BuildSphere. Real cloud deployment is
-> intentionally future work: the MVP generates, explains, and validates before
-> it changes external infrastructure.
+> intentionally outside the current boundary. Phases 7 and 8 add optional Helm
+> chart source and disabled-by-default AWS EKS Terraform source. The MVP
+> generates, explains, and statically validates before any operator-owned
+> external infrastructure action.
 
 ## Recommended slide deck
 
@@ -107,7 +111,8 @@ Use the system graph from `docs/15_PROJECT_KNOWLEDGE_GRAPH.md`.
 ### Slide 6: Generation engine
 
 - Template catalog plus typed generation variables.
-- Ten current outputs.
+- Selection-aware output; the default Helm/Terraform wizard produces 26 files.
+- Optional seven-file Helm chart and nine-file AWS EKS Terraform root module.
 - SHA-256 bundle checksum.
 - Preview, explanation, TAR download, and GitHub publishing.
 - Be explicit that it generates DevOps/config scaffolding, not full app source.
@@ -155,15 +160,20 @@ Use the system graph from `docs/15_PROJECT_KNOWLEDGE_GRAPH.md`.
 - Desktop/mobile browser checks.
 - Real GitHub integration validation.
 - Strict Helm v4.2.2 lint, rendered manifests, and PostgreSQL restart
-  persistence for the 17-file artifact.
+  persistence for the Phase 7 artifact.
+- Checksum-verified Terraform v1.15.8 formatting, backend-disabled
+  initialization, exact module resolution, and static validation.
+- PostgreSQL smoke with 26 files while all earlier workflows remain green.
 
 ### Slide 12: Boundaries and roadmap
 
-- Selection-aware generation and optional Helm packaging are implemented.
+- Selection-aware generation, optional Helm packaging, and disabled AWS EKS
+  Terraform source are implemented.
 - No real cluster apply or cloud deployment.
+- No Terraform plan/apply/destroy, AWS credential handling, or state ownership.
 - No external LLM yet.
 - Redis/MinIO/MailHog prepared but not active.
-- Next candidates: Jenkins, Terraform, real Kubernetes, cost, collaboration.
+- Next candidates: Jenkins, real Kubernetes, cost, collaboration.
 - Explain that these are intentional roadmap boundaries, not hidden claims.
 
 ## Ten-minute live demonstration
@@ -194,16 +204,16 @@ Use the system graph from `docs/15_PROJECT_KNOWLEDGE_GRAPH.md`.
 
 ### Demo sequence
 
-|       Time | Action                  | What to explain                                                    |
-| ---------: | ----------------------- | ------------------------------------------------------------------ |
-|  0:00-1:00 | Login and dashboard     | Two auth paths, projects, health, notifications                    |
-|  1:00-2:30 | Create a project        | Architecture and tool choices become typed project configuration   |
-|  2:30-4:00 | Generate assets         | Template variables, ten files, explanations, checksum, download    |
-|  4:00-5:30 | Run pipeline            | Seven stages, learning notes, simulated state and log flow         |
-|  5:30-6:30 | Show suggestions        | Deterministic checks, severity, confidence, accept/dismiss         |
-|  6:30-7:30 | Validate deployment     | Kubernetes structural checks and environment target model          |
-|  7:30-9:00 | GitHub tab              | Durable repository link, safe publication, Actions synchronization |
-| 9:00-10:00 | Close with architecture | Service boundaries, security, tests, honest future work            |
+|       Time | Action                  | What to explain                                                      |
+| ---------: | ----------------------- | -------------------------------------------------------------------- |
+|  0:00-1:00 | Login and dashboard     | Two auth paths, projects, health, notification center and read state |
+|  1:00-2:30 | Create a project        | Architecture and tool choices become typed project configuration     |
+|  2:30-4:00 | Generate assets         | Selection-aware files, explanations, checksum, preview, download     |
+|  4:00-5:30 | Run pipeline            | Seven stages, learning notes, simulated state and log flow           |
+|  5:30-6:30 | Show suggestions        | Deterministic checks, severity, confidence, accept/dismiss           |
+|  6:30-7:30 | Validate deployment     | Kubernetes structural checks and environment target model            |
+|  7:30-9:00 | GitHub tab              | Durable repository link, safe publication, Actions synchronization   |
+| 9:00-10:00 | Close with architecture | Service boundaries, security, tests, honest future work              |
 
 ### Optional failure demonstration
 
@@ -381,8 +391,10 @@ Read:
 - `backend/pipeline-service/src/pipeline-service.ts`
 - `backend/logging-service/`
 - `backend/notification-service/`
+- `frontend/src/components/NotificationCenter.tsx`
 
-Be able to narrate success, failure, and cancellation state transitions.
+Be able to narrate success, failure, cancellation, notification publication,
+and the durable individual/bulk read-state flow.
 
 ### Module 8: Recommendations and deployment foundations
 
@@ -491,8 +503,9 @@ scenario questions about failures, security boundaries, and future design.
 - Distinguish generated scaffolding from complete application source.
 - Mention security controls with their purpose, not as a vocabulary list.
 - Show quality evidence: 41 tests, builds, smoke workflows, persistence,
-  browser checks, live GitHub validation, and a 17-file Helm-enabled generation
-  run.
+  browser checks including notification read interactions, live GitHub
+  validation, strict Helm checks, real Terraform static validation, and a
+  26-file PostgreSQL generation run.
 - Name at least two tradeoffs and two future milestones.
 - Keep secrets and `.env` off screen.
 - End with what you learned and the next bounded improvement.

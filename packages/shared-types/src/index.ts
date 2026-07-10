@@ -102,7 +102,8 @@ export type ToolCategory =
   | "container"
   | "deployment"
   | "monitoring"
-  | "packaging";
+  | "packaging"
+  | "infrastructure";
 
 export type SupportedToolKey =
   | "react"
@@ -113,7 +114,8 @@ export type SupportedToolKey =
   | "docker"
   | "kubernetes"
   | "prometheus"
-  | "helm";
+  | "helm"
+  | "terraform-aws-eks";
 
 export interface ToolSelection {
   category: ToolCategory;
@@ -149,7 +151,13 @@ export interface UpdateProjectInput {
 }
 
 export type TemplateCategory =
-  "frontend" | "backend" | "docker" | "github-actions" | "kubernetes" | "helm";
+  | "frontend"
+  | "backend"
+  | "docker"
+  | "github-actions"
+  | "kubernetes"
+  | "helm"
+  | "terraform";
 
 export interface TemplateMetadata {
   key: string;
@@ -188,6 +196,8 @@ export interface GenerationVariables {
   dbName: string;
   dbUser: string;
   dbPassword: string;
+  awsRegion: string;
+  environment: string;
 }
 
 export type PipelineExecutionStatus =

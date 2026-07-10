@@ -133,6 +133,7 @@ Responsibilities:
 - Cross-tool dependency validation.
 - Selection-aware template resolution.
 - Kubernetes and optional Helm asset generation.
+- Optional Terraform AWS EKS source generation.
 - Generated artifact metadata.
 - Project ownership validation.
 
@@ -220,6 +221,16 @@ Responsibilities:
 - Mark notifications read/unread.
 - Future email or Slack integration.
 
+Frontend behavior:
+
+- The application shell opens a notification drawer from the unread counter.
+- The drawer shows complete event content and supports individual and bulk read
+  actions.
+- Bulk read reuses the idempotent per-notification read API; Phase 8 does not
+  add a separate batch endpoint.
+- Dashboard notification previews expose the same individual read action and
+  update shared application state.
+
 # Analytics Service
 
 Responsibilities:
@@ -257,6 +268,7 @@ Frontend -> API Gateway: POST /api/projects/{id}/generate
 API Gateway -> Project Service: generate assets
 Project Service -> TemplateCatalogService: resolve templates for saved tools
 TemplateCatalogService: resolve BuildSphere placeholders and preserve Helm expressions
+TemplateCatalogService: add disabled-by-default Terraform source for selected infrastructure
 Project Service -> ArtifactStore: write generated archive
 Project Service -> Pipeline Service: attach workflow metadata
 Project Service -> Frontend: generated artifact summary
@@ -267,3 +279,8 @@ that selection unless `deployment/kubernetes` is also present. The Deployment
 Service validates rendered raw files under `kubernetes/`; Helm chart templates
 under `helm/` remain source inputs for a later Helm render and are not parsed as
 raw manifests.
+
+Terraform AWS EKS is stored as the `infrastructure/terraform-aws-eks` tool
+selection and requires `deployment/kubernetes`. Project Service generates
+Terraform files under `terraform/` but does not invoke the Terraform CLI or AWS.
+Generated CI is limited to `fmt`, `init -backend=false`, and `validate`.

@@ -16,6 +16,7 @@
     "verify": "sh scripts/verify-workspace.sh",
     "smoke": "sh scripts/pnpm-workspace.sh --filter @buildsphere/auth-service exec tsx ../../scripts/smoke-mvp.ts",
     "smoke:phase6:postgres": "sh scripts/pnpm-workspace.sh --filter @buildsphere/auth-service exec tsx ../../scripts/verify-phase6-postgres.ts",
+    "verify:terraform": "sh scripts/pnpm-workspace.sh --filter @buildsphere/project-service exec tsx ../../scripts/verify-terraform-template.ts",
     "db:migrate": "sh scripts/pnpm-workspace.sh --filter @buildsphere/service-core db:migrate",
     "format": "prettier --write \"**/*.{ts,tsx,mjs,md,json,yml,yaml}\""
   },

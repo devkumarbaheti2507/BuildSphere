@@ -348,3 +348,39 @@ checksum-verified Helm v4.2.2 binary then passed strict lint and template
 rendering. The same 17-file workflow passed against PostgreSQL, persisted
 through an application restart, and remained compatible with the Phase 6
 PostgreSQL provider verifier.
+
+# Phase 8 tickets
+
+## BS-701: Generate safe AWS EKS Terraform configuration
+
+Priority: High
+Milestone: Phase 8
+Status: Done
+
+Description:
+Allow Kubernetes projects to optionally generate a disabled-by-default AWS EKS
+Terraform root module through the existing artifact workflow.
+
+Acceptance criteria:
+
+- `infrastructure/terraform-aws-eks` is supported and requires Kubernetes.
+- The generated root module includes versions, provider configuration,
+  variables, VPC/EKS modules, outputs, example values, backend guidance, ignore
+  rules, and a README.
+- Provider and registry module dependencies are explicitly versioned.
+- Cluster creation defaults to disabled and access inputs are explicit.
+- No generated file contains AWS credentials or an active remote-state backend.
+- Generated CI runs only safe Terraform format/init/validate checks.
+- Official Terraform CLI formatting and static validation pass.
+- Phase 0-7 tests and smoke workflows remain green.
+
+Verification outcome:
+The wizard, shared contracts, API schema, dependency checks, generator, and
+generated workflow support `infrastructure/terraform-aws-eks`. A selected
+project emits the specified nine-file module and a project without the tool
+emits no Terraform path. On 2026-07-10, frozen installation, zero-warning lint,
+all builds, and all 41 tests passed. A checksum-verified Terraform v1.15.8
+binary passed formatting, backend-disabled initialization of VPC `6.6.1`, EKS
+`21.24.0`, and AWS provider `6.54.0`, plus static validation without AWS
+credentials. The 26-file PostgreSQL gateway smoke and Phase 6 provider verifier
+also passed; no plan, apply, destroy, AWS call, or cluster change was made.

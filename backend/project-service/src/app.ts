@@ -59,6 +59,7 @@ const toolsSchema = z.object({
           "deployment",
           "monitoring",
           "packaging",
+          "infrastructure",
         ]),
         toolKey: z.enum([
           "react",
@@ -70,6 +71,7 @@ const toolsSchema = z.object({
           "kubernetes",
           "prometheus",
           "helm",
+          "terraform-aws-eks",
         ]),
         config: z.record(z.unknown()).default({}),
       }),

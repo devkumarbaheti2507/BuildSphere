@@ -1,13 +1,13 @@
 # Document Information
 
-| Field | Value |
-| --- | --- |
-| Document | Glossary |
-| Version | 0.1.0 |
-| Status | Draft |
-| Author | BuildSphere Team |
-| Last Updated | 2026-06-28 |
-| Related Documents | All docs |
+| Field             | Value            |
+| ----------------- | ---------------- |
+| Document          | Glossary         |
+| Version           | 0.1.0            |
+| Status            | Draft            |
+| Author            | BuildSphere Team |
+| Last Updated      | 2026-07-10       |
+| Related Documents | All docs         |
 
 ---
 
@@ -40,6 +40,23 @@ A file that defines how to build a Docker image.
 ## Kubernetes
 
 A container orchestration system that schedules and manages containers across nodes.
+
+## Amazon EKS
+
+Amazon Elastic Kubernetes Service, AWS's managed Kubernetes control-plane
+service. BuildSphere generates Terraform source for it but does not provision
+or operate a cluster.
+
+## Infrastructure as Code
+
+Version-controlled declarations of infrastructure configuration, commonly
+abbreviated IaC.
+
+## Terraform
+
+An infrastructure-as-code tool used by BuildSphere as an optional generated
+AWS EKS target. Phase 8 performs only formatting, backend-disabled
+initialization, and static validation.
 
 ## Pipeline
 

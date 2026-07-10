@@ -60,6 +60,7 @@ const main = async (): Promise<void> => {
     ["deployment", "kubernetes"],
     ["monitoring", "prometheus"],
     ["packaging", "helm"],
+    ["infrastructure", "terraform-aws-eks"],
   ].map(([category, toolKey]) => ({ category, toolKey, config: {} }));
   await request(`/projects/${project.id}/tool-selections`, token, {
     method: "POST",
@@ -74,13 +75,23 @@ const main = async (): Promise<void> => {
     body: "{}",
   });
   assert.ok(artifact.files.some((file) => file.path === "backend/Dockerfile"));
-  assert.equal(artifact.files.length, 17);
+  assert.equal(artifact.files.length, 26);
   assert.ok(artifact.files.some((file) => file.path === "helm/Chart.yaml"));
   assert.ok(
     artifact.files.some(
       (file) =>
         file.path === "helm/templates/deployment.yaml" &&
         file.content.includes("{{ .Values.replicaCount }}"),
+    ),
+  );
+  assert.ok(artifact.files.some((file) => file.path === "terraform/main.tf"));
+  assert.ok(
+    artifact.files.some(
+      (file) =>
+        file.path === "terraform/variables.tf" &&
+        /variable "enable_cluster"[\s\S]*?default\s*=\s*false/.test(
+          file.content,
+        ),
     ),
   );
 
@@ -148,8 +159,31 @@ const main = async (): Promise<void> => {
     token,
   );
   assert.equal(health.status, "ok");
-  const notifications = await request<unknown[]>("/notifications", token);
+  const notifications = await request<Array<{ id: string; readAt?: string }>>(
+    "/notifications",
+    token,
+  );
   assert.ok(notifications.length >= 4);
+  const unreadNotification = notifications.find(
+    (notification) => !notification.readAt,
+  );
+  assert.ok(unreadNotification);
+  const markedNotification = await request<{ id: string; readAt?: string }>(
+    `/notifications/${unreadNotification.id}/read`,
+    token,
+    { method: "PATCH" },
+  );
+  assert.equal(markedNotification.id, unreadNotification.id);
+  assert.ok(markedNotification.readAt);
+  const refreshedNotifications = await request<
+    Array<{ id: string; readAt?: string }>
+  >("/notifications", token);
+  assert.equal(
+    refreshedNotifications.find(
+      (notification) => notification.id === unreadNotification.id,
+    )?.readAt,
+    markedNotification.readAt,
+  );
 
   console.log(
     JSON.stringify(
@@ -162,6 +196,7 @@ const main = async (): Promise<void> => {
         suggestions: suggestions.length,
         monitoredServices: health.services.length,
         notifications: notifications.length,
+        notificationsMarkedRead: 1,
       },
       null,
       2,

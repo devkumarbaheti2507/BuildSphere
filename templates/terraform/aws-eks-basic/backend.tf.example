@@ -1,0 +1,11 @@
+# This file is inactive because Terraform loads only files ending in .tf.
+# Rename it to backend.tf only after creating and reviewing the state bucket.
+terraform {
+  backend "s3" {
+    bucket       = "replace-with-reviewed-state-bucket"
+    key          = "buildsphere/{{serviceName}}/terraform.tfstate"
+    region       = "{{awsRegion}}"
+    encrypt      = true
+    use_lockfile = true
+  }
+}

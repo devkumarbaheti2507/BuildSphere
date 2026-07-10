@@ -10,7 +10,9 @@ BuildSphere guides a user through the full software delivery lifecycle:
 
 1. Create a project.
 2. Select architecture, language, framework, database, CI/CD provider, container registry, and deployment target.
-3. Generate starter project files, Dockerfiles, CI/CD workflows, Kubernetes manifests, optional Helm charts, and documentation.
+3. Generate starter project files, Dockerfiles, CI/CD workflows, Kubernetes
+   manifests, optional Helm charts, disabled AWS EKS Terraform source, and
+   documentation.
 4. Run or connect to pipeline executions.
 5. Stream build and deployment logs.
 6. Explain each pipeline stage in learning mode.
@@ -24,7 +26,7 @@ The first version focuses on a practical developer workflow:
 - Project creation wizard.
 - Tool selection wizard.
 - Selection-aware template generation for Node.js, React, Docker, GitHub
-  Actions, Kubernetes, and optional Helm charts.
+  Actions, Kubernetes, optional Helm charts, and optional AWS EKS Terraform.
 - Pipeline definition storage.
 - Live log model and mock log streaming.
 - AI suggestion framework using prompt templates and rule-based checks.
@@ -43,6 +45,7 @@ This repository is prepared for a TypeScript-first implementation:
 | Containerization | Docker                                                                      | Required for generated workloads and BuildSphere services.            |
 | Orchestration    | Kubernetes                                                                  | Primary target for production deployment templates.                   |
 | Packaging        | Helm                                                                        | Configurable Kubernetes application charts without automatic install. |
+| Infrastructure   | Terraform for AWS EKS                                                       | Reviewable infrastructure source with cloud creation disabled.        |
 | CI/CD            | GitHub Actions first                                                        | Common, accessible, and portfolio-friendly.                           |
 | Monitoring       | Prometheus + Grafana planned                                                | Standard cloud-native observability stack.                            |
 
@@ -120,6 +123,13 @@ Verify the complete workspace:
 ./scripts/verify-workspace.sh
 ```
 
+When Terraform is installed, render and statically validate the generated AWS
+EKS module without initializing a backend or contacting AWS:
+
+```bash
+pnpm verify:terraform
+```
+
 After PostgreSQL migrations are applied, verify the Phase 6 provider
 persistence layer without making external GitHub changes:
 
@@ -157,16 +167,18 @@ The pack excludes `.env`, credentials, provider tokens, personal account data, a
 
 ## Current status
 
-Status: Local-first platform implemented through roadmap Phase 7. GitHub App
+Status: Local-first platform implemented through roadmap Phase 8. GitHub App
 authentication, generated repository publishing, Actions synchronization, and
-optional Helm chart generation are complete.
+optional Helm and AWS EKS Terraform generation are complete.
 
 Implemented workflows include local and GitHub authentication, project and
-tool configuration, selection-aware DevOps and Helm generation, GitHub
+tool configuration, selection-aware DevOps, Helm, and Terraform generation, GitHub
 repository publishing, simulated pipelines, synchronized GitHub Actions runs,
 rule-based suggestions, deployment target definitions, Kubernetes manifest
-checks, health aggregation, and notifications. Real Helm installation, cloud
-deployment, and additional provider integrations remain future work.
+checks, health aggregation, and notifications. Generated Terraform defaults to
+no cloud resources and is statically validated without credentials. Real Helm
+installation, Terraform plan/apply, cloud deployment, and additional provider
+integrations remain future work.
 
 ## License
 

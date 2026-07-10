@@ -73,7 +73,8 @@ Minimum container requirements:
 # Kubernetes strategy
 
 BuildSphere includes raw templates under `templates/kubernetes/` and optional
-Helm chart source under `templates/helm/`.
+Helm chart source under `templates/helm/`. Optional AWS EKS infrastructure
+source lives under `templates/terraform/aws-eks-basic/`.
 
 Future BuildSphere deployment will use:
 
@@ -109,10 +110,17 @@ BuildSphere will generate:
 - Kubernetes service.
 - Kubernetes ingress.
 - Optional Helm chart metadata, values, workload templates, and install notes.
+- Optional disabled AWS EKS Terraform root module with VPC, managed node group,
+  access, output, example-value, state, and operator files.
 - README instructions.
 
 Generated charts are packaging assets only. BuildSphere does not run Helm
 install, upgrade, rollback, or uninstall commands in Phase 7.
+
+Generated Terraform is infrastructure source only. BuildSphere and generated
+CI may run formatting, `terraform init -backend=false`, and static validation.
+They do not run plan, apply, destroy, import, or state operations, do not own a
+remote backend, and do not receive AWS credentials in Phase 8.
 
 # Environments
 

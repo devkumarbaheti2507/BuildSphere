@@ -1,12 +1,12 @@
 # Document Information
 
-| Field | Value |
-| --- | --- |
-| Document | UI and UX Design |
-| Version | 0.1.0 |
-| Status | Draft |
-| Author | BuildSphere Team |
-| Last Updated | 2026-07-09 |
+| Field             | Value                           |
+| ----------------- | ------------------------------- |
+| Document          | UI and UX Design                |
+| Version           | 0.1.0                           |
+| Status            | Draft                           |
+| Author            | BuildSphere Team                |
+| Last Updated      | 2026-07-10                      |
 | Related Documents | 00_PROJECT_VISION.md, 01_SRS.md |
 
 ---
@@ -49,6 +49,11 @@ Pages:
 - Login.
 - Forgot password placeholder for future.
 
+Stored browser sessions are refreshed before protected page data loads. An
+invalid refresh token clears local session state and returns the user to sign
+in instead of leaving an authenticated shell with repeated unauthorized
+requests.
+
 ## Dashboard
 
 Shows:
@@ -58,6 +63,15 @@ Shows:
 - Recent suggestions.
 - Build success rate placeholder.
 - Quick action: create project.
+- Recent notifications with full messages and individual read actions.
+
+## Notification center
+
+The notification toolbar button opens a right-side modal drawer containing all
+user-scoped notifications. Unread items are visually distinct. The drawer
+shows complete messages, event type, timestamp, and read state, and includes
+individual and mark-all-read commands. It closes with its close button, the
+backdrop, or Escape and remains usable at mobile widths.
 
 ## Create project wizard
 
@@ -68,6 +82,10 @@ Steps:
 3. Application stack.
 4. Delivery stack.
 5. Review and create.
+
+The delivery step always includes GitHub Actions, Docker, and Kubernetes. Helm,
+Terraform AWS EKS, and Prometheus are independently visible toggles; the
+Terraform label makes its disabled-by-default cloud source boundary explicit.
 
 ## Project detail page
 

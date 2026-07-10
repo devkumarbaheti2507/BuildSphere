@@ -172,12 +172,53 @@ Exit criteria:
 - Invalid Helm-without-Kubernetes selections fail with a structured error.
 - Existing Phase 0-6 verification remains green.
 
-# Post-Phase 7 candidates
+# Phase 8: Terraform AWS EKS generation
+
+Status: Complete as of 2026-07-10.
+
+Goal: Generate safe, reviewable infrastructure-as-code for an AWS EKS target
+without provisioning cloud resources.
+
+Features:
+
+1. Optional Terraform AWS EKS tool selection with a Kubernetes dependency.
+2. Versioned Terraform, AWS provider, VPC module, and EKS module requirements.
+3. Disabled-by-default VPC, EKS, managed-node, access, and output definitions.
+4. Example local values, remote-backend guidance, state ignore rules, and
+   operator documentation.
+5. Generated CI format/init/validate checks without plan or apply.
+6. Terraform CLI format and static validation plus cross-phase regression
+   coverage.
+
+Exit criteria:
+
+- A Kubernetes project can opt into Terraform and inspect, download, or
+  publish a complete AWS EKS root module.
+- Unselected projects receive no `terraform/` files.
+- Terraform without Kubernetes fails with a structured dependency error.
+- Generated defaults create no cloud resources and contain no credentials.
+- Generated Terraform passes format and static validation.
+- Existing Phase 0-7 verification remains green.
+
+Verification outcome:
+
+- The default wizard bundle now contains 26 files, including all nine
+  Terraform files, while projects without the selection receive no
+  `terraform/` paths.
+- A checksum-verified Terraform v1.15.8 binary passed format,
+  backend-disabled initialization, exact module resolution, and static
+  validation without credentials.
+- Frozen install, lint, all builds, all 41 automated tests, the PostgreSQL
+  gateway smoke, and the Phase 6 provider verifier pass.
+- The 26-file Phase 8 artifact remained in PostgreSQL across application
+  service restarts.
+- No AWS or Kubernetes resource was created.
+
+# Post-Phase 8 candidates
 
 These items require separate specifications and backlog milestones:
 
 - Jenkins integration.
-- Terraform generation.
 - Real Kubernetes deployment.
 - Cost estimation.
 - Team collaboration.

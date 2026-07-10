@@ -49,6 +49,13 @@ Phase 7 can package the same workload defaults as a Helm chart when both Helm
 and Kubernetes are selected. Chart generation does not apply resources to a
 cluster and does not require kubeconfig or cloud credentials.
 
+# Optional Terraform infrastructure
+
+Phase 8 can generate AWS EKS infrastructure source when Terraform AWS EKS and
+Kubernetes are selected. The default configuration is disabled and BuildSphere
+does not collect AWS credentials, configure active remote state, or execute
+Terraform plan/apply.
+
 # Future behavior
 
 - Validate kubeconfig.

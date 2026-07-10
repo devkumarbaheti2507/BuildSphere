@@ -22,6 +22,7 @@ import type {
 } from "@buildsphere/shared-types";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8080/api";
+export const SESSION_UNAUTHORIZED_EVENT = "buildsphere:session-unauthorized";
 
 export class ApiClientError extends Error {
   constructor(
@@ -44,6 +45,9 @@ const request = async <T>(
   if (token) headers.set("authorization", `Bearer ${token}`);
   const response = await fetch(`${API_URL}${path}`, { ...init, headers });
   if (!response.ok) {
+    if (response.status === 401 && token) {
+      window.dispatchEvent(new Event(SESSION_UNAUTHORIZED_EVENT));
+    }
     const body = (await response.json().catch(() => undefined)) as
       { error?: { code?: string; message?: string } } | undefined;
     throw new ApiClientError(
@@ -57,8 +61,7 @@ const request = async <T>(
 };
 
 export const api = {
-  authProviders: () =>
-    request<AuthProviderAvailability>("/auth/providers"),
+  authProviders: () => request<AuthProviderAvailability>("/auth/providers"),
   githubAuthorization: (codeChallenge: string) =>
     request<GitHubAuthorization>("/auth/github/authorize", undefined, {
       method: "POST",
@@ -82,6 +85,11 @@ export const api = {
     request<AuthSession>("/auth/login", undefined, {
       method: "POST",
       body: JSON.stringify(input),
+    }),
+  refresh: (refreshToken: string) =>
+    request<AuthSession>("/auth/refresh", undefined, {
+      method: "POST",
+      body: JSON.stringify({ refreshToken }),
     }),
   logout: (refreshToken: string) =>
     request<void>("/auth/logout", undefined, {

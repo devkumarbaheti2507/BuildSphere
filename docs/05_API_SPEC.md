@@ -175,12 +175,18 @@ Updates project metadata.
 
 Saves selected tools. `packaging/helm` is accepted only when
 `deployment/kubernetes` is selected in the same request.
+`infrastructure/terraform-aws-eks` has the same Kubernetes dependency. A
+missing dependency returns `TOOL_DEPENDENCY_REQUIRED` with `toolKey` and
+`requiredToolKey` details.
 
 ## POST /projects/{projectId}/generate
 
 Generates project assets from templates implied by the saved tool selections.
 Helm-enabled Kubernetes projects receive chart source under `helm/` while Helm
 Go-template expressions remain unresolved for later Helm rendering.
+Terraform-enabled Kubernetes projects receive nine files under `terraform/`.
+Cluster creation remains disabled and no AWS operation is performed by this
+endpoint.
 
 ## GET /projects/{projectId}/artifacts
 
