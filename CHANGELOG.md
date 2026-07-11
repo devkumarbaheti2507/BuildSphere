@@ -10,7 +10,7 @@ The project follows semantic versioning once the first implementation milestone 
 
 - A safe-to-share project knowledge graph, structured JSON graph, and
   presentation/learning guide covering the complete implementation through
-  Phase 8.
+  Phase 9.
 - Enforceable TypeScript linting as part of workspace verification.
 - Regression coverage for idempotent service shutdown.
 - GitHub App authentication with PKCE, signed expiring state, verified-email account linking, encrypted provider token storage, and frontend callback handling.
@@ -33,6 +33,21 @@ The project follows semantic versioning once the first implementation milestone 
   to format, backend-disabled initialization, and static validation.
 - A full notification center with complete event history, unread count, readable
   message details, individual read actions, and a bulk mark-all-read action.
+- Phase 9 BS-801 Kubernetes preflight using the official Node client for
+  ephemeral kubeconfig inspection, redacted target summaries, explicit draft
+  and inspected states, and ordered offline deployment plans.
+- A responsive Deployment tab workflow for kubeconfig file inspection,
+  connected target creation, and four-resource plan review without cluster
+  mutation authority.
+- Phase 9 BS-802 opt-in Kubernetes execution with minimized AES-256-GCM
+  credentials, exact API-server and environment policy, immutable-artifact
+  approvals, durable idempotency, ownership checks, and server-side apply.
+- Phase 9 BS-803 operation history, read-only rollout refresh, separate rollback
+  approval, prior-release restoration, and ownership-bounded pruning.
+- ADR-011, migrations 004-007, PostgreSQL and disposable-kind verification
+  scripts, deployment notifications, gateway routes, and a responsive
+  approve/deploy/status/rollback frontend workflow.
+- A BuildSphere favicon used by the browser shell.
 
 ### Fixed
 
@@ -47,6 +62,15 @@ The project follows semantic versioning once the first implementation milestone 
 - Make the generated GitHub Actions workflow validate template-only MVP artifacts while conditionally running Node and Docker build steps when their inputs exist.
 - Keep Helm Go-template expressions intact during BuildSphere rendering and
   exclude Helm chart source from raw Kubernetes manifest validation.
+- Reject kubeconfig local-file references before official-client parsing,
+  prohibit populated Secret payloads in plans, and contain plan-table scrolling
+  without widening desktop or mobile pages.
+- Bind approvals to the current credential fingerprint so credential rotation
+  after approval fails closed.
+- Cascade target cleanup through Phase 9 audit tables without leaving orphaned
+  approvals or operations.
+- Serialize simultaneous retries for the same deployment idempotency key and
+  treat rollback delete 404 responses as an already achieved outcome.
 
 ### Verified
 
@@ -72,6 +96,16 @@ The project follows semantic versioning once the first implementation milestone 
 - PostgreSQL notification read persistence plus live desktop/mobile notification
   interactions, including one-item and mark-all-read flows, synchronized counts,
   full message rendering, and clean authenticated API/browser execution.
+- The BS-801 gate with 46 tests, the 26-file PostgreSQL workflow plus a
+  four-resource offline plan, Phase 6 provider persistence, Terraform static
+  validation, and clean desktop/mobile kubeconfig-to-plan browser execution.
+- The complete Phase 9 gate with frozen install, zero-warning lint, every
+  production build, all 59 automated tests, migrations 001-007, Phase 6 and
+  Phase 9 PostgreSQL verifiers, the full gateway smoke, Terraform static
+  validation, and clean desktop/mobile deployment-plan rendering.
+- A real two-release apply, healthy rollout read, rollback, one-resource prune,
+  ownership check, credential revocation, and cluster cleanup against a
+  disposable kind v0.31.0 cluster using Kubernetes v1.34.3.
 
 ## [0.1.0] - 2026-06-28
 

@@ -1,12 +1,12 @@
 {
   "schemaVersion": "1.0.0",
-  "snapshotDate": "2026-07-10",
+  "snapshotDate": "2026-07-11",
   "project": {
     "id": "buildsphere",
     "name": "BuildSphere",
     "version": "0.1.0",
     "kind": "AI-assisted Developer Experience Platform",
-    "status": "Local-first platform complete through Phase 8 AWS EKS Terraform generation",
+    "status": "Phases 0-9 complete with controlled Kubernetes apply, status, and rollback live-validated",
     "primaryAudience": [
       "learning developer",
       "backend or DevOps portfolio builder",
@@ -33,7 +33,7 @@
       "type": "product",
       "name": "BuildSphere",
       "status": "implemented",
-      "description": "Guided platform for project configuration, selection-aware DevOps, Helm, and disabled AWS EKS Terraform asset generation, explainable delivery workflows, recommendations, validation, and GitHub integration.",
+      "description": "Guided platform for project configuration, selection-aware DevOps, Helm, disabled AWS EKS Terraform generation, controlled Kubernetes deployment, explainable delivery workflows, recommendations, validation, and GitHub integration.",
       "evidence": ["README.md", "docs/00_PROJECT_VISION.md"]
     },
     {
@@ -66,7 +66,7 @@
       "name": "React frontend",
       "status": "implemented",
       "port": 5173,
-      "responsibility": "Authentication, dashboard, project wizard with optional Helm and Terraform generation, artifact inspection, pipeline UI, suggestions, deployment UI, and GitHub workspace.",
+      "responsibility": "Authentication, dashboard, project wizard with optional Helm and Terraform generation, artifact inspection, pipeline UI, suggestions, deployment approval/status/rollback UI, and GitHub workspace.",
       "evidence": ["frontend/src/App.tsx", "frontend/src/pages/ProjectPage.tsx"]
     },
     {
@@ -121,10 +121,14 @@
       "name": "Deployment Service",
       "status": "implemented",
       "port": 8084,
-      "responsibility": "Kubernetes target records and structural validation of generated manifests.",
+      "responsibility": "Kubernetes targets, structural validation, ephemeral inspection, offline plans, encrypted credentials, approved apply, rollout summaries, and bounded rollback.",
       "evidence": [
         "backend/deployment-service/src/app.ts",
-        "backend/deployment-service/src/validator.ts"
+        "backend/deployment-service/src/validator.ts",
+        "backend/deployment-service/src/kubeconfig.ts",
+        "backend/deployment-service/src/planner.ts",
+        "backend/deployment-service/src/operation-service.ts",
+        "backend/deployment-service/src/executor.ts"
       ]
     },
     {
@@ -309,9 +313,12 @@
     {
       "id": "capability.deployment_validation",
       "type": "capability",
-      "name": "Kubernetes validation and target modeling",
+      "name": "Kubernetes validation, connection inspection, and preflight planning",
       "status": "implemented",
-      "evidence": ["specs/DEPLOYMENT_SPEC.md"]
+      "evidence": [
+        "specs/DEPLOYMENT_SPEC.md",
+        "docs/adr/ADR-010-Kubernetes-Deployment-Preflight.md"
+      ]
     },
     {
       "id": "capability.monitoring",
@@ -441,6 +448,30 @@
       "table": "deployment_targets"
     },
     {
+      "id": "entity.deployment_credential",
+      "type": "domain_entity",
+      "name": "Encrypted deployment credential",
+      "status": "implemented",
+      "owner": "service.deployment",
+      "table": "deployment_target_credentials"
+    },
+    {
+      "id": "entity.deployment_approval",
+      "type": "domain_entity",
+      "name": "Deployment approval",
+      "status": "implemented",
+      "owner": "service.deployment",
+      "table": "deployment_approvals"
+    },
+    {
+      "id": "entity.deployment_operation",
+      "type": "domain_entity",
+      "name": "Deployment operation",
+      "status": "implemented",
+      "owner": "service.deployment",
+      "table": "deployment_operations"
+    },
+    {
       "id": "entity.notification",
       "type": "domain_entity",
       "name": "Notification",
@@ -491,7 +522,7 @@
     {
       "id": "workflow.deployment_validation",
       "type": "workflow",
-      "name": "Kubernetes validation and target creation",
+      "name": "Kubernetes validation, planning, and controlled deployment",
       "status": "implemented"
     },
     {
@@ -572,9 +603,9 @@
     {
       "id": "technology.kubernetes",
       "type": "technology",
-      "name": "Kubernetes YAML",
+      "name": "Kubernetes API and YAML",
       "status": "implemented",
-      "reason": "Declarative generated deployment model and validation target."
+      "reason": "Declarative generated deployment model plus an official-client path for policy-bounded apply, observation, and rollback."
     },
     {
       "id": "technology.github_actions",
@@ -630,10 +661,15 @@
       ]
     },
     {
-      "id": "future.real_kubernetes",
-      "type": "future_candidate",
-      "name": "Real Kubernetes deployment",
-      "status": "future"
+      "id": "capability.kubernetes_execution",
+      "type": "capability",
+      "name": "Approved Kubernetes apply, status, and bounded rollback",
+      "status": "implemented",
+      "evidence": [
+        "specs/DEPLOYMENT_SPEC.md",
+        "docs/adr/ADR-011-Controlled-Kubernetes-Execution.md",
+        "scripts/verify-phase9-kind.ts"
+      ]
     },
     {
       "id": "future.cost",
@@ -981,6 +1017,11 @@
       "to": "capability.deployment_validation"
     },
     {
+      "from": "service.deployment",
+      "relation": "implements",
+      "to": "capability.kubernetes_execution"
+    },
+    {
       "from": "service.monitoring",
       "relation": "implements",
       "to": "capability.monitoring"
@@ -1054,6 +1095,26 @@
       "from": "service.deployment",
       "relation": "owns",
       "to": "entity.deployment_target"
+    },
+    {
+      "from": "service.deployment",
+      "relation": "owns",
+      "to": "entity.deployment_credential"
+    },
+    {
+      "from": "service.deployment",
+      "relation": "owns",
+      "to": "entity.deployment_approval"
+    },
+    {
+      "from": "service.deployment",
+      "relation": "owns",
+      "to": "entity.deployment_operation"
+    },
+    {
+      "from": "entity.deployment_operation",
+      "relation": "deploys",
+      "to": "entity.artifact"
     },
     {
       "from": "service.notification",
@@ -1240,9 +1301,9 @@
       "to": "technology.terraform"
     },
     {
-      "from": "product.buildsphere",
-      "relation": "may_evolve_to",
-      "to": "future.real_kubernetes"
+      "from": "workflow.deployment_validation",
+      "relation": "uses",
+      "to": "capability.kubernetes_execution"
     },
     {
       "from": "product.buildsphere",
@@ -1300,8 +1361,8 @@
     "validate_kubernetes_manifests"
   ],
   "verification": {
-    "automatedTests": 41,
-    "testFiles": 14,
+    "automatedTests": 59,
+    "testFiles": 19,
     "gates": [
       "pnpm install --frozen-lockfile",
       "pnpm lint",
@@ -1316,13 +1377,15 @@
       "restart persistence",
       "desktop and mobile browser verification",
       "PostgreSQL notification read persistence and desktop/mobile individual plus bulk read interactions",
+      "Phase 9 kubeconfig redaction, four-resource offline plan, PostgreSQL credential/approval/operation verification, and desktop/mobile deployment workflow",
+      "disposable kind two-release apply, healthy status, rollback, ownership-matched prune, credential revocation, and cluster cleanup",
       "live GitHub OAuth, private repository publication, successful Actions synchronization, and no-op republish"
     ]
   },
   "limitations": [
     "Generated output is delivery/configuration scaffolding, not a complete application source tree.",
     "The internal pipeline is simulated.",
-    "Kubernetes deployment is generated and validated but not applied.",
+    "Kubernetes execution is opt-in, raw-manifest only, and intended for explicitly allowlisted non-production targets; BuildSphere is not a production cluster control plane.",
     "Helm charts are linted and rendered locally but are not installed or validated against a live Kubernetes cluster.",
     "Terraform is formatted and statically validated with its backend disabled, but BuildSphere does not run plan, apply, destroy, state operations, AWS calls, or own remote state.",
     "External AI provider calls are not implemented.",
@@ -1330,7 +1393,7 @@
     "Artifacts are stored in PostgreSQL JSONB rather than object storage.",
     "Analytics Service is health-only.",
     "GitHub disconnect, organization SSO, workflow control, and log archive UI are out of scope.",
-    "Rate limiting, audit logs, full RBAC, and production secret management are future hardening."
+    "Rate limiting, general security audit events, full RBAC, and production secret management are future hardening."
   ],
   "sourceMap": {
     "productAndRequirements": [

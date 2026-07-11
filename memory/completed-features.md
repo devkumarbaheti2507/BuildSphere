@@ -139,3 +139,79 @@
   `readAt` state. A live browser run verified three successful read updates,
   complete message rendering, zero final unread counts, no authenticated 401s or
   runtime exceptions, and contained desktop/mobile layouts.
+
+## 2026-07-11
+
+- Completed BS-801, the first Phase 9 slice: authenticated users can inspect a
+  kubeconfig ephemerally, create draft or inspected Kubernetes targets, and
+  build an ordered offline plan from rendered manifests.
+- Added `@kubernetes/client-node` 1.4.0 for structured kubeconfig and Kubernetes
+  YAML parsing. A structured guard rejects `token-file`, client certificate/key
+  file paths, and certificate-authority file references before official-client
+  parsing can read local files.
+- Persisted target configuration is allowlisted to context, cluster, API server
+  host, namespace, credential mechanism, TLS posture, and context count. Raw
+  kubeconfig, tokens, passwords, certificates, keys, and exec arguments are not
+  stored or returned.
+- Added offline plan validation, resource identity and ordering, duplicate
+  detection, owner scoping, default namespace resolution, and populated
+  Kubernetes Secret rejection. Every plan reports `executable: false` and
+  `clusterRequestMade: false`.
+- Added a responsive Deployment tab flow for kubeconfig upload, inspection,
+  inspected target creation, and a dense four-resource plan table with internal
+  mobile scrolling.
+- Passed frozen installation, zero-warning lint, every production build, and
+  all 46 automated tests. Deployment Service contributes eight tests covering
+  the new security and planning behavior.
+- Passed idempotent migrations 001-003, the Phase 6 PostgreSQL provider
+  verifier, checksum-verified Terraform v1.15.8 static validation, and the
+  PostgreSQL gateway smoke with 26 files, 7 stages, 14 logs, one suggestion, a
+  four-resource offline plan, 8 monitored services, and 4 notifications.
+- Passed the complete desktop and 390 px mobile browser workflow with no secret
+  disclosure, page overflow, protected 401 response, console error, runtime
+  exception, or Kubernetes API request.
+- At the BS-801 checkpoint, no Kubernetes credential was retained and no
+  cluster resource was created, updated, or deleted; execution was deferred to
+  BS-802.
+- Completed BS-802 and BS-803, closing roadmap Phase 9 with opt-in approved
+  Kubernetes apply, durable rollout status, and bounded rollback.
+- Added fail-closed execution policy for a dedicated AES-256-GCM key, exact
+  API-server `host:port` allowlist, and allowed environments. Selected
+  kubeconfig credentials are minimized, reject dynamic/file/proxy/impersonation
+  paths, are authenticated to owner and target, and remain separate from public
+  target metadata.
+- Added immutable Project Service artifact resolution, exact manifest digests,
+  five-minute single-use approvals, credential-fingerprint binding, durable
+  idempotency, one active operation per target, and safe notification events.
+- Added constrained official-client server-side apply with `force=false`,
+  namespace/kind/Secret restrictions, existing-resource ownership prechecks,
+  BuildSphere labels, operation/request timeouts, and bounded transient retries.
+- Added owner-scoped operation history, summarized read-only rollout refresh,
+  separate rollback approval, prior-active-release resolution, prior-snapshot
+  reapply, and deletion of only newly introduced namespaced ownership-matched
+  resources. Namespace and cluster-scoped deletion are prohibited.
+- Added migrations 004-007 for encrypted target credentials, approvals,
+  operations, active-release restoration, safe cleanup, and credential-version
+  binding. The Phase 9 PostgreSQL verifier passes exact replay, three-operation
+  history, restored active release, and target cascade cleanup.
+- Added the complete frontend credential/approval/deploy/status/rollback flow,
+  gateway routes and timeouts, shared contracts, deployment notifications,
+  ADR-011, operational docs, and repeatable PostgreSQL/kind verification scripts.
+- Passed frozen installation, zero-warning lint, every production build, all 59
+  automated tests in 19 files, the complete gateway smoke, Phase 6 and Phase 9
+  PostgreSQL verifiers, and Terraform v1.15.8 static validation.
+- Passed a real disposable kind v0.31.0 workflow using the pinned Kubernetes
+  v1.34.3 node image: two releases applied, rollout healthy, rollback restored
+  release one, one newer ConfigMap pruned, ownership verified directly,
+  credential revoked, and cluster deleted.
+- Passed desktop 1440x1000 and mobile 390x844 Chrome checks with the inspected
+  target, four-resource plan, no horizontal overflow, and zero console or HTTP
+  errors. Added the missing browser favicon discovered by this gate.
+- Serialized simultaneous PostgreSQL claims for the same idempotency key,
+  verified one operation plus one replay, and made already-missing rollback
+  deletes idempotently successful.
+- Reconciled the safe learning graph to 80 nodes and 130 relationships with no
+  duplicate nodes or dangling edges.
+- No production cluster or cloud account was touched. Real Helm operations,
+  Terraform plan/apply/destroy, AWS credentials/state, and production deployment
+  remain outside the completed scope.

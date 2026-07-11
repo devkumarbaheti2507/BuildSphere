@@ -6,7 +6,7 @@
 | Version           | 0.1.0                                       |
 | Status            | Draft                                       |
 | Author            | BuildSphere Team                            |
-| Last Updated      | 2026-07-10                                  |
+| Last Updated      | 2026-07-11                                  |
 | Related Documents | 01_SRS.md, 03_LLD.md, 04_DATABASE_DESIGN.md |
 
 ---
@@ -121,6 +121,36 @@ Future production:
 The generated Phase 7 chart is an inspectable deployment asset. Real Helm
 install, upgrade, rollback, and Kubernetes credential handling remain outside
 the generation boundary.
+
+# Kubernetes execution boundary
+
+BS-801 establishes a preflight-only boundary inside Deployment Service. The
+service may parse a kubeconfig received in one authenticated request, but it
+must discard the source text after producing a redacted connection summary.
+Only that summary can be stored in `deployment_targets.config`.
+
+Deployment Service can combine an inspected target with rendered Kubernetes
+manifests to produce an explainable resource plan. That offline path does not
+construct a Kubernetes API client, contact the selected server, run Helm, or
+apply/delete resources. Retained credentials, approval policy, execution,
+status observation, and rollback stay behind the separate BS-802/BS-803
+boundary below.
+
+BS-802 and BS-803 add an opt-in execution boundary inside Deployment Service.
+Encrypted credentials, expiring approvals, and deployment operations are
+stored in dedicated tables rather than target JSON. Artifact content remains
+owned by Project Service and is loaded with the requesting user's
+authorization before approval or execution. Deployment Service alone decrypts
+the selected kubeconfig and constructs the official Kubernetes client.
+
+The executor is disabled unless runtime configuration supplies a dedicated
+encryption key, exact API-server host allowlist, and allowed environments.
+Mutation is limited to an approved target namespace and a constrained resource
+set. BuildSphere labels establish ownership, one active operation is allowed
+per target, and operation history provides the audit boundary. Read-only status
+observation and rollback reuse the same owner, credential, timeout, and host
+controls. Rollback can restore a prior successful snapshot but cannot delete a
+namespace or cluster-scoped resource.
 
 # Major workflows
 

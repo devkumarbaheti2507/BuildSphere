@@ -13,10 +13,16 @@ BuildSphere guides a user through the full software delivery lifecycle:
 3. Generate starter project files, Dockerfiles, CI/CD workflows, Kubernetes
    manifests, optional Helm charts, disabled AWS EKS Terraform source, and
    documentation.
-4. Run or connect to pipeline executions.
-5. Stream build and deployment logs.
-6. Explain each pipeline stage in learning mode.
-7. Provide AI-assisted suggestions for architecture, Docker, Kubernetes, security, testing, cost, and reliability.
+4. Inspect a Kubernetes connection without storing its credentials and review
+   an offline deployment plan.
+5. When execution is explicitly enabled, retain a minimized encrypted
+   credential and deploy an approved immutable artifact.
+6. Observe resource rollout summaries and perform a separately approved,
+   ownership-bounded rollback.
+7. Run or connect to pipeline executions.
+8. Stream build and deployment logs.
+9. Explain each pipeline stage in learning mode.
+10. Provide AI-assisted suggestions for architecture, Docker, Kubernetes, security, testing, cost, and reliability.
 
 ## MVP scope
 
@@ -137,6 +143,17 @@ persistence layer without making external GitHub changes:
 pnpm smoke:phase6:postgres
 ```
 
+Verify Phase 9 credential, approval, operation, rollback, and cleanup
+persistence without contacting a cluster:
+
+```bash
+pnpm smoke:phase9:postgres
+```
+
+Controlled Kubernetes execution is disabled by default. Its exact environment
+policy and disposable-cluster procedure are documented in
+`backend/deployment-service/README.md` and `docs/08_DEVOPS.md`.
+
 For a non-durable smoke run without PostgreSQL, set `STORAGE_DRIVER=memory` in the environment together with local JWT and internal service tokens, start the workspace, then run:
 
 ```bash
@@ -167,18 +184,24 @@ The pack excludes `.env`, credentials, provider tokens, personal account data, a
 
 ## Current status
 
-Status: Local-first platform implemented through roadmap Phase 8. GitHub App
-authentication, generated repository publishing, Actions synchronization, and
-optional Helm and AWS EKS Terraform generation are complete.
+Status: Phases 0-9 are complete. Phase 9 adds secure Kubernetes inspection,
+offline planning, opt-in approved apply, durable rollout summaries, and bounded
+rollback. The execution path was live-validated against a disposable local
+kind cluster and remains disabled unless an operator supplies every required
+policy value.
 
 Implemented workflows include local and GitHub authentication, project and
 tool configuration, selection-aware DevOps, Helm, and Terraform generation, GitHub
 repository publishing, simulated pipelines, synchronized GitHub Actions runs,
 rule-based suggestions, deployment target definitions, Kubernetes manifest
 checks, health aggregation, and notifications. Generated Terraform defaults to
-no cloud resources and is statically validated without credentials. Real Helm
-installation, Terraform plan/apply, cloud deployment, and additional provider
-integrations remain future work.
+no cloud resources and is statically validated without credentials. Kubernetes
+targets can retain separately encrypted credentials, require exact-artifact
+approval, apply only allowlisted resources, expose safe operation history, and
+restore a prior owned release. All 59 automated tests and the current
+cross-phase smoke gates pass. Helm installation, Terraform plan/apply, cloud or
+production deployment, and additional provider integrations remain future
+work.
 
 ## License
 

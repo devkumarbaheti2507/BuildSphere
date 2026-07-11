@@ -6,7 +6,7 @@
 | Version           | 0.1.0                           |
 | Status            | Draft                           |
 | Author            | BuildSphere Team                |
-| Last Updated      | 2026-07-10                      |
+| Last Updated      | 2026-07-11                      |
 | Related Documents | 00_PROJECT_VISION.md, 01_SRS.md |
 
 ---
@@ -97,6 +97,16 @@ Tabs:
 - GitHub repository and Actions.
 - Suggestions.
 - Deployment validation and targets.
+
+The Deployment tab accepts a kubeconfig file for ephemeral inspection and
+shows only a redacted context, API host, namespace, and authentication method.
+Targets visibly distinguish `draft`, `inspected`, and `connected`. An inspected
+target can build an offline preflight table that orders the latest artifact's
+resources. When execution is configured, the user can explicitly retain the
+credential, confirm and approve the exact artifact, deploy it, refresh safe
+resource/rollout summaries, and separately approve a bounded rollback. Durable
+operation history remains available after reload. Tables adapt or scroll within
+their own boundaries on narrow screens instead of widening the page.
 
 ## Pipeline page
 

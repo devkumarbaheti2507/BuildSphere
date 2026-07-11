@@ -6,7 +6,7 @@
 | Version           | 0.1.0                  |
 | Status            | Draft                  |
 | Author            | BuildSphere Team       |
-| Last Updated      | 2026-07-10             |
+| Last Updated      | 2026-07-11             |
 | Related Documents | 12_ROADMAP.md, specs/* |
 
 ---
@@ -384,3 +384,103 @@ binary passed formatting, backend-disabled initialization of VPC `6.6.1`, EKS
 `21.24.0`, and AWS provider `6.54.0`, plus static validation without AWS
 credentials. The 26-file PostgreSQL gateway smoke and Phase 6 provider verifier
 also passed; no plan, apply, destroy, AWS call, or cluster change was made.
+
+# Phase 9 tickets
+
+## BS-801: Inspect Kubernetes connections and build deployment plans
+
+Priority: High
+Milestone: Phase 9
+Status: Done
+
+Description:
+Accept kubeconfig ephemerally, persist only a redacted connection summary, and
+build an explainable non-executing resource plan from validated manifests.
+
+Acceptance criteria:
+
+- The official Kubernetes Node client parses kubeconfig input.
+- Invalid or incomplete current-context references return structured errors.
+- Responses and target records contain no token, password, key, certificate,
+  certificate-authority data, auth-provider secret, or exec arguments.
+- Draft and inspected deployment targets remain user-scoped.
+- Plans require an inspected target, reject invalid manifests and populated
+  Secrets, and return ordered resource identities.
+- Plans explicitly report that they are not executable and made no cluster
+  request.
+- Frontend, API, repository, smoke, and Phase 0-8 regression tests pass.
+
+Verification outcome:
+The official client parses kubeconfig after a structured local-file-reference
+guard. Target records contain only allowlisted summaries, and offline plans
+order four generated resources without constructing a Kubernetes API client.
+On 2026-07-11, frozen install, lint, every build, all 46 tests, the 26-file
+PostgreSQL gateway smoke, Phase 6 PostgreSQL verifier, Terraform static
+validation, and desktop/mobile browser checks passed. No cluster request or
+resource mutation occurred.
+
+## BS-802: Execute an approved Kubernetes deployment
+
+Priority: High
+Milestone: Phase 9
+Status: Done
+
+Description:
+Define approved credential retention, audit, idempotency, timeout, retry, and
+server-side apply behavior, then validate it against an explicit test cluster.
+
+Acceptance criteria:
+
+- Runtime execution fails closed without a dedicated encryption key, exact
+  server allowlist, and allowed environment.
+- Credential retention is explicit, encrypted, revocable, and separated from
+  public target metadata.
+- Artifact ownership and exact manifest digest are verified server-side.
+- Approval is owner-scoped, expires after five minutes, and is single use.
+- Idempotency and one-active-operation-per-target rules are durable.
+- Execution allows only the target namespace and constrained resource kinds.
+- Existing resources require matching BuildSphere ownership, and server-side
+  apply uses `force=false`.
+- Timeouts, bounded transient retries, safe errors, audit history, and
+  notifications are covered by tests.
+
+Verification outcome:
+Execution fails closed unless every required policy value is configured.
+Provider-double tests cover minimized target-bound encryption, exact server and
+environment policy, dynamic-auth rejection, namespace and kind restrictions,
+ownership prechecks, non-forced server-side apply, retries, stale-credential
+approval invalidation, idempotency, and target concurrency. The PostgreSQL
+verifier confirms durable credential, approval, and operation behavior. A real
+disposable kind cluster accepted two approved releases through the official
+client, with ownership labels confirmed directly from the API.
+
+## BS-803: Observe and roll back Kubernetes deployments
+
+Priority: High
+Milestone: Phase 9
+Status: Done
+
+Description:
+Persist deployment operations, observe workload rollout status, and provide a
+bounded rollback workflow for resources owned by BuildSphere.
+
+Acceptance criteria:
+
+- Operations and resource outcomes remain owner scoped and durable.
+- Refresh performs read-only Kubernetes requests and returns summarized status.
+- Rollback requires a separate expiring approval and prior successful release.
+- The prior snapshot is reapplied through the same execution policy.
+- Only newer, namespaced, ownership-matched resources can be deleted.
+- Namespaces and cluster-scoped resources cannot be deleted.
+- PostgreSQL, provider-double, disposable-cluster, browser, and all earlier
+  phase regression gates pass.
+
+Verification outcome:
+Operations expose only summarized resource and rollout state. Provider-double
+tests cover active-release resolution after rollback and pruning only a newer,
+namespaced, ownership-matched resource. The real kind workflow observed a
+healthy second release, separately approved rollback to the first release,
+deleted only the newly introduced ConfigMap, revoked the credential, and left
+no disposable cluster. All 59 tests, the full gateway smoke, Phase 6 and Phase 9
+PostgreSQL verifiers, Terraform validation, and desktop/mobile browser checks
+pass.

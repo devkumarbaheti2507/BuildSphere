@@ -6,7 +6,7 @@
 | Version           | 0.1.0                    |
 | Status            | Draft                    |
 | Author            | BuildSphere Team         |
-| Last Updated      | 2026-07-10               |
+| Last Updated      | 2026-07-11               |
 | Related Documents | 01_SRS.md, 13_BACKLOG.md |
 
 ---
@@ -214,12 +214,110 @@ Verification outcome:
   service restarts.
 - No AWS or Kubernetes resource was created.
 
-# Post-Phase 8 candidates
+# Phase 9: Kubernetes deployment execution
+
+Status: Complete as of 2026-07-11.
+
+Goal: Add a controlled, observable deployment workflow while keeping cluster
+mutation authority behind explicit credential, approval, ownership, and
+rollback boundaries.
+
+Planned slices:
+
+1. BS-801 (complete 2026-07-11): ephemeral kubeconfig inspection, redacted
+   target summaries, and non-executing deployment plans.
+2. BS-802 (complete 2026-07-11): approved credential retention and idempotent
+   apply execution against an explicitly configured test cluster.
+3. BS-803 (complete 2026-07-11): durable deployment status observation and
+   bounded rollback.
+
+BS-802 exit criteria:
+
+- Execution is opt-in and fails closed without encryption, host, and
+  environment policy.
+- Selected kubeconfig credentials are minimized, target-bound, encrypted, and
+  revocable without entering public target JSON.
+- An owned immutable artifact, exact digest, expiring single-use approval, and
+  idempotency key are required for every apply.
+- Namespace, resource-kind, ownership-label, concurrency, timeout, retry, and
+  server-side apply controls are enforced and audited.
+
+BS-803 exit criteria:
+
+- Owned operations expose durable, read-only rollout summaries.
+- A rollback requires a second approval and an immediately prior successful
+  snapshot.
+- Rollback reapplies the prior snapshot and can prune only namespaced resources
+  whose BuildSphere ownership labels match.
+- Namespace and cluster-scoped deletion are impossible through the rollback
+  path.
+- Apply, status, rollback, notifications, PostgreSQL durability, and the
+  frontend workflow pass disposable-cluster and cross-phase verification.
+
+BS-801 exit criteria:
+
+- Kubeconfig is parsed with the official Kubernetes Node client.
+- No credential-bearing kubeconfig field is persisted, logged, or returned.
+- Connected and draft target states are explicit.
+- Valid rendered manifests produce an ordered, explainable plan.
+- Planning performs no Kubernetes API request and reports `executable: false`.
+- Existing Phase 0-8 tests and smoke workflows remain green.
+
+Phase 9 completion criteria:
+
+- A user can explicitly approve deployment of a validated artifact to an owned
+  Kubernetes target.
+- BuildSphere tracks resource and rollout status and supports a bounded
+  rollback path.
+- Credentials, authorization, audit, timeout, retry, idempotency, and secret
+  handling pass security review and live test-cluster verification.
+
+BS-801 verification outcome:
+
+- Frozen install, zero-warning lint, every production build, and all 46
+  automated tests pass.
+- Focused tests cover credential redaction, local-file reference rejection,
+  unresolved contexts, draft-target blocking, owner scoping, resource ordering,
+  and populated-Secret rejection.
+- The PostgreSQL gateway smoke retains the 26-file, 7-stage, 14-log workflow and
+  adds one redacted connection inspection plus a four-resource offline plan.
+- The Phase 6 PostgreSQL verifier and checksum-verified Terraform v1.15.8
+  format/init-without-backend/validate baseline remain green.
+- Desktop and 390 px mobile browser workflows pass with no page overflow,
+  secret disclosure, protected 401 response, console error, runtime exception,
+  or Kubernetes API request.
+
+Phase 9 completion verification outcome:
+
+- Frozen installation, zero-warning lint, every production build, and all 59
+  automated tests in 19 test files pass. Deployment Service contributes 20
+  tests and API Gateway contributes three route-integration tests.
+- Migrations 001-007 are idempotent. The Phase 9 PostgreSQL verifier confirms
+  encrypted credential, three approval, and three operation records; exact
+  and concurrent idempotency replay; prior-release resolution; rollback
+  restoration; and full target cleanup. The Phase 6 provider verifier remains
+  green.
+- The complete gateway smoke retains 26 generated files, seven pipeline stages,
+  14 logs, suggestions, four planned Kubernetes resources, eight monitored
+  services, and durable notification read state.
+- A checksum-matched kind v0.31.0 binary and pinned Kubernetes v1.34.3 node
+  image completed two real releases, healthy rollout observation, a rollback,
+  ownership verification, one-resource prune, and credential revocation. The
+  disposable cluster was deleted and `kind get clusters` reports none.
+- Terraform v1.15.8 format, backend-disabled initialization, exact module and
+  provider resolution, and static validation remain green without AWS
+  credentials.
+- Desktop 1440x1000 and mobile 390x844 browser checks render the inspected
+  target, four-resource plan, and operation empty state with no document
+  overflow, console exception, or failed HTTP request.
+- No production cluster, cloud account, Helm release, Terraform plan/apply, or
+  remote state was touched.
+
+# Post-Phase 9 candidates
 
 These items require separate specifications and backlog milestones:
 
 - Jenkins integration.
-- Real Kubernetes deployment.
 - Cost estimation.
 - Team collaboration.
 

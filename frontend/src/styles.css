@@ -189,6 +189,7 @@ select:hover {
 }
 .primary-button,
 .secondary-button,
+.danger-button,
 .small-button,
 .text-button,
 .inline-button,
@@ -213,6 +214,13 @@ select:hover {
 .secondary-button:hover {
   border-color: #788783;
   background: #f8faf9;
+}
+.danger-button {
+  background: #a63d45;
+  color: #fff;
+}
+.danger-button:hover {
+  background: #863039;
 }
 .small-button {
   padding: 6px 9px;
@@ -897,8 +905,11 @@ button.table-row:hover {
 }
 .detail-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
+}
+.detail-grid > * {
+  min-width: 0;
 }
 .tool-grid {
   display: grid;
@@ -1129,6 +1140,88 @@ button.table-row:hover {
   padding-bottom: 18px;
   border-bottom: 1px solid #e0e6e3;
 }
+.target-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(130px, 0.7fr);
+  align-items: end;
+  gap: 10px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #e0e6e3;
+}
+.kubeconfig-field {
+  min-width: 0;
+  grid-column: 1 / -1;
+}
+.kubeconfig-field input[type="file"] {
+  width: 100%;
+  min-height: 42px;
+  padding: 8px;
+  border: 1px solid #cfd8d5;
+  border-radius: 4px;
+  background: #fff;
+  color: #4b5955;
+  font-size: 12px;
+}
+.kubeconfig-field small {
+  display: block;
+  min-height: 16px;
+  margin-top: 4px;
+  color: #75817d;
+  overflow-wrap: anywhere;
+}
+.target-form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 8px;
+}
+.credential-retention-field {
+  grid-column: 1 / -1;
+}
+.connection-summary,
+.plan-summary,
+.operation-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 14px 0 4px;
+  border: 1px solid #dce3e0;
+}
+.connection-summary > div,
+.plan-summary > div,
+.operation-summary > div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+  padding: 11px 12px;
+  border-right: 1px solid #dce3e0;
+}
+.connection-summary > div:last-of-type,
+.plan-summary > div:last-child,
+.operation-summary > div:last-child {
+  border-right: 0;
+}
+.connection-summary span,
+.plan-summary span,
+.operation-summary span {
+  color: #6f7c78;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.connection-summary strong,
+.plan-summary strong,
+.operation-summary strong {
+  min-width: 0;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.connection-warning {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 9px 12px;
+  border-top: 1px solid #efd4a8;
+  color: #85531f;
+  font-size: 12px;
+}
 .github-workspace {
   display: grid;
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
@@ -1184,14 +1277,164 @@ button.table-row:hover {
 }
 .target-list > div {
   display: grid;
-  grid-template-columns: 100px 1fr auto;
+  grid-template-columns: 100px minmax(130px, 1fr) 78px auto;
   align-items: center;
   gap: 10px;
   padding: 12px 0;
   border-bottom: 1px solid #e2e7e5;
 }
+.target-identity {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+.target-identity strong,
+.target-identity small {
+  overflow-wrap: anywhere;
+}
+.connection-status {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.connection-status.inspected {
+  color: #126452;
+}
+.connection-status.connected {
+  color: #18633b;
+}
+.connection-status.draft {
+  color: #7a6330;
+}
 .target-list small {
   color: #78847f;
+}
+.target-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.deployment-plan-band,
+.deployment-operations-band {
+  grid-column: 1 / -1;
+}
+.plan-resource-table {
+  margin-top: 14px;
+  border: 1px solid #dce3e0;
+  border-radius: 5px;
+  overflow: hidden;
+}
+.plan-resource-row {
+  display: grid;
+  grid-template-columns: 60px minmax(220px, 1fr) minmax(120px, 0.6fr) 90px;
+  align-items: center;
+  gap: 12px;
+  min-height: 46px;
+  padding: 9px 12px;
+  border-bottom: 1px solid #e2e7e5;
+  font-size: 12px;
+}
+.plan-resource-row:last-child {
+  border-bottom: 0;
+}
+.plan-resource-head {
+  min-height: 34px;
+  background: #edf2f0;
+  color: #61706b;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.plan-resource-row > span:nth-child(2) {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.plan-resource-row small {
+  color: #75817d;
+  overflow-wrap: anywhere;
+}
+.plan-warnings {
+  margin-top: 12px;
+  color: #795322;
+  font-size: 12px;
+}
+.plan-warnings p {
+  margin: 5px 0 0;
+}
+.deployment-approval-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #dce3e0;
+}
+.deployment-approval-bar > span {
+  color: #66736f;
+  font-size: 12px;
+}
+.operation-summary {
+  margin-top: 0;
+}
+.operation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+.operation-resource-row {
+  grid-template-columns: 60px minmax(220px, 1fr) 90px 110px;
+}
+.resource-state {
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.resource-state.ready,
+.resource-state.present,
+.resource-state.applied,
+.resource-state.retained,
+.resource-state.deleted {
+  color: #176344;
+}
+.resource-state.progressing,
+.resource-state.pending {
+  color: #786329;
+}
+.resource-state.degraded,
+.resource-state.failed,
+.resource-state.missing {
+  color: #a63d45;
+}
+.operation-history {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 1px;
+  margin-top: 16px;
+  background: #dce3e0;
+  border: 1px solid #dce3e0;
+}
+.operation-history button {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 0;
+  background: #fff;
+  color: #26322f;
+  text-align: left;
+}
+.operation-history button.active {
+  box-shadow: inset 3px 0 #177d6b;
+  background: #f3f7f5;
+}
+.operation-history span,
+.operation-history time {
+  color: #6c7874;
+  font-size: 11px;
 }
 .validation {
   border-left: 3px solid currentColor;
@@ -1264,7 +1507,7 @@ button.table-row:hover {
   .pipeline-layout,
   .detail-grid,
   .github-workspace {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .log-viewer {
     min-height: 360px;
@@ -1381,6 +1624,48 @@ button.table-row:hover {
   }
   .inline-form {
     grid-template-columns: 1fr;
+  }
+  .target-form {
+    grid-template-columns: 1fr;
+  }
+  .target-form-actions {
+    padding-bottom: 0;
+  }
+  .connection-summary,
+  .plan-summary,
+  .operation-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .connection-summary > div:nth-child(2),
+  .plan-summary > div:nth-child(2),
+  .operation-summary > div:nth-child(2) {
+    border-right: 0;
+  }
+  .connection-summary > div:nth-child(-n + 2),
+  .plan-summary > div:nth-child(-n + 2),
+  .operation-summary > div:nth-child(-n + 2) {
+    border-bottom: 1px solid #dce3e0;
+  }
+  .target-list > div {
+    grid-template-columns: 90px minmax(0, 1fr);
+    align-items: start;
+  }
+  .target-row-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+  .target-list > div > .small-button {
+    width: fit-content;
+  }
+  .plan-resource-table {
+    overflow-x: auto;
+  }
+  .plan-resource-row {
+    min-width: 600px;
+  }
+  .deployment-approval-bar {
+    align-items: stretch;
+    justify-content: flex-start;
   }
   .github-publish-form {
     grid-template-columns: 1fr;

@@ -5,8 +5,8 @@
 | Field                  | Value                                                                                    |
 | ---------------------- | ---------------------------------------------------------------------------------------- |
 | Purpose                | Self-contained technical and product context for learning, presentation, and AI tutoring |
-| Snapshot date          | 2026-07-10                                                                               |
-| Current milestone      | Local-first platform complete through Phase 8 AWS EKS Terraform generation               |
+| Snapshot date          | 2026-07-11                                                                               |
+| Current milestone      | Phase 9 complete; controlled Kubernetes apply, status, and rollback live-validated       |
 | Intended readers       | Project owner, reviewers, interviewers, mentors, and ChatGPT                             |
 | Structured companion   | `docs/project-knowledge-graph.json`                                                      |
 | Presentation companion | `docs/16_PRESENTATION_AND_LEARNING_GUIDE.md`                                             |
@@ -22,8 +22,10 @@ uploaded to an AI tutor without uploading the local secret-bearing `.env` file.
 BuildSphere is a documentation-first, AI-assisted Developer Experience Platform
 that guides a developer from project configuration to generated DevOps assets,
 explainable pipeline simulation, recommendations, deployment validation,
-optional Helm packaging, disabled-by-default AWS EKS Terraform generation, and
-optional real GitHub repository and Actions integration.
+optional Helm packaging, disabled-by-default AWS EKS Terraform generation,
+secure Kubernetes connection inspection, offline planning, opt-in approved
+apply, durable status and bounded rollback, plus optional real GitHub repository
+and Actions integration.
 
 ## What problem it solves
 
@@ -46,17 +48,18 @@ Use these labels throughout this graph:
 
 ## Current status
 
-| Area                     | Status                                                       | Evidence                                                           |
-| ------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------------ |
-| Roadmap Phases 1-5       | Implemented                                                  | `docs/12_ROADMAP.md`, `docs/13_BACKLOG.md`                         |
-| Phase 6 GitHub milestone | Implemented and live-validated                               | `specs/GITHUB_INTEGRATION_SPEC.md`, `memory/completed-features.md` |
-| Phase 7 Helm generation  | Implemented and gateway-validated                            | `specs/HELM_SPEC.md`, `memory/completed-features.md`               |
-| Phase 8 Terraform        | Implemented and statically validated                         | `specs/TERRAFORM_SPEC.md`, `memory/completed-features.md`          |
-| Automated verification   | 41 tests plus lint and production builds pass                | `docs/11_TESTING.md`, `memory/next-session.md`                     |
-| PostgreSQL persistence   | Implemented and restart-tested                               | migrations and smoke scripts                                       |
-| Browser workflow         | Auth, project, and notification flows desktop/mobile checked | `memory/completed-features.md`                                     |
-| Real deployment          | Future                                                       | generated and validated manifests only                             |
-| External LLM             | Future                                                       | local `rules` and `mock` modes only                                |
+| Area                     | Status                                                   | Evidence                                                                          |
+| ------------------------ | -------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Roadmap Phases 1-5       | Implemented                                              | `docs/12_ROADMAP.md`, `docs/13_BACKLOG.md`                                        |
+| Phase 6 GitHub milestone | Implemented and live-validated                           | `specs/GITHUB_INTEGRATION_SPEC.md`, `memory/completed-features.md`                |
+| Phase 7 Helm generation  | Implemented and gateway-validated                        | `specs/HELM_SPEC.md`, `memory/completed-features.md`                              |
+| Phase 8 Terraform        | Implemented and statically validated                     | `specs/TERRAFORM_SPEC.md`, `memory/completed-features.md`                         |
+| Phase 9 Kubernetes       | Inspection, planning, apply, status, and rollback complete | `specs/DEPLOYMENT_SPEC.md`, ADR-010, ADR-011                                     |
+| Automated verification   | 59 tests plus lint and production builds pass             | `docs/11_TESTING.md`, `memory/next-session.md`                                   |
+| PostgreSQL persistence   | Implemented and restart-tested                           | migrations and smoke scripts                                                      |
+| Browser workflow         | Auth, project, notification, and deployment flows checked | `memory/completed-features.md`                                                   |
+| Real deployment          | Opt-in non-production Kubernetes workflow live-validated  | `scripts/verify-phase9-kind.ts`, `docs/11_TESTING.md`                            |
+| External LLM             | Future                                                   | local `rules` and `mock` modes only                                               |
 
 ## System context graph
 
@@ -96,6 +99,7 @@ flowchart LR
   Project --> PostgreSQL
   Pipeline --> PostgreSQL
   Deployment --> PostgreSQL
+  Deployment -->|only when opt-in policy passes| KubernetesAPI[Allowlisted Kubernetes API]
   Logging --> PostgreSQL
   AI --> PostgreSQL
   Notification --> PostgreSQL
@@ -112,12 +116,12 @@ flowchart LR
 | Auth Service         | 8081 | Password auth, JWT sessions, refresh-token revocation, GitHub OAuth, provider tokens, repository publishing, Actions synchronization                | Calls GitHub; owns provider secret boundary                                    | Implemented                   |
 | Project Service      | 8082 | Projects, dependency-checked tool selections, Helm/Terraform rendering, artifact bundles, TAR downloads, project-scoped GitHub endpoints            | Coordinates Pipeline and AI after generation; calls Auth internally for GitHub | Implemented                   |
 | Pipeline Service     | 8083 | Explainable pipeline definitions, simulated executions, status transitions, cancellation                                                            | Writes logs through Logging Service and emits notifications                    | Implemented, simulated runner |
-| Deployment Service   | 8084 | Kubernetes deployment targets and structural manifest validation                                                                                    | Reads generated file payloads through API requests                             | Implemented, no cluster apply |
+| Deployment Service   | 8084 | Targets, validation, inspection, plans, encrypted credentials, approved apply, status, and rollback                                                  | Reads owned artifacts; optionally calls exact allowlisted Kubernetes APIs      | Phase 9 implemented           |
 | Monitoring Service   | 8085 | Aggregates eight service health endpoints and emits Prometheus text metrics                                                                         | Polls Gateway and seven domain services                                        | Implemented foundation        |
 | Logging Service      | 8086 | Internal log ingestion and owner-scoped execution log retrieval                                                                                     | Receives simulated pipeline logs                                               | Implemented                   |
 | AI Service           | 8087 | Rule-based or mock suggestions, prompt-file loading, suggestion status                                                                              | Reads project/artifact context; emits notifications                            | Implemented locally           |
 | Analytics Service    | 8088 | Reserved product analytics boundary                                                                                                                 | No database or events yet                                                      | Health-only scaffold          |
-| Notification Service | 8089 | Internal event creation, user-scoped listing, mark-as-read                                                                                          | Called by Project, Pipeline, and AI services                                   | Implemented                   |
+| Notification Service | 8089 | Internal event creation, user-scoped listing, mark-as-read                                                                                          | Called by Project, Pipeline, AI, and Deployment services                       | Implemented                   |
 | Shared Types         |  n/a | Cross-package TypeScript contracts                                                                                                                  | Used by frontend and domain services                                           | Implemented                   |
 | Service Core         |  n/a | JWT, scrypt, errors, logging, PostgreSQL, migrations, notifications, graceful shutdown                                                              | Used by backend services                                                       | Implemented                   |
 
@@ -137,7 +141,7 @@ flowchart LR
 | PNPM workspaces        | Monorepo package management                       | Efficient workspace linking and reproducible installs  | Coordinates 14 workspace packages from one lockfile                     | Active                                                 |
 | Docker Compose         | Local infrastructure                              | Repeatable local dependencies                          | Starts PostgreSQL, Redis, MinIO, and MailHog consistently               | PostgreSQL active; others prepared                     |
 | Docker templates       | Generated delivery assets and service Dockerfiles | Portable runtime packaging                             | Teaches image construction and prepares deployments                     | Active generation                                      |
-| Kubernetes YAML        | Generated deployment assets                       | Standard cloud-native deployment model                 | Produces inspectable Namespace, Deployment, Service, and Ingress files  | Active generation/validation                           |
+| Kubernetes API/YAML    | Generated assets and Deployment Service            | Declarative resources plus a standard control API      | Supports review, validation, policy-bounded apply, status, and rollback | Active generation and controlled execution             |
 | GitHub Actions         | BuildSphere CI and generated workflows            | Accessible CI/CD with strong portfolio value           | Validates BuildSphere and connects generated repositories to real runs  | Active                                                 |
 | GitHub App OAuth       | Optional identity and provider integration        | Fine-grained permissions and short-lived user tokens   | Supports secure login, repository creation, publishing, and run sync    | Active and live-tested                                 |
 | JWT HS256              | BuildSphere sessions                              | Stateless access-token validation across services      | Lets each service enforce user ownership without a session service call | Active                                                 |
@@ -165,8 +169,14 @@ flowchart LR
 9. **Generate-only Terraform boundary**: BuildSphere emits disabled AWS EKS
    source and may statically validate it, but holds no AWS credentials and runs
    no plan, apply, destroy, or state operation.
+10. **Offline-first Kubernetes preflight**: inspection and planning reveal no
+    credential material and make no cluster request.
+11. **Controlled Kubernetes execution**: mutation is disabled by default and
+    requires encrypted target-bound credentials, exact server/environment
+    policy, immutable-artifact approval, ownership checks, durable audit, and
+    bounded rollback.
 
-Evidence: `docs/adr/ADR-001-*` through `ADR-009-*`.
+Evidence: `docs/adr/ADR-001-*` through `ADR-011-*`.
 
 ## Domain and data graph
 
@@ -183,6 +193,9 @@ erDiagram
   PIPELINE_EXECUTION ||--o{ PIPELINE_LOG : emits
   PROJECT ||--o{ SUGGESTION : receives
   PROJECT ||--o{ DEPLOYMENT_TARGET : targets
+  DEPLOYMENT_TARGET ||--o| DEPLOYMENT_CREDENTIAL : retains
+  DEPLOYMENT_TARGET ||--o{ DEPLOYMENT_APPROVAL : authorizes
+  DEPLOYMENT_TARGET ||--o{ DEPLOYMENT_OPERATION : records
   PROJECT ||--o| GITHUB_REPOSITORY : publishes_to
   GITHUB_REPOSITORY ||--o{ GITHUB_WORKFLOW_RUN : reports
 ```
@@ -206,6 +219,9 @@ database foreign key because the owning services intentionally remain separate.
 | `pipeline_logs`               | Logging                       | Owner, execution, stage, level, message, timestamp                |
 | `suggestions`                 | AI                            | Category, severity, explanation, action, confidence, state        |
 | `deployment_targets`          | Deployment                    | Kubernetes target and environment per project/name                |
+| `deployment_target_credentials` | Deployment                  | Minimized owner/target-bound AES-GCM credential ciphertext         |
+| `deployment_approvals`        | Deployment                    | Expiring single-use artifact or rollback authorization             |
+| `deployment_operations`       | Deployment                    | Durable apply/rollback audit and safe resource/rollout summaries   |
 | `notifications`               | Notification                  | User-scoped event with unread/read state                          |
 | `project_github_repositories` | Auth                          | One durable GitHub repository link per logical project            |
 | `github_workflow_runs`        | Auth                          | Upserted by stable GitHub run ID                                  |
@@ -225,8 +241,13 @@ database foreign key because the owning services intentionally remain separate.
 7. Preview files and explanations or download a TAR archive.
 8. Run the seven-stage simulated pipeline, inspect learning notes and logs, or deliberately simulate a test-stage failure.
 9. Review, accept, or dismiss rule-based suggestions.
-10. Validate Kubernetes files and define a development, staging, or production target.
-11. When GitHub is configured, create/reuse a repository, publish the artifact, and synchronize real Actions runs.
+10. Validate Kubernetes files, inspect kubeconfig without retaining its
+    credentials, create a draft or inspected target, and review an offline
+    resource plan.
+11. When controlled execution is configured, explicitly retain the selected
+    encrypted credential, approve the exact artifact, deploy, refresh status,
+    and separately approve any rollback.
+12. When GitHub is configured, create/reuse a repository, publish the artifact, and synchronize real Actions runs.
 
 ## Core workflow graphs
 
@@ -311,6 +332,36 @@ sequenceDiagram
   UI->>Pipeline: poll execution
   UI->>Logs: retrieve owner-scoped logs
 ```
+
+### Controlled Kubernetes deployment
+
+```mermaid
+sequenceDiagram
+  participant UI
+  participant Deployment
+  participant Project
+  participant DB as PostgreSQL
+  participant Kubernetes
+  UI->>Deployment: inspect kubeconfig and build offline plan
+  UI->>Deployment: explicitly retain selected credential
+  Deployment->>DB: store target-bound AES-GCM ciphertext
+  UI->>Deployment: approve exact target + artifact
+  Deployment->>Project: resolve owned immutable artifact
+  Deployment->>DB: save expiring digest/fingerprint approval
+  UI->>Deployment: execute with idempotency key
+  Deployment->>Kubernetes: ownership pre-read + server-side apply force=false
+  Deployment->>DB: persist safe operation/resource outcomes
+  UI->>Deployment: refresh read-only rollout summary
+  opt rollback required
+    UI->>Deployment: create separate rollback approval
+    Deployment->>Kubernetes: reapply prior snapshot; prune only owned newer namespaced resources
+    Deployment->>DB: record restored active release
+  end
+```
+
+The execution branch exists only when encryption, exact API-server allowlist,
+and environment policy are configured. It never executes arbitrary browser
+manifests, populated Secrets, Helm, Terraform, or cluster-scoped deletion.
 
 ### GitHub repository publication
 
@@ -523,6 +574,18 @@ All public calls use `http://localhost:8080/api`. Protected endpoints require
 - `GET /projects/{projectId}/deployment-targets`
 - `GET /deployments/targets/{targetId}`
 - `POST /deployments/validate`
+- `POST /deployments/kubernetes/inspect`
+- `POST /deployments/plans`
+- `GET /deployments/capabilities`
+- `PUT /deployments/targets/{targetId}/credential`
+- `DELETE /deployments/targets/{targetId}/credential`
+- `POST /deployments/approvals`
+- `POST /deployments/operations`
+- `GET /projects/{projectId}/deployment-operations`
+- `GET /deployments/operations/{operationId}`
+- `POST /deployments/operations/{operationId}/refresh`
+- `POST /deployments/operations/{operationId}/rollback-approval`
+- `POST /deployments/operations/{operationId}/rollback`
 - `GET /monitoring/health`
 - `GET /notifications`
 - `PATCH /notifications/{notificationId}/read`
@@ -534,6 +597,14 @@ later update fails.
 
 Every backend service also exposes `GET /health`. Monitoring Service exposes
 `GET /metrics` directly in Prometheus text format.
+
+Inspection accepts kubeconfig only in authenticated request memory. Deployment
+Service rejects local file references before official-client parsing and
+returns or stores only an allowlisted connection summary. Plans are marked
+`executable: false` and `clusterRequestMade: false`. A separate explicit action
+can minimize and encrypt the selected credential. Execution then requires an
+owned immutable artifact, current credential fingerprint, expiring single-use
+approval, and durable idempotency key.
 
 ## Internal API boundaries
 
@@ -562,6 +633,9 @@ Every backend service also exposes `GET /health`. Monitoring Service exposes
 | Partial-artifact CI runs    | Publish workflow files after other files                                                | Existing external repositories may retain old run history     |
 | Secret leakage in templates | Placeholder values and `.env.example`; `.env` ignored                                   | Production secret manager is future                           |
 | Broken Kubernetes YAML      | Structural validation for API version, kind, name, labels, probes, resources            | Server-side schema validation and cluster dry-run are future  |
+| Kubeconfig credential leak  | Ephemeral inspection plus minimized AES-GCM retention bound to owner/target and kept outside public target JSON | External secret-manager references are future |
+| Accidental cluster mutation | Disabled by default; exact host/environment policy, immutable-artifact approval, ownership precheck, and non-forced SSA | Production RBAC/admission integration is future |
+| Destructive rollback        | Separate approval; prior snapshot only; prune only newer owned namespaced resources; never delete Namespace/cluster scope | Multi-release policy remains intentionally bounded |
 | Accidental cloud creation   | Terraform defaults disabled; generated CI has format/init-without-backend/validate only | Cost/IAM/state review and any execution remain operator-owned |
 | Terraform secret/state leak | No credentials or active backend; generated ignore rules exclude state and plans        | Production secret and remote-state workflows are future       |
 | Untraceable requests        | Correlation ID generated/propagated and logged                                          | Distributed tracing is future                                 |
@@ -573,7 +647,9 @@ Every backend service also exposes `GET /health`. Monitoring Service exposes
 - Monitoring polls eight health endpoints with a three-second timeout.
 - Platform health is `ok` only when every monitored target is reachable; otherwise it is `degraded`.
 - Prometheus output contains `buildsphere_service_up` and health response-time gauges.
-- Grafana, centralized logs, OpenTelemetry, and audit logs are future work.
+- Deployment approvals, operations, resource outcomes, refreshes, and rollbacks
+  form a durable audit trail. Grafana, centralized logs, OpenTelemetry, and
+  general security audit events are future work.
 
 ## Testing and verification graph
 
@@ -585,16 +661,21 @@ flowchart LR
   Tests --> MemorySmoke[Gateway smoke in memory mode]
   Tests --> HelmLint[Helm v4.2.2 strict lint + template]
   Tests --> TerraformValidate[Terraform v1.15.8 fmt + backend-disabled init + validate]
-  Tests --> PostgresSmoke[26-file gateway + Phase 6 PostgreSQL verification]
-  PostgresSmoke --> Browser[Desktop/mobile auth, project, and notification workflows]
+  Tests --> PostgresSmoke[26-file gateway + offline plan + Phase 6 verification]
+  Tests --> Phase9Postgres[Credential + approval + operation persistence]
+  Phase9Postgres --> Kind[Disposable kind apply + status + rollback]
+  PostgresSmoke --> Browser[Desktop/mobile auth, project, notification, deployment workflows]
   PostgresSmoke --> LiveGitHub[Live OAuth, private repo, publish, Actions sync]
 ```
 
-The repository contains 14 test files and 41 automated tests covering shared
+The repository contains 19 test files and 59 automated tests covering shared
 authentication and shutdown, gateway forwarding, every service's principal
 behavior, pipeline state/cancellation, generation, validation, OAuth security,
 GitHub publication idempotency, token refresh, workflow-run upserts, Helm
-dependency validation, selection-aware rendering, and validation isolation.
+dependency validation, selection-aware rendering, validation isolation,
+kubeconfig redaction/file-reference safety, owner-scoped targets, offline
+resource ordering, encrypted credentials, approval/idempotency races, execution
+policy, ownership prechecks, retries, rollout status, and bounded rollback.
 
 Primary commands:
 
@@ -603,11 +684,21 @@ pnpm verify
 pnpm verify:terraform
 pnpm smoke
 pnpm smoke:phase6:postgres
+pnpm smoke:phase9:postgres
+pnpm verify:phase9:kind
 ```
 
 The live GitHub test confirmed OAuth, a private repository, 10 published files,
 a successful corrected Actions run, durable synchronization, and a no-op repeat
 publish that created no extra run.
+
+The disposable kind test confirmed two real approved releases, healthy rollout
+observation, rollback to the prior active release, pruning of one newer owned
+ConfigMap, direct ownership-label reads, credential revocation, and cluster
+deletion. It did not touch a production or cloud cluster.
+
+The structured companion validates as 80 unique nodes and 130 relationships
+with no dangling edges.
 
 The notification browser test confirmed complete message rendering, individual
 and bulk read controls, synchronized zero unread counts, three successful PATCH
@@ -653,7 +744,10 @@ persistence after relisting.
   projects with exact VPC/EKS module pins and safe generated CI validation.
 - Seven-stage explainable simulated pipelines with success, failure, cancellation, and logs.
 - Thirteen deterministic recommendation rules and suggestion lifecycle.
-- Kubernetes target records and manifest validation.
+- Kubernetes target records, manifest validation, ephemeral kubeconfig
+  inspection, redacted connection summaries, offline plans, encrypted
+  credentials, approved idempotent apply, operation history/status, and bounded
+  rollback.
 - Health aggregation, Prometheus text metrics, user-scoped notifications, and a
   full notification center with durable individual/bulk read interactions.
 - GitHub repository creation/reuse, safe publishing, token refresh, and Actions synchronization.
@@ -672,7 +766,6 @@ persistence after relisting.
 ### Future candidates
 
 - Jenkins integration.
-- Real Kubernetes deployment and rollback.
 - Cost estimation.
 - Team collaboration and template sharing.
 - External LLM provider, Grafana, centralized logs, tracing, security scanning, and production deployment.
@@ -686,7 +779,9 @@ persistence after relisting.
    BuildSphere does not run plan/apply/destroy, own state, hold AWS credentials,
    estimate cost, or create EKS resources.
 4. The internal pipeline runner is simulated; GitHub Actions is the only connected real CI provider.
-5. Deployment targets and validation do not apply files to a Kubernetes cluster.
+5. Kubernetes execution is opt-in and raw-manifest only for exact allowlisted
+   targets; BuildSphere is not a production cluster control plane, Helm release
+   manager, general GitOps engine, or arbitrary manifest runner.
 6. AI suggestions are deterministic rules or mock data; no external model is called.
 7. Redis, MinIO, and MailHog run as optional local infrastructure but are not consumed by current services.
 8. Artifacts are stored as JSONB in PostgreSQL, not in object storage.

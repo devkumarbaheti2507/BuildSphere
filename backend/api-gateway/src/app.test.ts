@@ -86,3 +86,81 @@ test("gateway returns a structured error when an upstream is unavailable", async
     gateway.server.close();
   }
 });
+
+test("gateway keeps project-scoped deployment operations on Deployment Service", async () => {
+  const deploymentsApp = express();
+  deploymentsApp.use(express.json());
+  deploymentsApp.get(
+    "/projects/:projectId/deployment-operations",
+    (request, response) =>
+      response.json({
+        service: "deployments",
+        projectId: request.params.projectId,
+      }),
+  );
+  deploymentsApp.put(
+    "/deployments/targets/:targetId/credential",
+    (request, response) =>
+      response.json({
+        service: "deployments",
+        confirmed: request.body.confirmed,
+      }),
+  );
+  const projectApp = express();
+  projectApp.use((_request, response) =>
+    response.status(500).json({ service: "projects" }),
+  );
+  const deployments = await listen(deploymentsApp);
+  const projects = await listen(projectApp);
+  const unavailable = "http://127.0.0.1:1";
+  const gateway = await listen(
+    createGatewayApp({
+      auth: unavailable,
+      projects: projects.url,
+      pipelines: unavailable,
+      logging: unavailable,
+      suggestions: unavailable,
+      deployments: deployments.url,
+      monitoring: unavailable,
+      notifications: unavailable,
+    }),
+  );
+  try {
+    const history = await fetch(
+      `${gateway.url}/api/projects/22222222-2222-4222-8222-222222222222/deployment-operations`,
+    );
+    assert.equal(history.status, 200);
+    assert.equal(
+      ((await history.json()) as { service: string }).service,
+      "deployments",
+    );
+    const credential = await fetch(
+      `${gateway.url}/api/deployments/targets/33333333-3333-4333-8333-333333333333/credential`,
+      {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ confirmed: true }),
+      },
+    );
+    assert.equal(credential.status, 200);
+    assert.equal(
+      ((await credential.json()) as { confirmed: boolean }).confirmed,
+      true,
+    );
+    const preflight = await fetch(
+      `${gateway.url}/api/deployments/capabilities`,
+      {
+        method: "OPTIONS",
+        headers: { origin: "http://localhost:5173" },
+      },
+    );
+    assert.match(
+      preflight.headers.get("access-control-allow-methods") ?? "",
+      /PUT/,
+    );
+  } finally {
+    deployments.server.close();
+    projects.server.close();
+    gateway.server.close();
+  }
+});

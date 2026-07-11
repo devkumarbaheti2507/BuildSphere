@@ -1,6 +1,25 @@
 import assert from "node:assert/strict";
 
 const apiUrl = process.env.API_URL ?? "http://localhost:8080/api";
+const smokeKubeconfig = `apiVersion: v1
+kind: Config
+clusters:
+  - name: smoke-cluster
+    cluster:
+      server: https://127.0.0.1:6443
+      certificate-authority-data: c21va2UtY2EtZGF0YQ==
+contexts:
+  - name: smoke-context
+    context:
+      cluster: smoke-cluster
+      user: smoke-user
+      namespace: smoke
+current-context: smoke-context
+users:
+  - name: smoke-user
+    user:
+      token: smoke-kubeconfig-secret
+`;
 
 const request = async <T>(
   path: string,
@@ -144,16 +163,70 @@ const main = async (): Promise<void> => {
   );
   assert.equal(validation.valid, true);
 
-  await request("/deployments/targets", token, {
+  const deploymentCapabilities = await request<{
+    executionEnabled: boolean;
+    supportedKinds: string[];
+  }>("/deployments/capabilities", token);
+  assert.equal(typeof deploymentCapabilities.executionEnabled, "boolean");
+  assert.ok(deploymentCapabilities.supportedKinds.includes("Deployment"));
+  assert.equal("allowedServerHosts" in deploymentCapabilities, false);
+
+  const inspection = await request<{
+    valid: boolean;
+    connection: { serverHost: string; credentialMechanism: string };
+    clusterRequestMade: boolean;
+  }>("/deployments/kubernetes/inspect", token, {
+    method: "POST",
+    body: JSON.stringify({ kubeconfig: smokeKubeconfig }),
+  });
+  assert.equal(inspection.valid, true);
+  assert.equal(inspection.connection.serverHost, "127.0.0.1:6443");
+  assert.equal(inspection.connection.credentialMechanism, "token");
+  assert.equal(inspection.clusterRequestMade, false);
+  assert.equal(
+    JSON.stringify(inspection).includes("smoke-kubeconfig-secret"),
+    false,
+  );
+
+  const deploymentTarget = await request<{
+    id: string;
+    config: { connectionStatus: string };
+  }>("/deployments/targets", token, {
     method: "POST",
     body: JSON.stringify({
       projectId: project.id,
       name: "Smoke cluster",
       type: "kubernetes",
       environment: "development",
-      config: {},
+      kubeconfig: smokeKubeconfig,
     }),
   });
+  assert.equal(deploymentTarget.config.connectionStatus, "inspected");
+  assert.equal(
+    JSON.stringify(deploymentTarget).includes("smoke-kubeconfig-secret"),
+    false,
+  );
+  const deploymentPlan = await request<{
+    executable: boolean;
+    clusterRequestMade: boolean;
+    resources: unknown[];
+  }>("/deployments/plans", token, {
+    method: "POST",
+    body: JSON.stringify({
+      targetId: deploymentTarget.id,
+      manifests: artifact.files
+        .filter((file) => file.path.startsWith("kubernetes/"))
+        .map(({ path, content }) => ({ path, content })),
+    }),
+  });
+  assert.equal(deploymentPlan.executable, false);
+  assert.equal(deploymentPlan.clusterRequestMade, false);
+  assert.equal(deploymentPlan.resources.length, 4);
+  const deploymentOperations = await request<unknown[]>(
+    `/projects/${project.id}/deployment-operations`,
+    token,
+  );
+  assert.equal(deploymentOperations.length, 0);
   const health = await request<{ status: string; services: unknown[] }>(
     "/monitoring/health",
     token,
@@ -194,6 +267,8 @@ const main = async (): Promise<void> => {
         pipelineStages: pipelines[0].stages.length,
         pipelineLogs: logs.length,
         suggestions: suggestions.length,
+        deploymentPlanResources: deploymentPlan.resources.length,
+        deploymentOperations: deploymentOperations.length,
         monitoredServices: health.services.length,
         notifications: notifications.length,
         notificationsMarkedRead: 1,

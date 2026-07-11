@@ -82,7 +82,7 @@ const cors =
     );
     response.setHeader(
       "access-control-allow-methods",
-      "GET, POST, PATCH, DELETE, OPTIONS",
+      "GET, POST, PUT, PATCH, DELETE, OPTIONS",
     );
     if (request.method === "OPTIONS") {
       response.status(204).send();
@@ -119,6 +119,10 @@ export const createGatewayApp = (
     proxyRequest(targets.deployments),
   );
   app.use(
+    /^\/api\/projects\/[^/]+\/deployment-operations(?:\/|$)/,
+    proxyRequest(targets.deployments),
+  );
+  app.use(
     /^\/api\/executions\/[^/]+\/logs(?:\/|$)/,
     proxyRequest(targets.logging),
   );
@@ -129,6 +133,10 @@ export const createGatewayApp = (
   app.use("/api/pipelines", proxyRequest(targets.pipelines));
   app.use("/api/executions", proxyRequest(targets.pipelines));
   app.use("/api/suggestions", proxyRequest(targets.suggestions));
+  app.use(
+    /^\/api\/deployments\/(?:operations|targets\/[^/]+\/credential)(?:\/|$)/,
+    proxyRequest(targets.deployments, 120_000),
+  );
   app.use("/api/deployments", proxyRequest(targets.deployments));
   app.use("/api/monitoring", proxyRequest(targets.monitoring));
   app.use("/api/notifications", proxyRequest(targets.notifications));

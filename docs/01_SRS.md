@@ -6,7 +6,7 @@
 | Version           | 0.1.0                                    |
 | Status            | Draft                                    |
 | Author            | BuildSphere Team                         |
-| Last Updated      | 2026-07-10                               |
+| Last Updated      | 2026-07-11                               |
 | Related Documents | 00_PROJECT_VISION.md, 02_HLD.md, specs/* |
 
 ---
@@ -219,6 +219,79 @@ Acceptance criteria:
 - Terraform files use the existing artifact preview, download, and GitHub
   publishing workflows.
 - BuildSphere does not call AWS or run Terraform plan/apply in this milestone.
+
+## FR-016 Kubernetes deployment preflight
+
+BuildSphere shall prepare Kubernetes deployment targets through secure
+connection inspection and explainable preflight planning.
+
+Acceptance criteria:
+
+- An authenticated user can submit a kubeconfig for in-memory inspection.
+- Kubeconfig parsing uses the official Kubernetes Node client and returns only
+  the selected context, cluster name, server host, namespace, TLS posture, and
+  credential mechanism.
+- Raw kubeconfig, tokens, certificates, private keys, passwords, and exec
+  arguments are never persisted, logged, or returned to the browser.
+- A deployment target created with a valid kubeconfig stores only the redacted
+  connection summary; targets without a kubeconfig remain explicit drafts.
+- A connected target can build an ordered, non-executing plan from structurally
+  valid rendered Kubernetes manifests.
+- The plan identifies each resource by API version, kind, name, namespace,
+  source path, and intended apply action while clearly reporting that no
+  cluster request was made.
+- Cluster apply, retained credentials, deployment status, and rollback remain
+  separate FR-017/FR-018 capabilities and require explicit operator policy and
+  approval.
+
+## FR-017 Controlled Kubernetes deployment execution
+
+BuildSphere shall apply a generated Kubernetes artifact only after an owned
+target is explicitly connected and the exact plan is approved.
+
+Acceptance criteria:
+
+- Kubernetes execution is disabled unless a credential-encryption key, exact
+  API-server host allowlist, and allowed environment list are configured.
+- Credential retention is a separate authenticated action and stores only a
+  minimized kubeconfig encrypted with AES-256-GCM and target-bound
+  authenticated data.
+- Execution rejects HTTP, disabled TLS verification, proxy configuration,
+  impersonation, local credential files, exec plugins, auth providers, unknown
+  kinds, cross-namespace resources, and every Kubernetes Secret.
+- The execution input is loaded from an immutable owned BuildSphere artifact,
+  structurally validated, and bound to a five-minute single-use approval by a
+  SHA-256 manifest digest.
+- Approval is also bound to the current credential fingerprint, so replacing or
+  revoking the target credential invalidates the pending operation.
+- A client-generated idempotency key returns the same operation for safe
+  retries, and only one active operation may mutate a target at a time.
+- Existing resources are changed only when their BuildSphere ownership labels
+  match the owner, project, and target; server-side apply never forces field
+  conflicts.
+- Requests use bounded timeouts and transient retries, while durable operation
+  history records safe status and per-resource outcomes without credentials or
+  live object bodies.
+
+## FR-018 Kubernetes status and rollback
+
+BuildSphere shall observe owned deployment resources and support rollback to a
+prior successful release within a constrained ownership boundary.
+
+Acceptance criteria:
+
+- An authenticated owner can list operations and refresh status for an owned
+  target.
+- Status refresh performs read-only requests and reports present, progressing,
+  ready, degraded, or missing without returning Kubernetes object contents.
+- Rollback requires a separate expiring, single-use approval and an immediate
+  prior successful BuildSphere release.
+- Rollback reapplies the prior immutable artifact snapshot.
+- Resources introduced by the newer release are deleted only when they are
+  namespaced and carry matching BuildSphere ownership labels.
+- Namespace and cluster-scoped deletion is never performed by rollback.
+- Success, failure, and rollback results are persisted and published through
+  the existing notification workflow.
 
 # Non-functional requirements
 

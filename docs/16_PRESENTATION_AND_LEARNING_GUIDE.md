@@ -35,7 +35,8 @@ The project is valuable in three ways:
 > stack selection, generates Docker, GitHub Actions, Kubernetes, optional Helm,
 > and disabled AWS EKS Terraform assets,
 > simulates an explainable delivery pipeline, recommends improvements, validates
-> manifests, and can publish the result to GitHub and synchronize real Actions
+> manifests, supports an opt-in approved Kubernetes apply/status/rollback
+> workflow, and can publish the result to GitHub and synchronize real Actions
 > runs.
 
 ### Two minutes
@@ -61,11 +62,12 @@ The project is valuable in three ways:
 > provider tokens are encrypted with AES-256-GCM. Project Service verifies
 > ownership while Auth Service keeps the provider secret boundary. Generated
 > files can be published idempotently to a private repository, and GitHub
-> Actions runs are synchronized back into BuildSphere. Real cloud deployment is
-> intentionally outside the current boundary. Phases 7 and 8 add optional Helm
-> chart source and disabled-by-default AWS EKS Terraform source. The MVP
-> generates, explains, and statically validates before any operator-owned
-> external infrastructure action.
+> Actions runs are synchronized back into BuildSphere. Phases 7 and 8 add
+> optional Helm chart source and disabled-by-default AWS EKS Terraform source.
+> Phase 9 adds fail-closed encrypted Kubernetes credentials, exact-artifact
+> approvals, ownership-checked server-side apply, safe rollout summaries, and
+> bounded rollback. It was verified against a disposable local kind cluster;
+> production and cloud deployment remain intentionally outside the boundary.
 
 ## Recommended slide deck
 
@@ -95,7 +97,8 @@ Show this sequence:
 ```text
 Authenticate -> Create project -> Choose tools -> Generate assets
 -> Inspect/download -> Run explainable pipeline -> Review suggestions
--> Validate deployment -> Publish to GitHub -> Synchronize Actions
+-> Inspect and plan deployment -> Approve/apply/observe/rollback when enabled
+-> Publish to GitHub -> Synchronize Actions
 ```
 
 ### Slide 5: Architecture
@@ -140,6 +143,8 @@ Use the system graph from `docs/15_PROJECT_KNOWLEDGE_GRAPH.md`.
 - AES-256-GCM provider tokens.
 - Owner checks and internal service tokens.
 - Safe path validation and placeholder secrets.
+- Target-bound encrypted kubeconfig, exact server/environment policy, expiring
+  artifact approval, ownership checks, and bounded rollback.
 
 ### Slide 10: GitHub integration
 
@@ -154,7 +159,7 @@ Use the system graph from `docs/15_PROJECT_KNOWLEDGE_GRAPH.md`.
 
 - Frozen lockfile install.
 - ESLint and all production builds.
-- 41 automated tests.
+- 59 automated tests in 19 test files.
 - Memory and PostgreSQL gateway smoke workflows.
 - Migration idempotency and restart persistence.
 - Desktop/mobile browser checks.
@@ -164,16 +169,23 @@ Use the system graph from `docs/15_PROJECT_KNOWLEDGE_GRAPH.md`.
 - Checksum-verified Terraform v1.15.8 formatting, backend-disabled
   initialization, exact module resolution, and static validation.
 - PostgreSQL smoke with 26 files while all earlier workflows remain green.
+- Ephemeral kubeconfig inspection, redacted target persistence, a four-resource
+  offline plan, and desktop/mobile browser verification.
+- Phase 9 PostgreSQL credential/approval/operation verification plus a real
+  disposable-kind two-release apply, healthy status, rollback, ownership-bound
+  prune, credential revocation, and cluster cleanup.
 
 ### Slide 12: Boundaries and roadmap
 
 - Selection-aware generation, optional Helm packaging, and disabled AWS EKS
   Terraform source are implemented.
-- No real cluster apply or cloud deployment.
+- Kubernetes inspection, planning, approved apply, status, and bounded rollback
+  are implemented, but execution is opt-in and not a production control plane.
 - No Terraform plan/apply/destroy, AWS credential handling, or state ownership.
 - No external LLM yet.
 - Redis/MinIO/MailHog prepared but not active.
-- Next candidates: Jenkins, real Kubernetes, cost, collaboration.
+- Phase 9 is complete. The next milestone must be specified; candidates remain
+  Jenkins, cost estimation, collaboration, and external AI/observability.
 - Explain that these are intentional roadmap boundaries, not hidden claims.
 
 ## Ten-minute live demonstration
@@ -211,7 +223,7 @@ Use the system graph from `docs/15_PROJECT_KNOWLEDGE_GRAPH.md`.
 |  2:30-4:00 | Generate assets         | Selection-aware files, explanations, checksum, preview, download     |
 |  4:00-5:30 | Run pipeline            | Seven stages, learning notes, simulated state and log flow           |
 |  5:30-6:30 | Show suggestions        | Deterministic checks, severity, confidence, accept/dismiss           |
-|  6:30-7:30 | Validate deployment     | Kubernetes structural checks and environment target model            |
+|  6:30-7:30 | Deployment workflow     | Redacted inspection, plan, approval/status history, bounded rollback |
 |  7:30-9:00 | GitHub tab              | Durable repository link, safe publication, Actions synchronization   |
 | 9:00-10:00 | Close with architecture | Service boundaries, security, tests, honest future work              |
 
@@ -310,7 +322,7 @@ Use direct language:
 
 - "The current bundle generates delivery/configuration scaffolding, not complete application source code."
 - "The internal pipeline is simulated; GitHub Actions is the real connected CI provider."
-- "Kubernetes files are generated and structurally validated, but BuildSphere does not apply them to a cluster."
+- "Kubernetes execution is opt-in and policy-bounded; it is not a production control plane, Helm operator, or arbitrary manifest runner."
 - "The AI interface and prompts are ready for a provider, but current recommendations use deterministic rules or mock data."
 - "Redis, MinIO, and MailHog are local infrastructure preparation, not active service dependencies today."
 - "The Analytics Service currently proves the service contract through health only."
@@ -403,9 +415,12 @@ Read:
 - `backend/ai-service/src/rules.ts`
 - `prompts/`
 - `backend/deployment-service/src/validator.ts`
+- `backend/deployment-service/src/kubeconfig.ts`
+- `backend/deployment-service/src/planner.ts`
 - `backend/monitoring-service/src/health-checker.ts`
 
-Be able to distinguish deterministic analysis, structural validation, and real external execution.
+Be able to distinguish deterministic analysis, structural validation, offline
+deployment planning, and real external execution.
 
 ### Module 9: GitHub and security
 
@@ -502,10 +517,11 @@ scenario questions about failures, security boundaries, and future design.
 - Distinguish simulated pipeline execution from real GitHub Actions.
 - Distinguish generated scaffolding from complete application source.
 - Mention security controls with their purpose, not as a vocabulary list.
-- Show quality evidence: 41 tests, builds, smoke workflows, persistence,
+- Show quality evidence: 59 tests, builds, smoke workflows, persistence,
   browser checks including notification read interactions, live GitHub
-  validation, strict Helm checks, real Terraform static validation, and a
-  26-file PostgreSQL generation run.
+  validation, strict Helm checks, real Terraform static validation, a 26-file
+  PostgreSQL generation run, the four-resource offline deployment plan, and the
+  disposable-kind apply/status/rollback verification.
 - Name at least two tradeoffs and two future milestones.
 - Keep secrets and `.env` off screen.
 - End with what you learned and the next bounded improvement.

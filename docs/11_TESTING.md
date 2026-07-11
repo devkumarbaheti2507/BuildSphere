@@ -6,7 +6,7 @@
 | Version           | 0.1.0                |
 | Status            | Draft                |
 | Author            | BuildSphere Team     |
-| Last Updated      | 2026-07-10           |
+| Last Updated      | 2026-07-11           |
 | Related Documents | 01_SRS.md, 03_LLD.md |
 
 ---
@@ -158,3 +158,63 @@ Notification experience completion verified on 2026-07-10:
   401 responses or browser runtime exceptions.
 - Desktop at 1440x1000 and mobile at 390x844 both kept the drawer, close control,
   and notification text inside the viewport with no horizontal overflow.
+
+Phase 9 BS-801 verification completed on 2026-07-11:
+
+- Frozen installation, zero-warning lint, every production build, and all 46
+  automated tests pass. Deployment Service now contributes eight tests.
+- Kubeconfig tests verify allowlisted summaries, credential redaction,
+  local-file-reference rejection before client parsing, and unresolved-context
+  errors.
+- API/planner tests verify authenticated draft targets, inspected targets,
+  owner scoping, non-executable plans, deterministic resource ordering, and
+  populated Kubernetes Secret rejection.
+- The PostgreSQL gateway smoke passed with 26 generated files, 7 pipeline
+  stages, 14 logs, one suggestion, a four-resource offline deployment plan, 8
+  monitored services, 4 notifications, and persisted notification read state.
+- Migrations 001-003 remained idempotent, the Phase 6 PostgreSQL provider
+  verifier passed, and checksum-verified Terraform v1.15.8 again passed format,
+  backend-disabled initialization, exact module/provider resolution, and static
+  validation.
+- A live browser uploaded a synthetic kubeconfig, inspected it, created a
+  redacted target, and rendered the plan at desktop and 390x844 mobile sizes.
+  No page overflow, secret disclosure, protected 401, console error, runtime
+  exception, or Kubernetes API request occurred.
+
+Phase 9 BS-802/BS-803 completion verified on 2026-07-11:
+
+- Frozen installation, zero-warning lint, every production build, and all 59
+  automated tests in 19 test files pass on supported Node v24.18.0. Node 22
+  remains the preferred toolchain.
+- Deployment Service contributes 20 tests covering fail-closed capability
+  configuration, authenticated target-bound encryption, selected-context
+  minimization, dynamic credential and proxy rejection, exact server/TLS
+  policy, namespace and Secret rejection, ownership prechecks, bounded retries,
+  idempotency, approval expiry, credential rotation, target concurrency,
+  operation status, active-release resolution, and rollback pruning.
+- API Gateway tests confirm project-scoped operation routing, credential PUT
+  forwarding, CORS, authentication, and timeout integration.
+- Migrations 001-007 rerun idempotently. `npm run smoke:phase9:postgres`
+  confirms one credential, three approvals, three operations, exact replay,
+  serialized simultaneous same-key replay, prior-release resolution,
+  active-release restoration, and cascade cleanup. `npm run
+  smoke:phase6:postgres` remains green.
+- The full gateway smoke passes with 26 generated files, seven stages, 14 logs,
+  one suggestion, a four-resource plan, zero operations while execution is
+  disabled, eight monitored services, four notifications, and persisted read
+  state.
+- Official Terraform v1.15.8 again passes format, backend-disabled init with
+  the exact VPC/EKS modules and AWS provider, and static validation without AWS
+  credentials.
+- A checksum-matched official kind v0.31.0 binary with the pinned Kubernetes
+  v1.34.3 node image completed two approved releases through the real
+  Deployment Service and official Kubernetes client. The verifier observed a
+  healthy rollout, rolled back to release one, pruned only the release-two
+  ConfigMap, confirmed ownership labels directly, revoked the credential, and
+  deleted the cluster.
+- A live Chrome check at 1440x1000 and 390x844 rendered an inspected target,
+  built the four-resource plan through the UI, and showed durable-operation
+  empty state without horizontal overflow, console errors, or failed HTTP
+  requests.
+- No production or cloud resource was contacted. No Helm command, Terraform
+  plan/apply/destroy, AWS request, or remote-state operation occurred.

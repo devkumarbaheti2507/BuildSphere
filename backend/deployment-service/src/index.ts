@@ -2,11 +2,19 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   createLogger,
+  HttpNotificationPublisher,
   loadEnvironment,
   registerGracefulShutdown,
   requiredEnvironment,
 } from "@buildsphere/service-core";
 import { createDeploymentApp } from "./app.js";
+import { HttpProjectArtifactProvider } from "./artifact-provider.js";
+import { kubernetesExecutionConfigurationFromEnvironment } from "./execution-policy.js";
+import { OfficialKubernetesResourceClientFactory } from "./kubernetes-client.js";
+import {
+  InMemoryDeploymentOperationRepository,
+  PostgresDeploymentOperationRepository,
+} from "./operation-repository.js";
 import {
   InMemoryDeploymentRepository,
   PostgresDeploymentRepository,
@@ -25,12 +33,32 @@ const database =
   process.env.STORAGE_DRIVER === "memory"
     ? undefined
     : (await import("@buildsphere/service-core/database")).createDatabasePool();
+const executionConfiguration =
+  kubernetesExecutionConfigurationFromEnvironment();
+const repository = database
+  ? new PostgresDeploymentRepository(database)
+  : new InMemoryDeploymentRepository();
 const app = createDeploymentApp(
-  database
-    ? new PostgresDeploymentRepository(database)
-    : new InMemoryDeploymentRepository(),
+  repository,
   requiredEnvironment("JWT_ACCESS_TOKEN_SECRET"),
   logger,
+  {
+    operationRepository: database
+      ? new PostgresDeploymentOperationRepository(database)
+      : new InMemoryDeploymentOperationRepository(),
+    artifactProvider: new HttpProjectArtifactProvider(
+      process.env.PROJECT_SERVICE_URL ?? "http://localhost:8082",
+    ),
+    kubernetesClients: new OfficialKubernetesResourceClientFactory(
+      executionConfiguration.policy.requestTimeoutMs,
+    ),
+    executionConfiguration,
+    notifications: new HttpNotificationPublisher(
+      process.env.NOTIFICATION_SERVICE_URL ?? "http://localhost:8089",
+      requiredEnvironment("INTERNAL_SERVICE_TOKEN"),
+      logger,
+    ),
+  },
 );
 const server = app.listen(port, () =>
   logger.info({ port }, "Deployment service listening"),

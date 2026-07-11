@@ -3,20 +3,26 @@ import type {
   ManifestValidationResult,
 } from "@buildsphere/shared-types";
 
+export const selectKubernetesManifests = (
+  files: Pick<GeneratedFile, "path" | "content">[],
+): Pick<GeneratedFile, "path" | "content">[] => {
+  const yamlFiles = files.filter((file) => /\.ya?ml$/i.test(file.path));
+  const kubernetesFiles = yamlFiles.filter((file) =>
+    /^kubernetes\//i.test(file.path.replaceAll("\\", "/")),
+  );
+  return kubernetesFiles.length
+    ? kubernetesFiles
+    : yamlFiles.filter(
+        (file) => !/^helm\//i.test(file.path.replaceAll("\\", "/")),
+      );
+};
+
 export const validateKubernetesManifests = (
   files: Pick<GeneratedFile, "path" | "content">[],
 ): ManifestValidationResult => {
   const errors: string[] = [];
   const warnings: string[] = [];
-  const yamlFiles = files.filter((file) => /\.ya?ml$/i.test(file.path));
-  const kubernetesFiles = yamlFiles.filter((file) =>
-    /^kubernetes\//i.test(file.path.replaceAll("\\", "/")),
-  );
-  const manifests = kubernetesFiles.length
-    ? kubernetesFiles
-    : yamlFiles.filter(
-        (file) => !/^helm\//i.test(file.path.replaceAll("\\", "/")),
-      );
+  const manifests = selectKubernetesManifests(files);
   if (!manifests.length) errors.push("No Kubernetes YAML files were provided.");
 
   const kinds = new Set<string>();

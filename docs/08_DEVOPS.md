@@ -6,7 +6,7 @@
 | Version           | 0.1.0                    |
 | Status            | Draft                    |
 | Author            | BuildSphere Team         |
-| Last Updated      | 2026-07-10               |
+| Last Updated      | 2026-07-11               |
 | Related Documents | 02_HLD.md, 12_ROADMAP.md |
 
 ---
@@ -121,6 +121,26 @@ Generated Terraform is infrastructure source only. BuildSphere and generated
 CI may run formatting, `terraform init -backend=false`, and static validation.
 They do not run plan, apply, destroy, import, or state operations, do not own a
 remote backend, and do not receive AWS credentials in Phase 8.
+
+Phase 9 BS-801 inspection and planning remain offline and store only redacted
+connection metadata. BS-802/BS-803 add controlled raw-manifest apply, rollout
+observation, and bounded rollback, but the execution path is disabled by
+default. A development or test operator must set all of the following before
+Deployment Service exposes mutation actions:
+
+```text
+KUBERNETES_EXECUTION_ENABLED=true
+KUBERNETES_CREDENTIAL_ENCRYPTION_KEY=<base64 encoded 32-byte key>
+KUBERNETES_ALLOWED_SERVER_HOSTS=127.0.0.1:6443
+KUBERNETES_ALLOWED_ENVIRONMENTS=development
+KUBERNETES_REQUEST_TIMEOUT_MS=10000
+KUBERNETES_OPERATION_TIMEOUT_MS=60000
+```
+
+The allowlist is exact and must contain only explicitly approved Kubernetes API
+servers. Production is not enabled by default. Phase 9 executes rendered raw
+manifests only; it does not invoke Helm or Terraform. Use a disposable local
+cluster for verification and revoke the target credential afterward.
 
 # Environments
 

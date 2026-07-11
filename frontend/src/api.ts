@@ -7,6 +7,11 @@ import type {
   GitHubAuthorization,
   GitHubRepositorySummary,
   GitHubWorkflowRun,
+  KubernetesConnectionInspection,
+  KubernetesDeploymentApproval,
+  KubernetesDeploymentOperation,
+  KubernetesDeploymentPlan,
+  KubernetesExecutionCapabilities,
   ManifestValidationResult,
   Notification,
   PipelineDefinition,
@@ -213,6 +218,7 @@ export const api = {
     projectId: string,
     name: string,
     environment: DeploymentTarget["environment"],
+    kubeconfig?: string,
   ) =>
     request<DeploymentTarget>("/deployments/targets", token, {
       method: "POST",
@@ -221,9 +227,15 @@ export const api = {
         name,
         type: "kubernetes",
         environment,
-        config: {},
+        kubeconfig,
       }),
     }),
+  inspectKubeconfig: (token: string, kubeconfig: string) =>
+    request<KubernetesConnectionInspection>(
+      "/deployments/kubernetes/inspect",
+      token,
+      { method: "POST", body: JSON.stringify({ kubeconfig }) },
+    ),
   targets: (token: string, projectId: string) =>
     request<DeploymentTarget[]>(
       `/projects/${projectId}/deployment-targets`,
@@ -238,6 +250,98 @@ export const api = {
           .map(({ path, content }) => ({ path, content })),
       }),
     }),
+  deploymentPlan: (
+    token: string,
+    targetId: string,
+    artifact: GeneratedArtifact,
+  ) =>
+    request<KubernetesDeploymentPlan>("/deployments/plans", token, {
+      method: "POST",
+      body: JSON.stringify({
+        targetId,
+        manifests: artifact.files
+          .filter((file) => file.path.startsWith("kubernetes/"))
+          .map(({ path, content }) => ({ path, content })),
+      }),
+    }),
+  deploymentCapabilities: (token: string) =>
+    request<KubernetesExecutionCapabilities>(
+      "/deployments/capabilities",
+      token,
+    ),
+  storeTargetCredential: (
+    token: string,
+    targetId: string,
+    kubeconfig: string,
+  ) =>
+    request<DeploymentTarget>(
+      `/deployments/targets/${targetId}/credential`,
+      token,
+      {
+        method: "PUT",
+        body: JSON.stringify({ kubeconfig, confirmed: true }),
+      },
+    ),
+  revokeTargetCredential: (token: string, targetId: string) =>
+    request<DeploymentTarget>(
+      `/deployments/targets/${targetId}/credential`,
+      token,
+      { method: "DELETE" },
+    ),
+  createDeploymentApproval: (
+    token: string,
+    targetId: string,
+    artifactId: string,
+  ) =>
+    request<KubernetesDeploymentApproval>("/deployments/approvals", token, {
+      method: "POST",
+      body: JSON.stringify({
+        targetId,
+        artifactId,
+        action: "apply",
+        confirmed: true,
+      }),
+    }),
+  executeDeployment: (
+    token: string,
+    approvalId: string,
+    idempotencyKey: string,
+  ) =>
+    request<KubernetesDeploymentOperation>("/deployments/operations", token, {
+      method: "POST",
+      body: JSON.stringify({ approvalId, idempotencyKey }),
+    }),
+  deploymentOperations: (token: string, projectId: string) =>
+    request<KubernetesDeploymentOperation[]>(
+      `/projects/${projectId}/deployment-operations`,
+      token,
+    ),
+  refreshDeploymentOperation: (token: string, operationId: string) =>
+    request<KubernetesDeploymentOperation>(
+      `/deployments/operations/${operationId}/refresh`,
+      token,
+      { method: "POST", body: "{}" },
+    ),
+  createRollbackApproval: (token: string, operationId: string) =>
+    request<KubernetesDeploymentApproval>(
+      `/deployments/operations/${operationId}/rollback-approval`,
+      token,
+      { method: "POST", body: JSON.stringify({ confirmed: true }) },
+    ),
+  rollbackDeployment: (
+    token: string,
+    operationId: string,
+    approvalId: string,
+    idempotencyKey: string,
+  ) =>
+    request<KubernetesDeploymentOperation>(
+      `/deployments/operations/${operationId}/rollback`,
+      token,
+      {
+        method: "POST",
+        body: JSON.stringify({ approvalId, idempotencyKey }),
+      },
+    ),
   health: (token: string) =>
     request<PlatformHealth>("/monitoring/health", token),
   notifications: (token: string) =>

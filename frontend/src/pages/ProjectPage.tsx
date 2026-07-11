@@ -6,6 +6,11 @@ import type {
   GeneratedFile,
   GitHubRepositorySummary,
   GitHubWorkflowRun,
+  KubernetesConnectionInspection,
+  KubernetesDeploymentApproval,
+  KubernetesDeploymentOperation,
+  KubernetesDeploymentPlan,
+  KubernetesExecutionCapabilities,
   ManifestValidationResult,
   PipelineDefinition,
   PipelineExecutionSummary,
@@ -17,12 +22,7 @@ import { api, ApiClientError } from "../api";
 import { navigate } from "../navigation";
 
 type Tab =
-  | "overview"
-  | "files"
-  | "pipeline"
-  | "github"
-  | "suggestions"
-  | "deployment";
+  "overview" | "files" | "pipeline" | "github" | "suggestions" | "deployment";
 const terminalStatuses = ["succeeded", "failed", "cancelled"];
 
 export function ProjectPage({
@@ -46,11 +46,31 @@ export function ProjectPage({
   const [tab, setTab] = useState<Tab>("overview");
   const [selectedFile, setSelectedFile] = useState<GeneratedFile>();
   const [validation, setValidation] = useState<ManifestValidationResult>();
+  const [connectionInspection, setConnectionInspection] =
+    useState<KubernetesConnectionInspection>();
+  const [deploymentPlan, setDeploymentPlan] =
+    useState<KubernetesDeploymentPlan>();
+  const [deploymentCapabilities, setDeploymentCapabilities] =
+    useState<KubernetesExecutionCapabilities>();
+  const [deploymentOperations, setDeploymentOperations] = useState<
+    KubernetesDeploymentOperation[]
+  >([]);
+  const [deploymentApproval, setDeploymentApproval] =
+    useState<KubernetesDeploymentApproval>();
+  const [rollbackApproval, setRollbackApproval] =
+    useState<KubernetesDeploymentApproval>();
+  const [activeDeployment, setActiveDeployment] =
+    useState<KubernetesDeploymentOperation>();
   const [targetName, setTargetName] = useState("Local cluster");
   const [environment, setEnvironment] =
     useState<DeploymentEnvironment>("development");
   const [repositoryName, setRepositoryName] = useState("");
   const [repositoryPrivate, setRepositoryPrivate] = useState(true);
+  const [kubeconfig, setKubeconfig] = useState("");
+  const [kubeconfigFileName, setKubeconfigFileName] = useState("");
+  const [kubeconfigInputKey, setKubeconfigInputKey] = useState(0);
+  const [retainCredential, setRetainCredential] = useState(false);
+  const [deploymentConfirmed, setDeploymentConfirmed] = useState(false);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
 
@@ -62,18 +82,24 @@ export function ProjectPage({
         nextPipelines,
         nextSuggestions,
         nextTargets,
+        nextCapabilities,
+        nextDeploymentOperations,
       ] = await Promise.all([
         api.project(token, projectId),
         api.artifacts(token, projectId),
         api.pipelines(token, projectId),
         api.suggestions(token, projectId),
         api.targets(token, projectId),
+        api.deploymentCapabilities(token),
+        api.deploymentOperations(token, projectId),
       ]);
       setProject(nextProject);
       setArtifacts(nextArtifacts);
       setPipelines(nextPipelines);
       setSuggestions(nextSuggestions);
       setTargets(nextTargets);
+      setDeploymentCapabilities(nextCapabilities);
+      setDeploymentOperations(nextDeploymentOperations);
       setRepositoryName(
         (current) =>
           current ||
@@ -102,9 +128,7 @@ export function ProjectPage({
           .catch(() => null);
         setGitHubRepository(linked ?? undefined);
         setGitHubRuns(
-          linked
-            ? await api.githubRuns(token, projectId).catch(() => [])
-            : [],
+          linked ? await api.githubRuns(token, projectId).catch(() => []) : [],
         );
       }
     } catch (caught) {
@@ -116,6 +140,14 @@ export function ProjectPage({
     }
   };
   useEffect(() => {
+    setKubeconfig("");
+    setKubeconfigFileName("");
+    setConnectionInspection(undefined);
+    setDeploymentPlan(undefined);
+    setDeploymentApproval(undefined);
+    setRollbackApproval(undefined);
+    setActiveDeployment(undefined);
+    setDeploymentConfirmed(false);
     void load();
   }, [projectId]);
 
@@ -212,12 +244,246 @@ export function ProjectPage({
   };
   const createTarget = async () => {
     setBusy("target");
+    setError("");
     try {
-      await api.createTarget(token, projectId, targetName, environment);
+      const created = await api.createTarget(
+        token,
+        projectId,
+        targetName,
+        environment,
+        kubeconfig || undefined,
+      );
+      if (
+        retainCredential &&
+        kubeconfig &&
+        deploymentCapabilities?.executionEnabled
+      ) {
+        await api.storeTargetCredential(token, created.id, kubeconfig);
+      }
       setTargets(await api.targets(token, projectId));
+      setKubeconfig("");
+      setKubeconfigFileName("");
+      setConnectionInspection(undefined);
+      setRetainCredential(false);
+      setKubeconfigInputKey((current) => current + 1);
     } catch (caught) {
       setError(
         caught instanceof Error ? caught.message : "Target creation failed",
+      );
+    } finally {
+      setBusy("");
+    }
+  };
+
+  const chooseKubeconfig = async (file?: File) => {
+    setConnectionInspection(undefined);
+    setKubeconfig("");
+    setKubeconfigFileName(file?.name ?? "");
+    if (!file) return;
+    if (file.size > 1024 * 1024) {
+      setError("Kubeconfig files must be 1 MiB or smaller.");
+      return;
+    }
+    try {
+      setKubeconfig(await file.text());
+      setError("");
+    } catch {
+      setError("The kubeconfig file could not be read.");
+    }
+  };
+
+  const inspectConnection = async () => {
+    if (!kubeconfig) return;
+    setBusy("connection-inspect");
+    setError("");
+    try {
+      setConnectionInspection(await api.inspectKubeconfig(token, kubeconfig));
+    } catch (caught) {
+      setConnectionInspection(undefined);
+      setError(
+        caught instanceof ApiClientError
+          ? caught.message
+          : "Kubeconfig inspection failed",
+      );
+    } finally {
+      setBusy("");
+    }
+  };
+
+  const buildPlan = async (target: DeploymentTarget) => {
+    const latestArtifact = artifacts[0];
+    if (!latestArtifact) return;
+    setBusy(`plan-${target.id}`);
+    setError("");
+    try {
+      setDeploymentApproval(undefined);
+      setRollbackApproval(undefined);
+      setDeploymentConfirmed(false);
+      setDeploymentPlan(
+        await api.deploymentPlan(token, target.id, latestArtifact),
+      );
+    } catch (caught) {
+      setDeploymentPlan(undefined);
+      setError(
+        caught instanceof ApiClientError
+          ? caught.message
+          : "Deployment planning failed",
+      );
+    } finally {
+      setBusy("");
+    }
+  };
+
+  const connectTarget = async (target: DeploymentTarget) => {
+    if (!kubeconfig || !connectionInspection) return;
+    setBusy(`connect-${target.id}`);
+    setError("");
+    try {
+      await api.storeTargetCredential(token, target.id, kubeconfig);
+      setTargets(await api.targets(token, projectId));
+      setKubeconfig("");
+      setKubeconfigFileName("");
+      setConnectionInspection(undefined);
+      setKubeconfigInputKey((current) => current + 1);
+    } catch (caught) {
+      setError(
+        caught instanceof ApiClientError
+          ? caught.message
+          : "Credential connection failed",
+      );
+    } finally {
+      setBusy("");
+    }
+  };
+
+  const revokeTarget = async (target: DeploymentTarget) => {
+    setBusy(`revoke-${target.id}`);
+    setError("");
+    try {
+      await api.revokeTargetCredential(token, target.id);
+      setTargets(await api.targets(token, projectId));
+      if (deploymentPlan?.targetId === target.id) {
+        setDeploymentApproval(undefined);
+        setDeploymentConfirmed(false);
+      }
+    } catch (caught) {
+      setError(
+        caught instanceof ApiClientError
+          ? caught.message
+          : "Credential revocation failed",
+      );
+    } finally {
+      setBusy("");
+    }
+  };
+
+  const approveDeployment = async () => {
+    if (!deploymentPlan || !artifact || !deploymentConfirmed) return;
+    setBusy("deployment-approve");
+    setError("");
+    try {
+      setDeploymentApproval(
+        await api.createDeploymentApproval(
+          token,
+          deploymentPlan.targetId,
+          artifact.id,
+        ),
+      );
+    } catch (caught) {
+      setError(
+        caught instanceof ApiClientError
+          ? caught.message
+          : "Deployment approval failed",
+      );
+    } finally {
+      setBusy("");
+    }
+  };
+
+  const executeDeployment = async () => {
+    if (!deploymentApproval) return;
+    setBusy("deployment-execute");
+    setError("");
+    try {
+      const operation = await api.executeDeployment(
+        token,
+        deploymentApproval.id,
+        crypto.randomUUID(),
+      );
+      setActiveDeployment(operation);
+      setDeploymentApproval(undefined);
+      setDeploymentConfirmed(false);
+      setDeploymentOperations(await api.deploymentOperations(token, projectId));
+    } catch (caught) {
+      setError(
+        caught instanceof ApiClientError
+          ? caught.message
+          : "Deployment execution failed",
+      );
+    } finally {
+      setBusy("");
+    }
+  };
+
+  const refreshDeployment = async (
+    operation: KubernetesDeploymentOperation,
+  ) => {
+    setBusy(`deployment-refresh-${operation.id}`);
+    setError("");
+    try {
+      const refreshed = await api.refreshDeploymentOperation(
+        token,
+        operation.id,
+      );
+      setActiveDeployment(refreshed);
+      setDeploymentOperations(await api.deploymentOperations(token, projectId));
+    } catch (caught) {
+      setError(
+        caught instanceof ApiClientError
+          ? caught.message
+          : "Deployment status refresh failed",
+      );
+    } finally {
+      setBusy("");
+    }
+  };
+
+  const approveRollback = async (operation: KubernetesDeploymentOperation) => {
+    setBusy(`rollback-approve-${operation.id}`);
+    setError("");
+    try {
+      setRollbackApproval(
+        await api.createRollbackApproval(token, operation.id),
+      );
+      setActiveDeployment(operation);
+    } catch (caught) {
+      setError(
+        caught instanceof ApiClientError
+          ? caught.message
+          : "Rollback approval failed",
+      );
+    } finally {
+      setBusy("");
+    }
+  };
+
+  const executeRollback = async () => {
+    if (!rollbackApproval?.sourceOperationId) return;
+    setBusy("rollback-execute");
+    setError("");
+    try {
+      const operation = await api.rollbackDeployment(
+        token,
+        rollbackApproval.sourceOperationId,
+        rollbackApproval.id,
+        crypto.randomUUID(),
+      );
+      setActiveDeployment(operation);
+      setRollbackApproval(undefined);
+      setDeploymentOperations(await api.deploymentOperations(token, projectId));
+    } catch (caught) {
+      setError(
+        caught instanceof ApiClientError ? caught.message : "Rollback failed",
       );
     } finally {
       setBusy("");
@@ -270,6 +536,10 @@ export function ProjectPage({
     return <div className="loading-state">{error || "Loading project..."}</div>;
   const artifact = artifacts[0];
   const pipeline = pipelines[0];
+  const plannedTarget = targets.find(
+    (target) => target.id === deploymentPlan?.targetId,
+  );
+  const shownDeployment = activeDeployment ?? deploymentOperations[0];
   return (
     <>
       <button className="back-link" onClick={() => navigate("/dashboard")}>
@@ -514,7 +784,10 @@ export function ProjectPage({
           {!githubEnabled ? (
             <div className="empty-state">
               <h3>GitHub integration is not configured</h3>
-              <p>The provider becomes available after the GitHub App settings are configured.</p>
+              <p>
+                The provider becomes available after the GitHub App settings are
+                configured.
+              </p>
             </div>
           ) : (
             <>
@@ -546,7 +819,9 @@ export function ProjectPage({
                       value={repositoryName}
                       disabled={Boolean(githubRepository)}
                       maxLength={100}
-                      onChange={(event) => setRepositoryName(event.target.value)}
+                      onChange={(event) =>
+                        setRepositoryName(event.target.value)
+                      }
                     />
                   </label>
                   <label className="checkbox-field">
@@ -563,9 +838,7 @@ export function ProjectPage({
                   <button
                     className="primary-button"
                     disabled={
-                      !artifact ||
-                      !repositoryName ||
-                      busy === "github-publish"
+                      !artifact || !repositoryName || busy === "github-publish"
                     }
                     onClick={publishToGitHub}
                   >
@@ -614,7 +887,9 @@ export function ProjectPage({
                     disabled={!githubRepository || busy === "github-sync"}
                     onClick={synchronizeGitHubRuns}
                   >
-                    {busy === "github-sync" ? "Synchronizing..." : "Synchronize"}
+                    {busy === "github-sync"
+                      ? "Synchronizing..."
+                      : "Synchronize"}
                   </button>
                 </div>
                 {githubRuns.length ? (
@@ -757,7 +1032,7 @@ export function ProjectPage({
               <h2>Deployment targets</h2>
               <span>{targets.length}</span>
             </div>
-            <div className="inline-form">
+            <div className="target-form">
               <label>
                 Name
                 <input
@@ -778,25 +1053,381 @@ export function ProjectPage({
                   <option value="production">Production</option>
                 </select>
               </label>
-              <button
-                className="primary-button"
-                disabled={busy === "target"}
-                onClick={createTarget}
-              >
-                Add target
-              </button>
+              <label className="kubeconfig-field">
+                Kubeconfig
+                <input
+                  key={kubeconfigInputKey}
+                  type="file"
+                  accept=".yaml,.yml,application/yaml,text/yaml"
+                  onChange={(event) =>
+                    void chooseKubeconfig(event.target.files?.[0])
+                  }
+                />
+                <small>{kubeconfigFileName || "No file selected"}</small>
+              </label>
+              {deploymentCapabilities?.executionEnabled && (
+                <label className="checkbox-field credential-retention-field">
+                  <input
+                    type="checkbox"
+                    checked={retainCredential}
+                    disabled={!connectionInspection}
+                    onChange={(event) =>
+                      setRetainCredential(event.target.checked)
+                    }
+                  />
+                  Store encrypted credential
+                </label>
+              )}
+              <div className="target-form-actions">
+                <button
+                  className="secondary-button"
+                  disabled={!kubeconfig || busy === "connection-inspect"}
+                  onClick={() => void inspectConnection()}
+                >
+                  {busy === "connection-inspect" ? "Inspecting..." : "Inspect"}
+                </button>
+                <button
+                  className="primary-button"
+                  disabled={
+                    busy === "target" ||
+                    (Boolean(kubeconfig) && !connectionInspection)
+                  }
+                  onClick={() => void createTarget()}
+                >
+                  {busy === "target"
+                    ? "Adding..."
+                    : kubeconfig
+                      ? "Add inspected target"
+                      : "Add draft target"}
+                </button>
+              </div>
             </div>
+            {connectionInspection && (
+              <div className="connection-summary" aria-live="polite">
+                <div>
+                  <span>Context</span>
+                  <strong>{connectionInspection.connection.context}</strong>
+                </div>
+                <div>
+                  <span>API server</span>
+                  <strong>{connectionInspection.connection.serverHost}</strong>
+                </div>
+                <div>
+                  <span>Namespace</span>
+                  <strong>{connectionInspection.connection.namespace}</strong>
+                </div>
+                <div>
+                  <span>Authentication</span>
+                  <strong>
+                    {connectionInspection.connection.credentialMechanism}
+                  </strong>
+                </div>
+                {connectionInspection.warnings.map((warning) => (
+                  <p className="connection-warning" key={warning}>
+                    {warning}
+                  </p>
+                ))}
+              </div>
+            )}
             <div className="target-list">
+              {targets.length === 0 && (
+                <p className="quiet">No deployment targets.</p>
+              )}
               {targets.map((target) => (
                 <div key={target.id}>
                   <span className={`environment ${target.environment}`}>
                     {target.environment}
                   </span>
-                  <strong>{target.name}</strong>
-                  <small>{target.type}</small>
+                  <span className="target-identity">
+                    <strong>{target.name}</strong>
+                    <small>
+                      {target.config.connectionStatus !== "draft"
+                        ? target.config.connection.serverHost
+                        : target.type}
+                    </small>
+                  </span>
+                  <span
+                    className={`connection-status ${target.config.connectionStatus}`}
+                  >
+                    {target.config.connectionStatus}
+                  </span>
+                  <span className="target-row-actions">
+                    {deploymentCapabilities?.executionEnabled &&
+                      target.config.connectionStatus === "inspected" && (
+                        <button
+                          className="small-button"
+                          disabled={
+                            !connectionInspection ||
+                            busy === `connect-${target.id}`
+                          }
+                          onClick={() => void connectTarget(target)}
+                        >
+                          {busy === `connect-${target.id}`
+                            ? "Connecting..."
+                            : "Connect"}
+                        </button>
+                      )}
+                    {target.config.connectionStatus === "connected" && (
+                      <button
+                        className="small-button"
+                        disabled={busy === `revoke-${target.id}`}
+                        onClick={() => void revokeTarget(target)}
+                      >
+                        {busy === `revoke-${target.id}`
+                          ? "Revoking..."
+                          : "Revoke"}
+                      </button>
+                    )}
+                    <button
+                      className="small-button"
+                      disabled={
+                        !artifact ||
+                        target.config.connectionStatus === "draft" ||
+                        busy === `plan-${target.id}`
+                      }
+                      onClick={() => void buildPlan(target)}
+                    >
+                      {busy === `plan-${target.id}`
+                        ? "Planning..."
+                        : "Build plan"}
+                    </button>
+                  </span>
                 </div>
               ))}
             </div>
+          </div>
+          <div className="content-band deployment-plan-band">
+            <div className="band-heading">
+              <h2>Deployment preflight</h2>
+              <span>{deploymentPlan?.resources.length ?? 0} resources</span>
+            </div>
+            {deploymentPlan ? (
+              <>
+                <div className="plan-summary">
+                  <div>
+                    <span>Mode</span>
+                    <strong>Offline preflight</strong>
+                  </div>
+                  <div>
+                    <span>Context</span>
+                    <strong>{deploymentPlan.connection.context}</strong>
+                  </div>
+                  <div>
+                    <span>Namespace</span>
+                    <strong>{deploymentPlan.connection.namespace}</strong>
+                  </div>
+                  <div>
+                    <span>Execution</span>
+                    <strong>Approval required</strong>
+                  </div>
+                </div>
+                <div className="plan-resource-table">
+                  <div className="plan-resource-row plan-resource-head">
+                    <span>Order</span>
+                    <span>Resource</span>
+                    <span>Namespace</span>
+                    <span>Action</span>
+                  </div>
+                  {deploymentPlan.resources.map((resource) => (
+                    <div
+                      className="plan-resource-row"
+                      key={`${resource.apiVersion}/${resource.kind}/${resource.namespace ?? "cluster"}/${resource.name}`}
+                    >
+                      <span>{resource.order}</span>
+                      <span>
+                        <strong>
+                          {resource.kind}/{resource.name}
+                        </strong>
+                        <small>{resource.sourcePath}</small>
+                      </span>
+                      <span>{resource.namespace ?? "cluster"}</span>
+                      <span>{resource.action}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="plan-warnings">
+                  {deploymentPlan.warnings.map((warning) => (
+                    <p key={warning}>{warning}</p>
+                  ))}
+                </div>
+                {deploymentCapabilities?.executionEnabled &&
+                  plannedTarget?.config.connectionStatus === "connected" && (
+                    <div className="deployment-approval-bar">
+                      <label className="checkbox-field">
+                        <input
+                          type="checkbox"
+                          checked={deploymentConfirmed}
+                          disabled={Boolean(deploymentApproval)}
+                          onChange={(event) =>
+                            setDeploymentConfirmed(event.target.checked)
+                          }
+                        />
+                        Approve exact artifact
+                      </label>
+                      {deploymentApproval ? (
+                        <>
+                          <span>
+                            Expires{" "}
+                            {new Date(
+                              deploymentApproval.expiresAt,
+                            ).toLocaleTimeString()}
+                          </span>
+                          <button
+                            className="primary-button"
+                            disabled={busy === "deployment-execute"}
+                            onClick={() => void executeDeployment()}
+                          >
+                            {busy === "deployment-execute"
+                              ? "Deploying..."
+                              : "Deploy"}
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          className="secondary-button"
+                          disabled={
+                            !deploymentConfirmed ||
+                            busy === "deployment-approve"
+                          }
+                          onClick={() => void approveDeployment()}
+                        >
+                          {busy === "deployment-approve"
+                            ? "Approving..."
+                            : "Approve plan"}
+                        </button>
+                      )}
+                    </div>
+                  )}
+              </>
+            ) : (
+              <p className="quiet">No deployment plan.</p>
+            )}
+          </div>
+          <div className="content-band deployment-operations-band">
+            <div className="band-heading">
+              <h2>Deployment operations</h2>
+              <span>{deploymentOperations.length}</span>
+            </div>
+            {shownDeployment ? (
+              <>
+                <div className="operation-summary">
+                  <div>
+                    <span>Action</span>
+                    <strong>{shownDeployment.kind}</strong>
+                  </div>
+                  <div>
+                    <span>Operation</span>
+                    <strong>{shownDeployment.status}</strong>
+                  </div>
+                  <div>
+                    <span>Rollout</span>
+                    <strong>{shownDeployment.rolloutStatus}</strong>
+                  </div>
+                  <div>
+                    <span>Updated</span>
+                    <strong>
+                      {new Date(shownDeployment.updatedAt).toLocaleTimeString()}
+                    </strong>
+                  </div>
+                </div>
+                <div className="operation-actions">
+                  <button
+                    className="secondary-button"
+                    disabled={
+                      !deploymentCapabilities?.executionEnabled ||
+                      busy === `deployment-refresh-${shownDeployment.id}`
+                    }
+                    onClick={() => void refreshDeployment(shownDeployment)}
+                  >
+                    {busy === `deployment-refresh-${shownDeployment.id}`
+                      ? "Refreshing..."
+                      : "Refresh status"}
+                  </button>
+                  {shownDeployment.rollbackAvailable &&
+                    (rollbackApproval?.sourceOperationId ===
+                    shownDeployment.id ? (
+                      <button
+                        className="danger-button"
+                        disabled={busy === "rollback-execute"}
+                        onClick={() => void executeRollback()}
+                      >
+                        {busy === "rollback-execute"
+                          ? "Rolling back..."
+                          : "Roll back"}
+                      </button>
+                    ) : (
+                      <button
+                        className="secondary-button"
+                        disabled={
+                          busy === `rollback-approve-${shownDeployment.id}`
+                        }
+                        onClick={() => void approveRollback(shownDeployment)}
+                      >
+                        {busy === `rollback-approve-${shownDeployment.id}`
+                          ? "Approving..."
+                          : "Approve rollback"}
+                      </button>
+                    ))}
+                </div>
+                {(shownDeployment.errorCode ||
+                  shownDeployment.errorMessage) && (
+                  <p className="form-error" role="status">
+                    {shownDeployment.errorCode}: {shownDeployment.errorMessage}
+                  </p>
+                )}
+                <div className="plan-resource-table operation-resource-table">
+                  <div className="plan-resource-row operation-resource-row plan-resource-head">
+                    <span>Order</span>
+                    <span>Resource</span>
+                    <span>Action</span>
+                    <span>Status</span>
+                  </div>
+                  {shownDeployment.resources.map((resource) => (
+                    <div
+                      className="plan-resource-row operation-resource-row"
+                      key={`${resource.action}/${resource.apiVersion}/${resource.kind}/${resource.namespace ?? "cluster"}/${resource.name}`}
+                    >
+                      <span>{resource.order}</span>
+                      <span>
+                        <strong>
+                          {resource.kind}/{resource.name}
+                        </strong>
+                        <small>{resource.namespace ?? "cluster"}</small>
+                      </span>
+                      <span>{resource.action}</span>
+                      <span className={`resource-state ${resource.status}`}>
+                        {resource.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div
+                  className="operation-history"
+                  aria-label="Operation history"
+                >
+                  {deploymentOperations.map((operation) => (
+                    <button
+                      className={
+                        shownDeployment.id === operation.id ? "active" : ""
+                      }
+                      key={operation.id}
+                      onClick={() => {
+                        setActiveDeployment(operation);
+                        setRollbackApproval(undefined);
+                      }}
+                    >
+                      <span>{operation.kind}</span>
+                      <strong>{operation.status}</strong>
+                      <time>
+                        {new Date(operation.createdAt).toLocaleString()}
+                      </time>
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="quiet">No deployment operations.</p>
+            )}
           </div>
         </section>
       )}

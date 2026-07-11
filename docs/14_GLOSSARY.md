@@ -6,7 +6,7 @@
 | Version           | 0.1.0            |
 | Status            | Draft            |
 | Author            | BuildSphere Team |
-| Last Updated      | 2026-07-10       |
+| Last Updated      | 2026-07-11       |
 | Related Documents | All docs         |
 
 ---
@@ -40,6 +40,18 @@ A file that defines how to build a Docker image.
 ## Kubernetes
 
 A container orchestration system that schedules and manages containers across nodes.
+
+## Kubeconfig
+
+A Kubernetes client configuration containing clusters, contexts, users, and
+often credentials. BuildSphere BS-801 inspects it ephemerally and persists only
+an allowlisted, non-secret connection summary.
+
+## Deployment preflight
+
+An offline review of structurally valid Kubernetes resources, their target
+namespace, ordering, and intended action. A BuildSphere preflight plan is not an
+execution and makes no cluster request.
 
 ## Amazon EKS
 

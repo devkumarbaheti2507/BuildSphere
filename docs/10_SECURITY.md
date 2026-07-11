@@ -6,7 +6,7 @@
 | Version           | 0.1.0                         |
 | Status            | Draft                         |
 | Author            | BuildSphere Team              |
-| Last Updated      | 2026-07-10                    |
+| Last Updated      | 2026-07-11                    |
 | Related Documents | 01_SRS.md, specs/AUTH_SPEC.md |
 
 ---
@@ -70,6 +70,15 @@ Rules:
   workflow.
 - Generated Terraform must not contain AWS credentials, active backend values,
   state, plans, kubeconfig, or provider tokens.
+- Phase 9 kubeconfig inspection must keep source text and all credential-bearing
+  fields in request memory only. Persistent targets contain redacted metadata,
+  never credentials.
+- Phase 9 execution credentials must be minimized to the selected context and
+  encrypted with a dedicated AES-256-GCM key. Ciphertext is stored separately
+  from target metadata and authenticated data binds it to the owner and target.
+- Kubernetes object bodies, API error bodies, environment values, and decrypted
+  kubeconfig must never enter logs, operation history, notifications, or API
+  responses.
 
 # API security
 
@@ -108,13 +117,25 @@ Before sending data to an AI provider:
 | Helm source treated as deployed YAML    | Validate only rendered raw Kubernetes manifests; Helm expressions remain source until an operator renders the chart.                                                         |
 | Accidental Terraform cloud provisioning | Default `enable_cluster` to false; keep generated CI to format/init-without-backend/validate and require explicit IAM, endpoint, state, and cost review outside BuildSphere. |
 | Terraform state or credential leakage   | Generate only non-secret examples, keep the backend example inactive, and ignore private variables, local state, plans, caches, and crash files.                             |
+| Kubeconfig credential disclosure        | Parse kubeconfig ephemerally, never log request bodies, return only an allowlisted summary, and prohibit raw config or credential fields in target JSON.                     |
+| Premature cluster mutation              | Keep execution disabled by default; require an exact host/environment policy, encrypted retained credential, owned artifact digest, expiring approval, and durable operation audit. |
+| Kubeconfig-driven SSRF                  | Require HTTPS, prohibit proxy configuration, and permit execution only for exact configured API-server `host:port` values.                                                   |
+| Kubeconfig command execution            | Reject exec plugins, auth providers, local file references, and impersonation before encrypted retention or client creation.                                                 |
+| Credential database disclosure          | Minimize the selected context, encrypt with AES-256-GCM and owner/target authenticated data, and support explicit revocation.                                                  |
+| Accidental or replayed deployment       | Bind an immutable artifact digest to a five-minute single-use approval and a durable idempotency key.                                                                          |
+| Cross-namespace or cluster mutation     | Restrict execution to the target namespace and allow only the matching Namespace as a cluster-scoped resource.                                                                 |
+| Resource takeover                       | Pre-read existing resources, require exact BuildSphere ownership labels, and use server-side apply with `force=false`.                                                         |
+| Concurrent mutation                     | Enforce one active operation per target with a partial unique database index.                                                                                                  |
+| Unbounded provider failure              | Apply request/operation timeouts, retry only transient failures, cap retries at three, and persist redacted errors.                                                             |
+| Destructive rollback                    | Require a second approval, restore only a prior successful snapshot, verify ownership before pruning, and never delete Namespace or cluster-scoped resources.                  |
 
 # Audit logs
 
-Future versions should record:
+BuildSphere records deployment approvals, operations, per-resource outcomes,
+status refreshes, and rollback results in Phase 9. Future versions should also
+record:
 
 - Login events.
 - Project creation.
 - Pipeline generation.
-- Deployment actions.
 - Provider connection changes.

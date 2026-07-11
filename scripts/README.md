@@ -40,7 +40,29 @@ pnpm -r test
 
 ## `smoke-mvp.ts`
 
-Exercises the complete MVP workflow through `http://localhost:8080/api`. Run it with `npm run smoke` after the services are available. It is suitable for PostgreSQL-backed verification or the explicitly non-durable `STORAGE_DRIVER=memory` mode.
+Exercises the complete workflow through `http://localhost:8080/api`. In
+addition to the Phase 0-8 baseline, it inspects a synthetic kubeconfig, verifies
+that credentials are absent from responses and target storage, and builds a
+four-resource offline Kubernetes plan with no cluster request. Run it with
+`npm run smoke` after the services are available. It is suitable for
+PostgreSQL-backed verification or the explicitly non-durable
+`STORAGE_DRIVER=memory` mode.
+
+## `verify-phase9-postgres.ts`
+
+Validates encrypted Kubernetes credential storage, expiring approvals, durable
+operations, exact and simultaneous idempotency replay, previous-release
+resolution, and cleanup against PostgreSQL without contacting a cluster. Run it with
+`npm run smoke:phase9:postgres` after applying migrations.
+
+## `verify-phase9-kind.ts`
+
+Runs the real Deployment Service approval, official-client apply, status,
+rollback, prune, history, and credential-revocation workflow against an
+explicit disposable kind kubeconfig. It does not create or delete a cluster.
+Set `KUBECONFIG_PATH` when the kubeconfig is not at
+`/tmp/buildsphere-phase9-kubeconfig`, then run
+`npm run verify:phase9:kind`.
 
 ## `verify-terraform-template.ts`
 

@@ -6,7 +6,7 @@
 | Version | 0.1.0 |
 | Status | Draft |
 | Author | BuildSphere Team |
-| Last Updated | 2026-07-09 |
+| Last Updated | 2026-07-11 |
 | Related Documents | 01_SRS.md, 03_LLD.md, 05_API_SPEC.md |
 
 ---
@@ -212,6 +212,77 @@ Owned by Notification Service.
 | read_at | timestamptz | Nullable. |
 | created_at | timestamptz | Required. |
 
+## deployment_target_credentials
+
+Owned by Deployment Service. This table is never exposed directly through an
+API.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| target_id | uuid | Primary key and reference to `deployment_targets.id`. |
+| owner_id | uuid | Credential owner used in every lookup. |
+| kubeconfig_encrypted | text | AES-256-GCM ciphertext for the minimized selected context. |
+| key_version | text | Cipher format/key identifier, initially `v1`. |
+| fingerprint | text | SHA-256 digest used to audit credential replacement. |
+| created_at | timestamptz | Required. |
+| updated_at | timestamptz | Required. |
+
+Ciphertext authenticated data includes the owner and target IDs. Public target
+configuration stores only redacted connection data and credential timestamps.
+
+## deployment_approvals
+
+Owned by Deployment Service.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| id | uuid | Primary key. |
+| owner_id | uuid | Approving user. |
+| target_id | uuid | Owned deployment target. |
+| project_id | uuid | Logical Project Service reference. |
+| artifact_id | uuid | Immutable generated artifact. |
+| action | text | `apply` or `rollback`. |
+| source_operation_id | uuid | Successful operation being rolled back, when applicable. |
+| manifest_digest | text | SHA-256 digest of exact executable manifests. |
+| credential_fingerprint | text | SHA-256 binding to the approved credential version. |
+| status | text | `pending`, `consumed`, `expired`, or `revoked`. |
+| expires_at | timestamptz | Five-minute approval expiry. |
+| consumed_at | timestamptz | Single-use consumption timestamp. |
+| created_at | timestamptz | Required. |
+
+## deployment_operations
+
+Owned by Deployment Service and used as the durable deployment audit history.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| id | uuid | Primary key. |
+| owner_id | uuid | Operation owner. |
+| target_id | uuid | Owned deployment target. |
+| project_id | uuid | Target project. |
+| artifact_id | uuid | Applied artifact snapshot. |
+| approval_id | uuid | Consumed approval. |
+| kind | text | `apply` or `rollback`. |
+| status | text | Queued, active, succeeded, failed, or rollback terminal state. |
+| rollout_status | text | `unknown`, `progressing`, `healthy`, or `degraded`. |
+| idempotency_key | uuid | Unique per owner for exact retry replay. |
+| manifest_digest | text | Exact snapshot digest. |
+| credential_fingerprint | text | Credential version consumed by the operation. |
+| resources | jsonb | Resource identities and safe apply/observation outcomes. |
+| rollback_of_id | uuid | Apply operation restored by a rollback. |
+| restored_operation_id | uuid | Successful release made active by a rollback. |
+| error_code | text | Optional safe failure code. |
+| error_message | text | Optional redacted failure message. |
+| started_at | timestamptz | Optional. |
+| finished_at | timestamptz | Optional. |
+| created_at | timestamptz | Required. |
+| updated_at | timestamptz | Required. |
+
+A partial unique index permits only one queued/applying/rolling-back operation
+per target. `(owner_id, idempotency_key)` is unique. Immutable manifest content
+remains owned by `generated_artifacts`; operations store its ID and exact digest
+rather than duplicating source values in audit history.
+
 # Future tables
 
 - organizations
@@ -224,6 +295,14 @@ Owned by Notification Service.
 `deployment_targets` is implemented in migration 001. Generated artifacts are
 currently stored directly in PostgreSQL JSONB; the object-storage URI model is
 future work.
+
+Phase 9 BS-801 continues using `deployment_targets.config` for redacted
+metadata. Migrations 004-007 add encrypted credentials, approvals, active
+release history, and operation audit cleanup without placing credential
+material in that JSON value. Raw
+kubeconfig, tokens, passwords, certificates, keys, exec arguments, and
+certificate-authority data remain prohibited from public target records,
+approvals, operations, and API responses.
 
 # Migration strategy
 

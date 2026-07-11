@@ -4,7 +4,8 @@ BuildSphere is an AI-assisted Developer Experience Platform for designing, gener
 
 Current implementation status:
 
-- Local-first platform code is implemented through roadmap Phase 8.
+- Phases 0-9 are implemented. BS-801 inspection/preflight, BS-802 approved
+  execution, and BS-803 status/rollback are complete.
 - Local and GitHub App authentication, project repository publishing, GitHub Actions synchronization, projects, generation, pipelines, logs, suggestions, deployment targets, monitoring, notifications, and frontend workflows are present.
 - Frozen dependency installation, lint, production builds, and automated tests pass.
 - Memory and PostgreSQL gateway smoke workflows pass.
@@ -17,15 +18,23 @@ Current implementation status:
 - Phase 8 adds optional, disabled-by-default AWS EKS Terraform generation with
   exact VPC/EKS module pins, a Kubernetes dependency, generated static CI
   checks, and no cloud execution authority.
+- Phase 9 adds official-client kubeconfig inspection, redacted targets, offline
+  plans, explicit AES-256-GCM credential retention, immutable-artifact
+  approvals, idempotent ownership-checked server-side apply, durable rollout
+  summaries, and bounded rollback.
 - Checksum-verified Terraform v1.15.8 format/init-without-backend/validate, the
-  26-file PostgreSQL gateway smoke, all 41 tests, and the Phase 6 provider
-  verifier pass.
+  26-file PostgreSQL gateway smoke with a four-resource plan, all 59 tests, and
+  the Phase 6 and Phase 9 PostgreSQL verifiers pass.
+- A real disposable kind workflow passed two releases, healthy status,
+  rollback, ownership-matched pruning, and credential revocation; the cluster
+  was deleted afterward.
 - Database-backed services use a shared idempotent graceful-shutdown helper.
 
 Primary goal now:
 
-Select and specify the next post-Phase 8 milestone while keeping the completed
-Phase 0-8 verification baseline green.
+Select and specify the next post-Phase 9 milestone before implementing it.
+Current candidates are Jenkins integration, cost estimation, collaboration, or
+external AI/observability work; none is yet an approved Phase 10 ticket.
 
 Learning pack:
 

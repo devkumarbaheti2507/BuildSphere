@@ -6,7 +6,7 @@
 | Version           | 0.1.0                         |
 | Status            | Draft                         |
 | Author            | BuildSphere Team              |
-| Last Updated      | 2026-07-10                    |
+| Last Updated      | 2026-07-11                    |
 | Related Documents | 01_SRS.md, 03_LLD.md, specs/* |
 
 ---
@@ -279,10 +279,45 @@ Marks notification as read.
 
 # Deployment endpoints
 
+- `POST /deployments/kubernetes/inspect` accepts kubeconfig ephemerally and
+  returns a redacted connection summary without contacting the cluster.
 - `POST /deployments/targets` creates a Kubernetes deployment target definition.
+  An optional kubeconfig is inspected server-side and only its redacted summary
+  is stored; omitted kubeconfig creates a draft target.
 - `GET /projects/{projectId}/deployment-targets` lists owned targets.
 - `POST /deployments/validate` performs structural checks on rendered
   Kubernetes YAML and excludes Helm chart source templates.
+- `POST /deployments/plans` combines an inspected owned target with rendered
+  manifests and returns an ordered plan with `executable: false` and
+  `clusterRequestMade: false`.
+- `GET /deployments/capabilities` returns whether controlled execution is
+  configured plus non-secret timeout, approval-TTL, environment, and resource
+  limits.
+- `PUT /deployments/targets/{targetId}/credential` explicitly minimizes,
+  encrypts, and retains an execution credential. The request must include
+  `confirmed: true`; the response contains only the connected target summary.
+- `DELETE /deployments/targets/{targetId}/credential` revokes the stored
+  credential and returns the target to `inspected` state.
+- `POST /deployments/approvals` creates a five-minute single-use approval for
+  an exact owned artifact and target. Request: `targetId`, `artifactId`,
+  `action: "apply"`, and `confirmed: true`.
+- `POST /deployments/operations` consumes an apply approval and starts or
+  idempotently replays an operation. Request: `approvalId` and UUID
+  `idempotencyKey`.
+- `GET /projects/{projectId}/deployment-operations` lists owner-scoped
+  operation summaries newest first.
+- `GET /deployments/operations/{operationId}` returns one owned operation.
+- `POST /deployments/operations/{operationId}/refresh` performs read-only
+  resource observation and persists summarized rollout status.
+- `POST /deployments/operations/{operationId}/rollback-approval` creates a
+  separate expiring approval for the immediately prior successful release.
+- `POST /deployments/operations/{operationId}/rollback` consumes that approval
+  with an idempotency key and starts a bounded rollback operation.
+
+Kubeconfig source text and credentials are never included in an API response.
+BS-801 inspection and planning make no Kubernetes API request. Apply, refresh,
+and rollback return only operation/resource summaries and never Kubernetes
+object bodies.
 
 # Monitoring endpoints
 

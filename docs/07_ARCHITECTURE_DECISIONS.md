@@ -6,7 +6,7 @@
 | Version           | 0.1.0                               |
 | Status            | Draft                               |
 | Author            | BuildSphere Team                    |
-| Last Updated      | 2026-07-10                          |
+| Last Updated      | 2026-07-11                          |
 | Related Documents | docs/adr/*                          |
 
 ---
@@ -40,6 +40,8 @@ Create an ADR when a decision affects:
 | ADR-007 | GitHub App OAuth with signed state, PKCE, and encrypted provider tokens | Accepted |
 | ADR-008 | Project/Auth service boundary for GitHub operations                     | Accepted |
 | ADR-009 | Generate-only AWS EKS Terraform boundary                                | Accepted |
+| ADR-010 | Ephemeral kubeconfig inspection and offline deployment planning         | Accepted |
+| ADR-011 | Controlled Kubernetes execution and bounded rollback                    | Accepted |
 
 # ADR template
 
