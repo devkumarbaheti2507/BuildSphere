@@ -9,7 +9,7 @@ import {
   errorHandler,
   healthHandler,
   notFoundHandler,
-  requestContext,
+  installServiceObservability,
   requireAuthentication,
 } from "@buildsphere/service-core";
 import type { LogRepository } from "./repository.js";
@@ -30,7 +30,7 @@ export const createLoggingApp = (
 ): Express => {
   const app = express();
   app.use(express.json({ limit: "100kb" }));
-  app.use(requestContext(logger));
+  installServiceObservability(app, "logging-service", logger);
   app.get("/health", healthHandler("logging-service"));
 
   app.post(

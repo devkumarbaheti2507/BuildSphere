@@ -254,3 +254,31 @@
   and complete cluster/kubeconfig cleanup.
 - No image was pushed and no external cluster, cloud account, production
   Secret, Terraform state, or production resource was contacted or modified.
+- Defined and completed Phase 11 through FR-020, the production observability
+  specification, ADR-013, and tickets BS-1101 through BS-1103.
+- Added isolated Prometheus registries to all ten backend services with
+  Node.js/process metrics, request count and duration, in-flight requests, a
+  stable service label, matched-route normalization, and identifier-safe
+  unmatched handling.
+- Unified Monitoring Service health gauges with the shared metric response and
+  added explicit safe proxy route templates at API Gateway.
+- Added backend Service discovery metadata and optional, default-disabled
+  ServiceMonitor and PrometheusRule resources with six recording rules, three
+  alerts, configurable SLO values, and checked-in runbook links.
+- Added an eight-panel, data-source-selectable Grafana dashboard and runbooks
+  for service down, API errors, and API latency without fixed endpoints or
+  credentials.
+- Added the Phase 11 structural verifier, Prometheus rule syntax validation in
+  CI, backend image metric smoke, and an in-cluster Helm test that scrapes all
+  ten backend Services.
+- Passed frozen installation, zero-warning lint, every production build, and
+  all 63 automated tests. Helm v4.2.3 strict checks, Prometheus v3.12.0 rule
+  validation, all 11 hardened images, and the default 38-resource zero-Secret
+  chart contract pass.
+- Re-ran the 26-file gateway smoke, migrations 001-007, Phase 6 and Phase 9
+  PostgreSQL verifiers, Terraform v1.15.8 static validation, Phase 10
+  install/test/upgrade/test with backend metrics, and the independent Phase 9
+  real-client apply/status/rollback/prune/revocation flow.
+- Deleted both disposable kind clusters. No monitoring stack, registry,
+  external cluster, cloud account, production Secret, alert receiver, or
+  production resource was contacted or modified.

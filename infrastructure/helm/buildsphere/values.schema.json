@@ -8,6 +8,7 @@
     "resources",
     "probes",
     "migration",
+    "observability",
     "ingress",
     "deploymentExecution"
   ],
@@ -64,6 +65,106 @@
       "type": "integer",
       "minimum": 10,
       "maximum": 300
+    },
+    "observability": {
+      "type": "object",
+      "required": [
+        "serviceAnnotations",
+        "serviceMonitor",
+        "prometheusRule",
+        "slo"
+      ],
+      "properties": {
+        "serviceAnnotations": {
+          "type": "object",
+          "required": ["enabled"],
+          "properties": {
+            "enabled": { "type": "boolean" }
+          }
+        },
+        "serviceMonitor": {
+          "type": "object",
+          "required": [
+            "enabled",
+            "namespace",
+            "additionalLabels",
+            "interval",
+            "scrapeTimeout"
+          ],
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "namespace": { "type": "string" },
+            "additionalLabels": {
+              "type": "object",
+              "additionalProperties": { "type": "string" }
+            },
+            "interval": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*(ms|s|m|h)$"
+            },
+            "scrapeTimeout": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*(ms|s|m|h)$"
+            }
+          }
+        },
+        "prometheusRule": {
+          "type": "object",
+          "required": [
+            "enabled",
+            "namespace",
+            "additionalLabels",
+            "evaluationInterval"
+          ],
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "namespace": { "type": "string" },
+            "additionalLabels": {
+              "type": "object",
+              "additionalProperties": { "type": "string" }
+            },
+            "evaluationInterval": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*(ms|s|m|h)$"
+            }
+          }
+        },
+        "slo": {
+          "type": "object",
+          "required": [
+            "availabilityTargetPercent",
+            "availabilityWindow",
+            "serverErrorRatioAlertThreshold",
+            "latencyTargetPercentile",
+            "latencyTargetSeconds"
+          ],
+          "properties": {
+            "availabilityTargetPercent": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 100
+            },
+            "availabilityWindow": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*d$"
+            },
+            "serverErrorRatioAlertThreshold": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "latencyTargetPercentile": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 1
+            },
+            "latencyTargetSeconds": {
+              "type": "number",
+              "enum": [0.1, 0.25, 0.5, 0.75, 1, 2.5, 5, 10]
+            }
+          }
+        }
+      }
     },
     "deploymentExecution": {
       "type": "object",

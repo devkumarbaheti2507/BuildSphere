@@ -14,15 +14,26 @@ BuildSphere has these major components:
 - Notification Service.
 - Analytics Service.
 - Shared types package.
+- Shared Service Core, including isolated Prometheus registries.
 - Template library.
-- Infrastructure assets.
+- BuildSphere production images, Helm chart, and observability assets.
 
 MVP communication:
 
 - REST over HTTP.
 
-MVP data:
+Runtime data:
 
 - PostgreSQL for durable records.
-- Redis for cache and ephemeral state.
-- MinIO/local storage for generated artifacts.
+- In-memory repositories for non-durable local verification.
+- Redis and MinIO are prepared local dependencies, not active runtime stores.
+- Generated artifacts currently live in PostgreSQL JSONB.
+
+Production boundary:
+
+- BuildSphere packages 11 non-root images and a hardened platform Helm release.
+- Every backend exposes bounded Prometheus runtime and HTTP metrics.
+- Optional ServiceMonitor, PrometheusRule, Grafana dashboard, SLO, and runbook
+  assets integrate with an operator-owned monitoring stack.
+- PostgreSQL operations, secrets, ingress/TLS, monitoring servers, registries,
+  and external deployment remain operator-owned.

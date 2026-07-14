@@ -5,7 +5,7 @@ import {
   errorHandler,
   healthHandler,
   notFoundHandler,
-  requestContext,
+  installServiceObservability,
 } from "@buildsphere/service-core";
 
 export const createAnalyticsApp = (
@@ -13,7 +13,7 @@ export const createAnalyticsApp = (
 ): Express => {
   const app = express();
   app.use(express.json({ limit: "100kb" }));
-  app.use(requestContext(logger));
+  installServiceObservability(app, "analytics-service", logger);
   app.get("/health", healthHandler("analytics-service"));
   app.use(notFoundHandler);
   app.use(errorHandler);

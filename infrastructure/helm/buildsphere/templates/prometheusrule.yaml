@@ -1,0 +1,78 @@
+{{- if .Values.observability.prometheusRule.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "buildsphere.fullname" . }}
+  {{- with .Values.observability.prometheusRule.namespace }}
+  namespace: {{ . | quote }}
+  {{- end }}
+  labels:
+    {{- include "buildsphere.commonLabels" . | nindent 4 }}
+    {{- with .Values.observability.prometheusRule.additionalLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: buildsphere-api-slo-recording
+      interval: {{ .Values.observability.prometheusRule.evaluationInterval }}
+      rules:
+        - record: buildsphere:api_gateway_http_requests:rate5m
+          expr: >-
+            sum(rate(buildsphere_http_requests_total{service="api-gateway",route!~"^(/health|unmatched)$"}[5m]))
+        - record: buildsphere:api_gateway_http_server_error_ratio:rate5m
+          expr: >-
+            sum(rate(buildsphere_http_requests_total{service="api-gateway",route!~"^(/health|unmatched)$",status_code=~"5.."}[5m]))
+            /
+            clamp_min(sum(rate(buildsphere_http_requests_total{service="api-gateway",route!~"^(/health|unmatched)$"}[5m])), 0.000001)
+        - record: buildsphere:api_gateway_http_server_error_ratio:rate30d
+          expr: >-
+            sum(rate(buildsphere_http_requests_total{service="api-gateway",route!~"^(/health|unmatched)$",status_code=~"5.."}[{{ .Values.observability.slo.availabilityWindow }}]))
+            /
+            clamp_min(sum(rate(buildsphere_http_requests_total{service="api-gateway",route!~"^(/health|unmatched)$"}[{{ .Values.observability.slo.availabilityWindow }}])), 0.000001)
+        - record: buildsphere:api_gateway_http_availability:rate30d
+          expr: >-
+            1 - buildsphere:api_gateway_http_server_error_ratio:rate30d
+        - record: buildsphere:api_gateway_http_request_duration_seconds:p95_rate5m
+          expr: >-
+            histogram_quantile({{ .Values.observability.slo.latencyTargetPercentile }},
+            sum by (le) (rate(buildsphere_http_request_duration_seconds_bucket{service="api-gateway",route!~"^(/health|unmatched)$"}[5m])))
+        - record: buildsphere:api_gateway_http_latency_sli:rate30d
+          expr: >-
+            sum(rate(buildsphere_http_request_duration_seconds_bucket{service="api-gateway",route!~"^(/health|unmatched)$",le="{{ .Values.observability.slo.latencyTargetSeconds }}"}[{{ .Values.observability.slo.availabilityWindow }}]))
+            /
+            clamp_min(sum(rate(buildsphere_http_request_duration_seconds_count{service="api-gateway",route!~"^(/health|unmatched)$"}[{{ .Values.observability.slo.availabilityWindow }}])), 0.000001)
+    - name: buildsphere-alerts
+      interval: {{ .Values.observability.prometheusRule.evaluationInterval }}
+      rules:
+        - alert: BuildSphereServiceDown
+          expr: buildsphere_service_up == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: BuildSphere service {{ "{{" }} $labels.service {{ "}}" }} is unavailable
+            description: Monitoring Service has failed to reach this health endpoint for five minutes.
+            runbook: docs/runbooks/BUILDSHERE_SERVICE_DOWN.md
+        - alert: BuildSphereApiGatewayHighServerErrorRatio
+          expr: >-
+            buildsphere:api_gateway_http_server_error_ratio:rate5m
+            > {{ .Values.observability.slo.serverErrorRatioAlertThreshold }}
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: BuildSphere API Gateway is consuming its availability error budget
+            description: The five-minute 5xx ratio has remained above the configured fast-burn threshold for ten minutes.
+            runbook: docs/runbooks/BUILDSHERE_API_ERRORS.md
+        - alert: BuildSphereApiGatewayHighLatency
+          expr: >-
+            buildsphere:api_gateway_http_request_duration_seconds:p95_rate5m
+            > {{ .Values.observability.slo.latencyTargetSeconds }}
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: BuildSphere API Gateway p95 latency is above its objective
+            description: API Gateway p95 latency has exceeded the configured target for ten minutes.
+            runbook: docs/runbooks/BUILDSHERE_API_LATENCY.md
+{{- end }}

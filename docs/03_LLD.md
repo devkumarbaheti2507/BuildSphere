@@ -300,6 +300,51 @@ Phase 10 does not provision PostgreSQL, a registry, DNS, certificates, cloud
 infrastructure, or external secrets. Those remain operator prerequisites and
 later production-hardening work.
 
+# Phase 11 production observability
+
+Service Core creates one `prom-client` registry per Express application. The
+registry collects prefixed Node.js/process metrics and these shared HTTP
+metrics:
+
+- `buildsphere_http_requests_total`
+- `buildsphere_http_request_duration_seconds`
+- `buildsphere_http_requests_in_flight`
+
+The `service` label is constant for one application. Request labels are limited
+to method, matched Express route template, and response status. Unmatched
+requests use the literal route `unmatched`; raw request paths and query values
+are never metric labels. Scrapes of `/metrics` are excluded from request
+metrics so collection does not create self-referential traffic.
+
+Every service registers the shared middleware before application routes and
+serves the registry through `GET /metrics`. Monitoring Service appends its
+existing `buildsphere_service_up` and health-response gauges to the same
+response after performing bounded health checks.
+
+Helm observability modules:
+
+- Backend Services carry an explicit metrics capability label and optional
+  standard scrape annotations.
+- An optional `ServiceMonitor` selects only those backend Services and scrapes
+  the named `http` port at `/metrics`.
+- An optional `PrometheusRule` defines BuildSphere recording rules and alerts
+  for service down, API Gateway server-error budget consumption, and latency.
+- Operator CRDs remain optional and disabled by default; enabling their
+  resources requires an existing Prometheus Operator installation.
+- The versioned Grafana dashboard and Markdown runbooks are static operator
+  assets and contain no credentials or provider configuration.
+
+## Sequence: collect and use service metrics
+
+```text
+Express middleware -> Isolated registry: increment in-flight request count
+Express response finish -> Isolated registry: count status and observe duration
+Prometheus -> Service /metrics: scrape bounded metric families
+Prometheus -> PrometheusRule: evaluate recording and alerting expressions
+Grafana -> Prometheus: render BuildSphere overview dashboard
+Alert receiver -> Runbook: diagnose service, dependency, error, or latency issue
+```
+
 # Logging Service
 
 Responsibilities:

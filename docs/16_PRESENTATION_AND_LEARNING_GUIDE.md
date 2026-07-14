@@ -67,10 +67,12 @@ The project is valuable in three ways:
 > Phase 9 adds fail-closed encrypted Kubernetes credentials, exact-artifact
 > approvals, ownership-checked server-side apply, safe rollout summaries, and
 > bounded rollback. Phase 10 packages all 11 platform components as non-root
-> images and adds a hardened BuildSphere-owned Helm release. Both workflows
-> were verified against disposable local kind clusters; registry publication,
-> external staging, production operations, and cloud deployment remain outside
-> the boundary.
+> images and adds a hardened BuildSphere-owned Helm release. Phase 11 gives all
+> ten backends bounded Prometheus metrics and adds optional discovery/rules,
+> API SLOs, a Grafana dashboard, and alert runbooks. The Kubernetes workflows
+> were verified against disposable local kind clusters; operating a monitoring
+> stack, registry publication, external staging, production operations, and
+> cloud deployment remain outside the boundary.
 
 ## Recommended slide deck
 
@@ -162,7 +164,7 @@ Use the system graph from `docs/15_PROJECT_KNOWLEDGE_GRAPH.md`.
 
 - Frozen lockfile install.
 - ESLint and all production builds.
-- 61 automated tests in 20 test files.
+- 63 automated tests in 21 test files.
 - Memory and PostgreSQL gateway smoke workflows.
 - Migration idempotency and restart persistence.
 - Desktop/mobile browser checks.
@@ -180,6 +182,10 @@ Use the system graph from `docs/15_PROJECT_KNOWLEDGE_GRAPH.md`.
 - All 11 production images passing non-root/read-only health smoke, plus the
   BuildSphere chart passing seven migrations, 11 ready workloads,
   frontend/API/database Helm tests, upgrade, repeat test, and cleanup.
+- Shared metrics on all ten backends, Prometheus rule syntax validation, one
+  optional ServiceMonitor, six recording rules, three alerts, eight dashboard
+  panels, three runbooks, and ten in-cluster metric scrapes before and after
+  upgrade.
 
 ### Slide 12: Boundaries and roadmap
 
@@ -190,12 +196,16 @@ Use the system graph from `docs/15_PROJECT_KNOWLEDGE_GRAPH.md`.
 - Phase 10 production images and the platform Helm chart are implemented and
   locally install-tested, but no registry or external staging environment is
   operated by the repository.
+- Phase 11 metrics, SLOs, rules, dashboard, and runbooks are implemented and
+  verified, but Prometheus, Grafana, Alertmanager, retention, and receiver
+  credentials remain operator-owned.
 - No Terraform plan/apply/destroy, AWS credential handling, or state ownership.
 - No external LLM yet.
 - Redis/MinIO/MailHog prepared but not active.
-- Phase 10 is complete. The next milestone must be specified; candidates
-  include supply-chain security, runtime reliability/data operations,
-  observability/SLOs, Jenkins, cost estimation, collaboration, and external AI.
+- Phase 11 is complete. Phase 12 must be specified; candidates include
+  supply-chain security, runtime reliability/network policy, production data
+  and secret operations, Jenkins, cost estimation, collaboration, and external
+  AI.
 - Explain that these are intentional roadmap boundaries, not hidden claims.
 
 ## Ten-minute live demonstration
@@ -260,6 +270,8 @@ requiring a real build runner.
 | Kubernetes      | Describes how containers run together    | Declarative workload, networking, probes, resources, and ingress model      |
 | GitHub Actions  | Runs automated workflow jobs             | Real connected CI provider whose runs are normalized into BuildSphere       |
 | Pino            | Writes machine-readable logs             | Structured logging with request correlation and latency metadata            |
+| Prometheus      | Collects numeric service signals         | Bounded RED/runtime metrics, recording rules, and SLO evaluation            |
+| Grafana         | Displays operational dashboards          | Versioned panels over an operator-selected Prometheus data source           |
 | JWT             | Carries authenticated identity           | Signed stateless claims verified independently by each service              |
 | AES-GCM         | Encrypts GitHub tokens                   | Authenticated encryption protects confidentiality and integrity at rest     |
 
@@ -455,6 +467,21 @@ Read:
 
 Be able to distinguish unit, API, smoke, persistence, browser, and live-provider evidence.
 
+### Module 11: Production packaging and observability
+
+Read:
+
+- `specs/PRODUCTION_DEPLOYMENT_SPEC.md`
+- `specs/PRODUCTION_OBSERVABILITY_SPEC.md`
+- `packages/service-core/src/metrics.ts`
+- `infrastructure/helm/buildsphere/`
+- `infrastructure/observability/`
+- `docs/runbooks/`
+
+Be able to explain non-root images, external runtime state, metric cardinality,
+RED signals, optional operator resources, SLO measurement, alert response, and
+why BuildSphere validates but does not operate the external monitoring plane.
+
 ## ChatGPT study prompts
 
 ### Guided tutor
@@ -527,12 +554,13 @@ scenario questions about failures, security boundaries, and future design.
 - Distinguish simulated pipeline execution from real GitHub Actions.
 - Distinguish generated scaffolding from complete application source.
 - Mention security controls with their purpose, not as a vocabulary list.
-- Show quality evidence: 61 tests, builds, smoke workflows, persistence,
+- Show quality evidence: 63 tests, builds, smoke workflows, persistence,
   browser checks including notification read interactions, live GitHub
   validation, strict Helm checks, real Terraform static validation, a 26-file
   PostgreSQL generation run, the four-resource offline deployment plan, and the
   disposable-kind apply/status/rollback verification, and the Phase 10
-  image/chart install-upgrade verification.
+  image/chart install-upgrade verification, plus Phase 11 metric, Prometheus
+  rule, dashboard, runbook, image, and in-cluster scrape verification.
 - Name at least two tradeoffs and two future milestones.
 - Keep secrets and `.env` off screen.
 - End with what you learned and the next bounded improvement.

@@ -7,7 +7,7 @@ import {
   errorHandler,
   healthHandler,
   notFoundHandler,
-  requestContext,
+  installServiceObservability,
 } from "@buildsphere/service-core";
 
 export interface GatewayTargets {
@@ -21,8 +21,13 @@ export interface GatewayTargets {
   notifications: string;
 }
 
-const proxyRequest = (target: string, timeoutMs = 10_000): RequestHandler =>
+const proxyRequest = (
+  target: string,
+  metricRoute: string,
+  timeoutMs = 10_000,
+): RequestHandler =>
   asyncHandler(async (request, response) => {
+    response.locals.metricRoute = metricRoute;
     const targetPath = request.originalUrl.replace(/^\/api/, "");
     const headers = new Headers();
     for (const [name, value] of Object.entries(request.headers)) {
@@ -98,48 +103,84 @@ export const createGatewayApp = (
 ): Express => {
   const app = express();
   app.use(express.json({ limit: "2mb" }));
-  app.use(requestContext(logger));
+  installServiceObservability(app, "api-gateway", logger);
   app.use(cors(allowedOrigin));
   app.get("/health", healthHandler("api-gateway"));
 
   app.use(
     /^\/api\/projects\/[^/]+\/github\/repository\/?$/,
-    proxyRequest(targets.projects, 120_000),
+    proxyRequest(
+      targets.projects,
+      "/api/projects/:projectId/github/repository",
+      120_000,
+    ),
   );
   app.use(
     /^\/api\/projects\/[^/]+\/pipelines(?:\/|$)/,
-    proxyRequest(targets.pipelines),
+    proxyRequest(targets.pipelines, "/api/projects/:projectId/pipelines/*"),
   );
   app.use(
     /^\/api\/projects\/[^/]+\/suggestions(?:\/|$)/,
-    proxyRequest(targets.suggestions),
+    proxyRequest(targets.suggestions, "/api/projects/:projectId/suggestions/*"),
   );
   app.use(
     /^\/api\/projects\/[^/]+\/deployment-targets(?:\/|$)/,
-    proxyRequest(targets.deployments),
+    proxyRequest(
+      targets.deployments,
+      "/api/projects/:projectId/deployment-targets/*",
+    ),
   );
   app.use(
     /^\/api\/projects\/[^/]+\/deployment-operations(?:\/|$)/,
-    proxyRequest(targets.deployments),
+    proxyRequest(
+      targets.deployments,
+      "/api/projects/:projectId/deployment-operations/*",
+    ),
   );
   app.use(
     /^\/api\/executions\/[^/]+\/logs(?:\/|$)/,
-    proxyRequest(targets.logging),
+    proxyRequest(targets.logging, "/api/executions/:executionId/logs/*"),
   );
-  app.use("/api/auth", proxyRequest(targets.auth));
-  app.use("/api/projects", proxyRequest(targets.projects));
-  app.use("/api/templates", proxyRequest(targets.projects));
-  app.use("/api/artifacts", proxyRequest(targets.projects));
-  app.use("/api/pipelines", proxyRequest(targets.pipelines));
-  app.use("/api/executions", proxyRequest(targets.pipelines));
-  app.use("/api/suggestions", proxyRequest(targets.suggestions));
+  app.use("/api/auth", proxyRequest(targets.auth, "/api/auth/*"));
+  app.use("/api/projects", proxyRequest(targets.projects, "/api/projects/*"));
+  app.use("/api/templates", proxyRequest(targets.projects, "/api/templates/*"));
+  app.use("/api/artifacts", proxyRequest(targets.projects, "/api/artifacts/*"));
   app.use(
-    /^\/api\/deployments\/(?:operations|targets\/[^/]+\/credential)(?:\/|$)/,
-    proxyRequest(targets.deployments, 120_000),
+    "/api/pipelines",
+    proxyRequest(targets.pipelines, "/api/pipelines/*"),
   );
-  app.use("/api/deployments", proxyRequest(targets.deployments));
-  app.use("/api/monitoring", proxyRequest(targets.monitoring));
-  app.use("/api/notifications", proxyRequest(targets.notifications));
+  app.use(
+    "/api/executions",
+    proxyRequest(targets.pipelines, "/api/executions/*"),
+  );
+  app.use(
+    "/api/suggestions",
+    proxyRequest(targets.suggestions, "/api/suggestions/*"),
+  );
+  app.use(
+    /^\/api\/deployments\/operations(?:\/|$)/,
+    proxyRequest(targets.deployments, "/api/deployments/operations/*", 120_000),
+  );
+  app.use(
+    /^\/api\/deployments\/targets\/[^/]+\/credential(?:\/|$)/,
+    proxyRequest(
+      targets.deployments,
+      "/api/deployments/targets/:targetId/credential/*",
+      120_000,
+    ),
+  );
+  app.use(
+    "/api/deployments",
+    proxyRequest(targets.deployments, "/api/deployments/*"),
+  );
+  app.use(
+    "/api/monitoring",
+    proxyRequest(targets.monitoring, "/api/monitoring/*"),
+  );
+  app.use(
+    "/api/notifications",
+    proxyRequest(targets.notifications, "/api/notifications/*"),
+  );
 
   app.use(notFoundHandler);
   app.use(errorHandler);

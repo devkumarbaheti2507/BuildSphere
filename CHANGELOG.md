@@ -56,6 +56,15 @@ The project follows semantic versioning once the first implementation milestone 
 - Structured chart verification, no-push CI image builds, hardened local image
   smoke, and a repeatable disposable kind install/test/upgrade/test verifier.
 - ADR-012 and the production deployment packaging specification.
+- Phase 11 shared Node.js/process and bounded HTTP RED metrics on all ten
+  backend services, with route-template normalization and identifier-safe
+  labels.
+- Optional ServiceMonitor and PrometheusRule chart resources, six recording
+  rules, three alert rules, explicit API SLOs, an eight-panel Grafana dashboard,
+  and three checked-in response runbooks.
+- ADR-013, the production observability specification, a structural Phase 11
+  verifier, CI `promtool` validation, backend image metric smoke, and
+  ten-service in-cluster metrics checks.
 
 ### Fixed
 
@@ -125,6 +134,13 @@ The project follows semantic versioning once the first implementation milestone 
 - A disposable kind v0.31.0 / Kubernetes v1.34.3 chart workflow with seven
   migrations, 11 ready Deployments, successful frontend/API/database Helm
   tests before and after upgrade, and complete cluster cleanup.
+- The complete Phase 11 gate with all 63 tests, Helm v4.2.3 strict validation,
+  Prometheus v3.12.0 rule checks, all 11 hardened image smokes, the eight-panel
+  dashboard contract, and Phase 0-10 PostgreSQL, Terraform, image, and real
+  Kubernetes regressions.
+- Every backend `/metrics` endpoint in the disposable Phase 10 chart before and
+  after upgrade, plus repeat Phase 9 apply/status/rollback verification and
+  cleanup with no external monitoring or production resource contacted.
 
 ## [0.1.0] - 2026-06-28
 

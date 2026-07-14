@@ -48,6 +48,8 @@ test("health aggregation reports degraded services and exposes Prometheus metric
       metrics,
       /buildsphere_service_up\{service="project-service"\} 0/,
     );
+    assert.match(metrics, /buildsphere_http_requests_total/);
+    assert.match(metrics, /service="monitoring-service"/);
   } finally {
     server.close();
   }

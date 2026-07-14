@@ -6,7 +6,7 @@
 | ---------------------- | ---------------------------------------------------------------------------------------- |
 | Purpose                | Self-contained technical and product context for learning, presentation, and AI tutoring |
 | Snapshot date          | 2026-07-14                                                                               |
-| Current milestone      | Phase 10 complete; production images and the BuildSphere chart locally live-validated    |
+| Current milestone      | Phase 11 complete; production observability and SLO baseline locally live-validated      |
 | Intended readers       | Project owner, reviewers, interviewers, mentors, and ChatGPT                             |
 | Structured companion   | `docs/project-knowledge-graph.json`                                                      |
 | Presentation companion | `docs/16_PRESENTATION_AND_LEARNING_GUIDE.md`                                             |
@@ -26,7 +26,9 @@ optional Helm packaging, disabled-by-default AWS EKS Terraform generation,
 secure Kubernetes connection inspection, offline planning, opt-in approved
 apply, durable status and bounded rollback, plus optional real GitHub repository
 and Actions integration. BuildSphere itself is packaged as non-root containers
-and a hardened Helm release for controlled staging.
+and a hardened Helm release for controlled staging, with shared Prometheus
+metrics, optional operator discovery/rules, a Grafana dashboard, SLOs, and alert
+runbooks.
 
 ## What problem it solves
 
@@ -57,7 +59,8 @@ Use these labels throughout this graph:
 | Phase 8 Terraform        | Implemented and statically validated                       | `specs/TERRAFORM_SPEC.md`, `memory/completed-features.md`          |
 | Phase 9 Kubernetes       | Inspection, planning, apply, status, and rollback complete | `specs/DEPLOYMENT_SPEC.md`, ADR-010, ADR-011                       |
 | Phase 10 packaging       | 11 images and platform Helm release locally live-validated | `specs/PRODUCTION_DEPLOYMENT_SPEC.md`, ADR-012                     |
-| Automated verification   | 61 tests plus lint and production builds pass              | `docs/11_TESTING.md`, `memory/next-session.md`                     |
+| Phase 11 observability   | Metrics, SLOs, rules, dashboard, and runbooks complete     | `specs/PRODUCTION_OBSERVABILITY_SPEC.md`, ADR-013                  |
+| Automated verification   | 63 tests plus lint and production builds pass              | `docs/11_TESTING.md`, `memory/next-session.md`                     |
 | PostgreSQL persistence   | Implemented and restart-tested                             | migrations and smoke scripts                                       |
 | Browser workflow         | Auth, project, notification, and deployment flows checked  | `memory/completed-features.md`                                     |
 | Real deployment          | Opt-in non-production Kubernetes workflow live-validated   | `scripts/verify-phase9-kind.ts`, `docs/11_TESTING.md`              |
@@ -107,6 +110,10 @@ flowchart LR
   Notification --> PostgreSQL
 
   Analytics[Analytics Service :8088] -->|health only today| Learner
+
+  Prometheus[(Operator-owned Prometheus)] -->|scrapes internal /metrics| Gateway
+  Prometheus -->|scrapes internal /metrics| BackendMetrics[All domain services]
+  Grafana[Operator-owned Grafana] --> Prometheus
 ```
 
 ## Runtime component registry
@@ -119,13 +126,13 @@ flowchart LR
 | Project Service      | 8082 | Projects, dependency-checked tool selections, Helm/Terraform rendering, artifact bundles, TAR downloads, project-scoped GitHub endpoints            | Coordinates Pipeline and AI after generation; calls Auth internally for GitHub | Implemented                   |
 | Pipeline Service     | 8083 | Explainable pipeline definitions, simulated executions, status transitions, cancellation                                                            | Writes logs through Logging Service and emits notifications                    | Implemented, simulated runner |
 | Deployment Service   | 8084 | Targets, validation, inspection, plans, encrypted credentials, approved apply, status, and rollback                                                 | Reads owned artifacts; optionally calls exact allowlisted Kubernetes APIs      | Phase 9 implemented           |
-| Monitoring Service   | 8085 | Aggregates eight service health endpoints and emits Prometheus text metrics                                                                         | Polls Gateway and seven domain services                                        | Implemented foundation        |
+| Monitoring Service   | 8085 | Aggregates eight service health endpoints and emits shared runtime/HTTP plus aggregate-health metrics                                               | Polls Gateway and seven domain services                                        | Implemented                   |
 | Logging Service      | 8086 | Internal log ingestion and owner-scoped execution log retrieval                                                                                     | Receives simulated pipeline logs                                               | Implemented                   |
 | AI Service           | 8087 | Rule-based or mock suggestions, prompt-file loading, suggestion status                                                                              | Reads project/artifact context; emits notifications                            | Implemented locally           |
 | Analytics Service    | 8088 | Reserved product analytics boundary                                                                                                                 | No database or events yet                                                      | Health-only scaffold          |
 | Notification Service | 8089 | Internal event creation, user-scoped listing, mark-as-read                                                                                          | Called by Project, Pipeline, AI, and Deployment services                       | Implemented                   |
 | Shared Types         |  n/a | Cross-package TypeScript contracts                                                                                                                  | Used by frontend and domain services                                           | Implemented                   |
-| Service Core         |  n/a | JWT, scrypt, errors, logging, PostgreSQL, migrations, notifications, graceful shutdown                                                              | Used by backend services                                                       | Implemented                   |
+| Service Core         |  n/a | JWT, scrypt, errors, logging, PostgreSQL, migrations, notifications, graceful shutdown, and isolated Prometheus registries                          | Used by backend services                                                       | Implemented                   |
 
 ## Why each technology is used
 
@@ -151,7 +158,8 @@ flowchart LR
 | AES-256-GCM            | GitHub provider token encryption                    | Authenticated encryption at rest                      | Keeps provider tokens confidential and detects tampering                  | Active                                                 |
 | SHA-256                | Artifact checksums and refresh-token hashing        | Stable one-way digest                                 | Detects artifact identity and avoids plaintext refresh-token storage      | Active                                                 |
 | Git blob SHA-1         | GitHub publish idempotency                          | GitHub Contents API identifies blobs this way         | Skips unchanged files and prevents needless commits/runs                  | Active                                                 |
-| Prometheus text format | Monitoring `/metrics`                               | Standard scrape format                                | Exposes service-up and response-time gauges                               | Active foundation                                      |
+| Prometheus/prom-client | Every backend `/metrics`, chart rules/discovery     | Standard cloud-native metric model                    | Exposes bounded runtime/HTTP RED and aggregate-health signals             | Active; external server remains operator-owned         |
+| Grafana dashboard      | Versioned observability asset                       | Portable visualization contract                       | Presents availability, errors, rate, latency, in-flight, memory, and lag  | Active asset; external server remains operator-owned   |
 | Redis                  | Compose and project tool model                      | Intended cache and lightweight coordination           | Future ephemeral state and queues                                         | Prepared, not used by runtime code                     |
 | MinIO/S3 settings      | Compose and environment examples                    | Intended object storage                               | Future external storage for artifact archives                             | Prepared, artifacts currently live in PostgreSQL JSONB |
 | MailHog                | Compose                                             | Intended local email capture                          | Future notification delivery testing                                      | Prepared, not used by runtime code                     |
@@ -181,8 +189,12 @@ flowchart LR
     monorepo-aware images and a platform-owned Helm chart, while PostgreSQL,
     credentials, ingress, TLS, registry publication, and external deployment
     remain operator responsibilities.
+13. **Shared metrics with an operator-owned monitoring plane**: every backend
+    owns an isolated, bounded Prometheus registry; the chart offers discovery
+    and rules without installing or credentialing Prometheus, Grafana, or
+    Alertmanager.
 
-Evidence: `docs/adr/ADR-001-*` through `ADR-012-*`.
+Evidence: `docs/adr/ADR-001-*` through `ADR-013-*`.
 
 ## Domain and data graph
 
@@ -601,8 +613,9 @@ topbar unread badge, and full-history drawer. Bulk read reuses the owner-scoped
 per-notification PATCH endpoint so completed updates remain durable even if a
 later update fails.
 
-Every backend service also exposes `GET /health`. Monitoring Service exposes
-`GET /metrics` directly in Prometheus text format.
+Every backend service also exposes `GET /health` and internal `GET /metrics`.
+Monitoring Service's metric response includes the shared runtime/HTTP families
+and its aggregate-health gauges.
 
 Inspection accepts kubeconfig only in authenticated request memory. Deployment
 Service rejects local file references before official-client parsing and
@@ -645,17 +658,28 @@ approval, and durable idempotency key.
 | Accidental cloud creation   | Terraform defaults disabled; generated CI has format/init-without-backend/validate only                                   | Cost/IAM/state review and any execution remain operator-owned |
 | Terraform secret/state leak | No credentials or active backend; generated ignore rules exclude state and plans                                          | Production secret and remote-state workflows are future       |
 | Untraceable requests        | Correlation ID generated/propagated and logged                                                                            | Distributed tracing is future                                 |
+| Metric identifier leakage   | Stable service/status labels, known methods or `OTHER`, and matched routes; unknown paths collapse to `unmatched`         | Production retention and access policy are operator-owned     |
 
 ## Observability model
 
 - Pino writes structured request logs with service, correlation ID, method, path, status, and response time.
 - Pipeline logs are separate user-visible domain records.
+- Every backend exposes isolated Node.js/process and bounded HTTP RED metrics.
+- Matched route templates prevent raw IDs and query values from becoming
+  labels; `/metrics` traffic is excluded from request metrics.
 - Monitoring polls eight health endpoints with a three-second timeout.
 - Platform health is `ok` only when every monitored target is reachable; otherwise it is `degraded`.
-- Prometheus output contains `buildsphere_service_up` and health response-time gauges.
+- Monitoring output also contains `buildsphere_service_up` and health
+  response-time gauges.
+- Backend Services have internal discovery metadata. Optional ServiceMonitor
+  and PrometheusRule resources remain disabled by default.
+- The API Gateway SLO is 99.9% availability over 30 days and p95 within 750 ms.
+  Six recording rules, three alerts, an eight-panel dashboard, and three
+  response runbooks are versioned in the repository.
 - Deployment approvals, operations, resource outcomes, refreshes, and rollbacks
-  form a durable audit trail. Grafana, centralized logs, OpenTelemetry, and
-  general security audit events are future work.
+  form a durable audit trail. Operating Prometheus/Grafana/Alertmanager,
+  centralized logs, OpenTelemetry, and general security audit events are future
+  work.
 
 ## Testing and verification graph
 
@@ -672,11 +696,15 @@ flowchart LR
   Phase9Postgres --> Kind[Disposable kind apply + status + rollback]
   HelmLint --> Images[11 image builds + hardened health smoke]
   Images --> Phase10Kind[Platform install + migrations + test + upgrade + test]
+  Tests --> Phase11[Metrics + rules + dashboard + runbook verification]
+  Phase11 --> Promtool[Prometheus rule syntax]
+  Images --> MetricsSmoke[10 backend image metrics checks]
+  Phase10Kind --> ClusterMetrics[10 backend cluster scrapes]
   PostgresSmoke --> Browser[Desktop/mobile auth, project, notification, deployment workflows]
   PostgresSmoke --> LiveGitHub[Live OAuth, private repo, publish, Actions sync]
 ```
 
-The repository contains 20 test files and 61 automated tests covering shared
+The repository contains 21 test files and 63 automated tests covering shared
 authentication and shutdown, gateway forwarding, every service's principal
 behavior, pipeline state/cancellation, generation, validation, OAuth security,
 GitHub publication idempotency, token refresh, workflow-run upserts, Helm
@@ -684,7 +712,9 @@ dependency validation, selection-aware rendering, validation isolation,
 kubeconfig redaction/file-reference safety, owner-scoped targets, offline
 resource ordering, encrypted credentials, approval/idempotency races, execution
 policy, ownership prechecks, retries, rollout status, bounded rollback, and
-flattened production-image root resolution.
+flattened production-image root resolution. Metric tests additionally cover
+content type, family names, route normalization, identifier/query redaction,
+scrape exclusion, and registry isolation.
 
 Primary commands:
 
@@ -692,6 +722,7 @@ Primary commands:
 pnpm verify
 pnpm verify:terraform
 pnpm verify:phase10
+HELM_BIN=/path/to/helm PROMTOOL_BIN=/path/to/promtool pnpm verify:phase11
 pnpm verify:phase10:images
 KIND_BIN=/path/to/kind HELM_BIN=/path/to/helm pnpm verify:phase10:kind
 pnpm smoke
@@ -712,9 +743,17 @@ deletion. It did not touch a production or cloud cluster.
 The Phase 10 kind test confirmed the platform chart itself: all seven
 migrations, 11 ready Deployments, frontend/API/database checks, an upgrade,
 idempotent repeated migrations, a second successful test, and cluster cleanup.
-It used ephemeral PostgreSQL and random test-only credentials.
+It used ephemeral PostgreSQL and random test-only credentials. The Phase 11
+extension also scraped all ten backend metric endpoints before and after
+upgrade.
 
-The structured companion validates as 85 unique nodes and 140 relationships
+The Phase 11 verifier confirmed the default 38-resource chart still contains no
+monitoring CRD or Secret, while opt-in rendering produces one ServiceMonitor,
+one PrometheusRule, six recording rules, and three alerts. Prometheus v3.12.0
+accepted the rules; all 11 hardened image smokes and the independent Phase 9
+cluster regression remained green.
+
+The structured companion validates as 90 unique nodes and 150 relationships
 with no dangling edges.
 
 The notification browser test confirmed complete message rendering, individual
@@ -770,6 +809,9 @@ persistence after relisting.
   rollback.
 - Health aggregation, Prometheus text metrics, user-scoped notifications, and a
   full notification center with durable individual/bulk read interactions.
+- Shared runtime and bounded HTTP RED metrics on every backend, optional
+  operator discovery/rules, explicit API SLOs, an eight-panel dashboard, and
+  checked-in alert runbooks.
 - GitHub repository creation/reuse, safe publishing, token refresh, and Actions synchronization.
 - PostgreSQL and in-memory repository implementations.
 
@@ -787,9 +829,9 @@ persistence after relisting.
 - Jenkins integration.
 - Cost estimation.
 - Team collaboration and template sharing.
-- External LLM provider, Grafana, centralized logs, tracing, registry/signing,
-  security scanning, high availability, backup/restore, and production release
-  certification.
+- External LLM provider, operated metrics/log retention and alert routing,
+  centralized logs, tracing, registry/signing, security scanning, high
+  availability, backup/restore, and production release certification.
 
 ## Important limitations to state honestly
 
@@ -808,11 +850,13 @@ persistence after relisting.
 7. Redis, MinIO, and MailHog run as optional local infrastructure but are not consumed by current services.
 8. Artifacts are stored as JSONB in PostgreSQL, not in object storage.
 9. Analytics Service exposes health only.
-10. Monitoring does not include Analytics Service and does not yet persist metrics.
-11. Phase 10 packaging is suitable for controlled staging, but it does not
+10. Monitoring health aggregation does not include Analytics Service, and the
+    repository does not operate or persist a Prometheus/Grafana stack.
+11. Phase 10 packaging and Phase 11 observability contracts are suitable for
+    controlled staging, but they do not
     provide registry promotion, image signing/scanning, external secret
-    operations, database HA/backups, network policy, autoscaling, SLOs, or
-    production release certification.
+    operations, database HA/backups, network policy, autoscaling,
+    environment-specific alert routing, or production release certification.
 12. The frontend uses session storage and a lightweight custom route helper.
 13. GitHub disconnect, organization SSO, run dispatch/rerun/cancel, and log archive UI are out of scope.
 14. Rate limiting, audit logs, full RBAC, production secret management, and automated checked-in browser E2E tests remain future hardening.

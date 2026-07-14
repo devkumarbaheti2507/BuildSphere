@@ -2,16 +2,16 @@
 
 Recommended next task:
 
-Choose and specify the first post-Phase 10 production-hardening milestone.
-Phase 10 is complete; there is no approved Phase 11 ticket yet.
+Choose and specify Phase 12. Phase 11 production observability and SLO baseline
+is complete; there is no approved Phase 12 ticket yet.
 
 Immediate tasks:
 
-1. Decide whether Phase 11 starts with supply-chain/release security,
-   production observability/SLOs, or runtime reliability/data operations.
+1. Decide whether Phase 12 starts with runtime reliability/network security,
+   production data and secret operations, or supply-chain/release security.
 2. Add requirements, an ADR when architecture changes, a spec, roadmap
    milestone, and backlog tickets before implementation.
-3. Keep `pnpm verify`, `pnpm verify:phase10`,
+3. Keep `pnpm verify`, `pnpm verify:phase10`, `pnpm verify:phase11`,
    `pnpm verify:phase10:images`, the gateway smoke, Terraform validation, and
    Phase 6/Phase 9 PostgreSQL verifiers green.
 4. Use `pnpm verify:phase10:kind` for local chart regressions and delete every
@@ -19,8 +19,8 @@ Immediate tasks:
 
 Current evidence:
 
-- Phases 0-10 are complete.
-- Frozen install, zero-warning lint, every production build, and all 61 tests
+- Phases 0-11 are complete.
+- Frozen install, zero-warning lint, every production build, and all 63 tests
   pass.
 - All 11 production images build and become healthy under non-root,
   read-only-root, dropped-capability smoke restrictions.
@@ -35,6 +35,12 @@ Current evidence:
   validation, and the Phase 9 real-client cluster workflow remain green.
 - CI runs the workspace gate, chart verification, and no-push builds for all 11
   images.
+- All ten backends expose bounded runtime/HTTP metrics. Phase 11 validation
+  passes for one optional ServiceMonitor, one PrometheusRule, six recording
+  rules, three alerts, eight dashboard panels, and three linked runbooks.
+- Prometheus v3.12.0 validates the rendered rules. The Phase 10 image and kind
+  gates verify every backend metrics endpoint; the chart's default 38-resource,
+  zero-Secret, no-monitoring-CRD render remains intact.
 
 Production boundaries still open:
 
@@ -44,8 +50,9 @@ Production boundaries still open:
   backup/restore, and disaster recovery.
 - NetworkPolicy, pod disruption budgets, autoscaling, anti-affinity, ingress
   controller, DNS, certificate automation, and capacity testing.
-- Centralized logging, metrics collection, dashboards, alerts, tracing, SLOs,
-  and on-call/release runbooks.
+- Operating and retaining Prometheus/Grafana/Alertmanager data, centralized
+  logging, distributed tracing, environment-specific alert routing, and
+  on-call ownership.
 - Approved external staging deployment and production release certification.
 - Terraform plan/apply/state and cloud account operations remain out of scope
   until separately approved.

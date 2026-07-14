@@ -147,6 +147,13 @@ test("gateway keeps project-scoped deployment operations on Deployment Service",
       ((await credential.json()) as { confirmed: boolean }).confirmed,
       true,
     );
+    const metrics = await (await fetch(`${gateway.url}/metrics`)).text();
+    assert.match(
+      metrics,
+      /route="\/api\/projects\/:projectId\/deployment-operations\/\*"/,
+    );
+    assert.doesNotMatch(metrics, /22222222-2222-4222-8222-222222222222/);
+    assert.doesNotMatch(metrics, /33333333-3333-4333-8333-333333333333/);
     const preflight = await fetch(
       `${gateway.url}/api/deployments/capabilities`,
       {

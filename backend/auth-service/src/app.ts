@@ -9,7 +9,7 @@ import {
   errorHandler,
   healthHandler,
   notFoundHandler,
-  requestContext,
+  installServiceObservability,
   requireAuthentication,
 } from "@buildsphere/service-core";
 import { AuthService, type TokenConfiguration } from "./auth-service.js";
@@ -78,7 +78,7 @@ export const createAuthApp = (
   const authenticate = requireAuthentication(tokens.accessSecret);
 
   app.use(express.json({ limit: "12mb" }));
-  app.use(requestContext(logger));
+  installServiceObservability(app, "auth-service", logger);
   app.get("/health", healthHandler("auth-service"));
 
   const requireInternalToken = (value: string | undefined) => {
@@ -193,12 +193,10 @@ export const createAuthApp = (
     "/auth/register",
     asyncHandler(async (request, response) => {
       const input = validated(registrationSchema, request.body);
-      response
-        .status(201)
-        .json({
-          data: await service.register(input.name, input.email, input.password),
-          meta: {},
-        });
+      response.status(201).json({
+        data: await service.register(input.name, input.email, input.password),
+        meta: {},
+      });
     }),
   );
 

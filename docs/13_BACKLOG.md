@@ -570,3 +570,83 @@ packaging verifier, and a kind v0.31.0 install/test/upgrade/test cycle pass with
 all seven migrations and 11 ready Deployments. Gateway, Phase 6/Phase 9
 PostgreSQL, Terraform, and Phase 9 real-client regressions also pass. CI builds
 all images without push, and no external environment was modified.
+
+# Phase 11 tickets
+
+## BS-1101: Expose shared service metrics
+
+Priority: High
+Milestone: Phase 11
+Status: Done
+
+Description:
+Instrument every backend service with one isolated Prometheus registry,
+standard runtime metrics, and bounded HTTP RED metrics.
+
+Acceptance criteria:
+
+- Every backend exposes `GET /metrics` with the Prometheus content type.
+- Request count, duration histogram, in-flight requests, and runtime metrics
+  carry a stable service label.
+- Matched route templates prevent IDs, query values, and unmatched raw paths
+  from entering labels.
+- Monitoring Service includes its aggregate health gauges in the unified
+  response.
+- Shared unit tests and service API tests cover collection and redaction.
+
+Outcome:
+Service Core installs one isolated registry per Express app, all ten backend
+factories expose `/metrics`, proxy routes provide explicit templates, and tests
+cover the content type, metric families, route normalization, redaction,
+scrape exclusion, registry isolation, and Monitoring Service composition.
+
+## BS-1102: Add Prometheus discovery and alert rules
+
+Priority: High
+Milestone: Phase 11
+Status: Done
+
+Description:
+Extend the BuildSphere Helm chart with internal scrape metadata and optional
+Prometheus Operator resources.
+
+Acceptance criteria:
+
+- Only backend Services are selected as metric targets.
+- Operator resources remain disabled by default and require no CRDs for the
+  default install.
+- ServiceMonitor interval, timeout, labels, and namespace are configurable.
+- PrometheusRule recording and alerting rules cover availability, server-error
+  ratio, and latency without embedding credentials or environment endpoints.
+- Phase 10 chart contracts remain green.
+
+Outcome:
+Backend Services now carry bounded discovery metadata. The default chart emits
+no operator CRDs; opt-in rendering creates one ServiceMonitor and one
+PrometheusRule with six recording rules and three alerts. Helm strict lint,
+schema-negative checks, and Prometheus rule validation pass.
+
+## BS-1103: Define SLO operations and verify compatibility
+
+Priority: High
+Milestone: Phase 11
+Status: Done
+
+Description:
+Provide the dashboard, service-level objectives, alert response documentation,
+and complete regression evidence required to operate the metric contract.
+
+Acceptance criteria:
+
+- A versioned Grafana dashboard visualizes the documented signals.
+- SLO thresholds and measurement windows are explicit and match alert rules.
+- Every alert links to a checked-in response runbook.
+- CI runs Phase 11 structural verification.
+- Unit, integration, image, Helm, PostgreSQL, Terraform, and disposable-cluster
+  regressions remain green.
+
+Outcome:
+The eight-panel Grafana dashboard, explicit API availability/latency objectives,
+three alert runbooks, CI verifier, hardened image metric smoke, and ten-service
+cluster scrape test are checked in. All 63 tests and the complete Phase 0-10
+regression suite pass without modifying an external environment.

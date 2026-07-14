@@ -364,7 +364,56 @@ Verification outcome:
   push. No external cluster, cloud account, production Secret, or production
   resource was contacted.
 
-# Post-Phase 10 candidates
+# Phase 11: Production observability and SLO baseline
+
+Status: Complete as of 2026-07-14.
+
+Goal: Give operators a measurable service contract before adding production
+autoscaling, high availability, and release automation.
+
+Planned slices:
+
+1. BS-1101: shared Prometheus runtime, process, and bounded HTTP RED metrics.
+2. BS-1102: optional Prometheus Operator discovery, recording rules, and
+   alerts in the BuildSphere chart.
+3. BS-1103: versioned Grafana dashboard, SLO definitions, runbooks, and
+   complete cross-phase verification.
+
+Exit criteria:
+
+- All ten backend services expose valid Prometheus metrics without requiring
+  authentication or leaking high-cardinality/user-controlled labels.
+- Monitoring Service preserves aggregate health metrics on the unified
+  endpoint.
+- The default Phase 10 chart remains installable without monitoring CRDs.
+- Opt-in `ServiceMonitor` and `PrometheusRule` resources pass structural and
+  expression-contract verification.
+- Availability, server-error, and latency signals have documented objectives,
+  alert thresholds, dashboard panels, and response runbooks.
+- Workspace, PostgreSQL, image, chart, and disposable-cluster regressions from
+  Phases 0-10 remain green.
+- No external monitoring stack or production environment is modified.
+
+Later production-hardening phases remain responsible for centralized log
+retention, distributed tracing, network policy, autoscaling, database
+operations, supply-chain release security, and external release certification.
+
+Verification outcome:
+
+- All ten backends expose isolated runtime and bounded HTTP RED metric families;
+  Service Core and API tests cover route normalization, identifier redaction,
+  scrape exclusion, and Monitoring Service gauge composition.
+- The default chart retains its 38-resource, zero-Secret, no-monitoring-CRD
+  contract. Opt-in rendering produces one ServiceMonitor, one PrometheusRule,
+  six recording rules, and three alerts linked to checked-in runbooks.
+- Helm v4.2.3 strict lint, Prometheus v3.12.0 rule validation, eight-panel
+  dashboard checks, all 63 automated tests, all 11 hardened image smokes, and
+  the Phase 0-10 PostgreSQL, Terraform, and disposable-cluster regressions pass.
+- The Phase 10 cluster gate scraped every backend before and after chart
+  upgrade. The separate Phase 9 real-client apply/status/rollback regression
+  also passed; both clusters were deleted and no external environment changed.
+
+# Post-Phase 11 candidates
 
 These items require separate specifications and backlog milestones:
 

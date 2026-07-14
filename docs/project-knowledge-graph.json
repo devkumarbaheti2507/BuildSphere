@@ -6,7 +6,7 @@
     "name": "BuildSphere",
     "version": "0.1.0",
     "kind": "AI-assisted Developer Experience Platform",
-    "status": "Phases 0-10 complete with controlled Kubernetes execution and platform deployment packaging live-validated locally",
+    "status": "Phases 0-11 complete with controlled Kubernetes execution, platform packaging, and production observability live-validated locally",
     "primaryAudience": [
       "learning developer",
       "backend or DevOps portfolio builder",
@@ -33,7 +33,7 @@
       "type": "product",
       "name": "BuildSphere",
       "status": "implemented",
-      "description": "Guided platform for project configuration, selection-aware DevOps, Helm, disabled AWS EKS Terraform generation, controlled Kubernetes deployment, explainable delivery workflows, recommendations, validation, GitHub integration, and locally verified production packaging.",
+      "description": "Guided platform for project configuration, selection-aware DevOps, Helm, disabled AWS EKS Terraform generation, controlled Kubernetes deployment, explainable delivery workflows, recommendations, validation, GitHub integration, locally verified production packaging, and a production observability baseline.",
       "evidence": ["README.md", "docs/00_PROJECT_VISION.md"]
     },
     {
@@ -137,8 +137,11 @@
       "name": "Monitoring Service",
       "status": "implemented",
       "port": 8085,
-      "responsibility": "Health aggregation for eight components and Prometheus-format gauges.",
-      "evidence": ["backend/monitoring-service/src/health-checker.ts"]
+      "responsibility": "Health aggregation for eight components plus shared runtime, HTTP, and aggregate-health Prometheus metrics.",
+      "evidence": [
+        "backend/monitoring-service/src/health-checker.ts",
+        "backend/monitoring-service/src/app.ts"
+      ]
     },
     {
       "id": "service.logging",
@@ -198,8 +201,11 @@
       "type": "package",
       "name": "Service Core",
       "status": "implemented",
-      "responsibility": "JWT, scrypt, errors, logging, PostgreSQL, migrations, notifications, and graceful shutdown.",
-      "evidence": ["packages/service-core/src/"]
+      "responsibility": "JWT, scrypt, errors, logging, PostgreSQL, migrations, notifications, graceful shutdown, and isolated Prometheus registries.",
+      "evidence": [
+        "packages/service-core/src/",
+        "packages/service-core/src/metrics.ts"
+      ]
     },
     {
       "id": "store.postgresql",
@@ -729,6 +735,64 @@
       "name": "External production dependencies",
       "status": "prepared",
       "description": "Registry, PostgreSQL operations, runtime Secret lifecycle, ingress, DNS, TLS, and external cluster authority remain operator-owned."
+    },
+    {
+      "id": "technology.prometheus",
+      "type": "technology",
+      "name": "Prometheus and prom-client",
+      "status": "implemented",
+      "reason": "Provide a standard bounded metric contract, recording rules, alerts, and SLO queries while leaving server operation external.",
+      "evidence": [
+        "packages/service-core/src/metrics.ts",
+        "infrastructure/helm/buildsphere/templates/prometheusrule.yaml"
+      ]
+    },
+    {
+      "id": "technology.grafana",
+      "type": "technology",
+      "name": "Grafana dashboard asset",
+      "status": "implemented",
+      "reason": "Version operational panels without fixing an environment endpoint, data source, or credential.",
+      "evidence": [
+        "infrastructure/observability/grafana/buildsphere-overview.json"
+      ]
+    },
+    {
+      "id": "capability.shared_metrics",
+      "type": "capability",
+      "name": "Shared backend runtime and HTTP metrics",
+      "status": "implemented",
+      "description": "All ten backend applications expose isolated runtime, request count, duration, and in-flight metrics with bounded route and normalized method labels.",
+      "evidence": [
+        "packages/service-core/src/metrics.ts",
+        "packages/service-core/src/metrics.test.ts"
+      ]
+    },
+    {
+      "id": "capability.observability_assets",
+      "type": "capability",
+      "name": "Production observability and SLO assets",
+      "status": "implemented",
+      "description": "Optional ServiceMonitor and PrometheusRule resources, six recording rules, three alerts, explicit API SLOs, an eight-panel dashboard, and three response runbooks.",
+      "evidence": [
+        "specs/PRODUCTION_OBSERVABILITY_SPEC.md",
+        "infrastructure/helm/buildsphere/templates/servicemonitor.yaml",
+        "infrastructure/helm/buildsphere/templates/prometheusrule.yaml",
+        "infrastructure/observability/",
+        "docs/runbooks/"
+      ]
+    },
+    {
+      "id": "workflow.phase11_observability_verification",
+      "type": "workflow",
+      "name": "Phase 11 observability verification",
+      "status": "implemented",
+      "description": "Checks default and opt-in Helm contracts, Prometheus rule syntax, dashboard and runbook structure, image metrics, and all ten in-cluster backend scrapes.",
+      "evidence": [
+        "scripts/verify-phase11-observability.mjs",
+        "scripts/smoke-phase10-images.sh",
+        "infrastructure/helm/buildsphere/templates/tests/smoke-test.yaml"
+      ]
     },
     {
       "id": "future.production_hardening",
@@ -1415,6 +1479,56 @@
     },
     {
       "from": "product.buildsphere",
+      "relation": "exposes",
+      "to": "capability.shared_metrics"
+    },
+    {
+      "from": "capability.shared_metrics",
+      "relation": "implemented_by",
+      "to": "package.service_core"
+    },
+    {
+      "from": "capability.shared_metrics",
+      "relation": "uses",
+      "to": "technology.prometheus"
+    },
+    {
+      "from": "service.monitoring",
+      "relation": "composes",
+      "to": "capability.shared_metrics"
+    },
+    {
+      "from": "capability.platform_helm_release",
+      "relation": "offers",
+      "to": "capability.observability_assets"
+    },
+    {
+      "from": "capability.observability_assets",
+      "relation": "uses",
+      "to": "technology.prometheus"
+    },
+    {
+      "from": "capability.observability_assets",
+      "relation": "visualized_by",
+      "to": "technology.grafana"
+    },
+    {
+      "from": "workflow.phase11_observability_verification",
+      "relation": "verifies",
+      "to": "capability.shared_metrics"
+    },
+    {
+      "from": "workflow.phase11_observability_verification",
+      "relation": "verifies",
+      "to": "capability.observability_assets"
+    },
+    {
+      "from": "capability.observability_assets",
+      "relation": "externalizes",
+      "to": "boundary.external_production_dependencies"
+    },
+    {
+      "from": "product.buildsphere",
       "relation": "may_evolve_to",
       "to": "future.production_hardening"
     }
@@ -1464,8 +1578,8 @@
     "validate_kubernetes_manifests"
   ],
   "verification": {
-    "automatedTests": 61,
-    "testFiles": 20,
+    "automatedTests": 63,
+    "testFiles": 21,
     "gates": [
       "pnpm install --frozen-lockfile",
       "pnpm lint",
@@ -1484,6 +1598,8 @@
       "disposable kind two-release apply, healthy status, rollback, ownership-matched prune, credential revocation, and cluster cleanup",
       "all 11 production image builds and hardened non-root health smoke",
       "disposable kind platform install with seven migrations, 11 ready Deployments, Helm test, upgrade, repeated migration/test, and cleanup",
+      "Phase 11 shared metrics tests, default and opt-in chart verification, Prometheus v3.12.0 rule validation, eight dashboard panels, and three runbooks",
+      "all ten backend image metric checks and disposable-cluster metric scrapes before and after chart upgrade",
       "live GitHub OAuth, private repository publication, successful Actions synchronization, and no-op republish"
     ]
   },
@@ -1499,7 +1615,8 @@
     "Analytics Service is health-only.",
     "GitHub disconnect, organization SSO, workflow control, and log archive UI are out of scope.",
     "Rate limiting, general security audit events, full RBAC, and production secret management are future hardening.",
-    "Phase 10 does not provide registry promotion, image signing/scanning, external Secret operations, database HA/backups, network policy, autoscaling, SLOs, or production release certification."
+    "The repository defines metrics, SLOs, rules, a dashboard, and runbooks but does not operate or persist Prometheus, Grafana, Alertmanager, or receiver credentials.",
+    "Phases 10-11 do not provide registry promotion, image signing/scanning, external Secret operations, database HA/backups, network policy, autoscaling, environment alert routing, or production release certification."
   ],
   "sourceMap": {
     "productAndRequirements": [
@@ -1531,6 +1648,8 @@
       ".github/workflows/ci.yml",
       "infrastructure/docker/",
       "infrastructure/helm/buildsphere/",
+      "infrastructure/observability/",
+      "docs/runbooks/",
       "scripts/",
       "docs/11_TESTING.md",
       "memory/"

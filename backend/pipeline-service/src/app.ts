@@ -10,7 +10,7 @@ import {
   healthHandler,
   NoopNotificationPublisher,
   notFoundHandler,
-  requestContext,
+  installServiceObservability,
   requireAuthentication,
 } from "@buildsphere/service-core";
 import type { NotificationPublisher } from "@buildsphere/service-core";
@@ -43,7 +43,7 @@ export const createPipelineApp = (
     stageDelayMs,
   );
   app.use(express.json({ limit: "100kb" }));
-  app.use(requestContext(logger));
+  installServiceObservability(app, "pipeline-service", logger);
   app.get("/health", healthHandler("pipeline-service"));
   app.use(requireAuthentication(accessSecret));
 
@@ -58,17 +58,15 @@ export const createPipelineApp = (
           "The pipeline definition is invalid",
           { fields: input.error.flatten() },
         );
-      response
-        .status(201)
-        .json({
-          data: await service.create(
-            authenticatedUser(response).userId,
-            input.data.projectId,
-            input.data.name,
-            input.data.provider,
-          ),
-          meta: {},
-        });
+      response.status(201).json({
+        data: await service.create(
+          authenticatedUser(response).userId,
+          input.data.projectId,
+          input.data.name,
+          input.data.provider,
+        ),
+        meta: {},
+      });
     }),
   );
   app.get(
@@ -106,16 +104,14 @@ export const createPipelineApp = (
           "The execution request is invalid",
           { fields: input.error.flatten() },
         );
-      response
-        .status(202)
-        .json({
-          data: await service.start(
-            authenticatedUser(response).userId,
-            request.params.pipelineId,
-            input.data.failStageKey,
-          ),
-          meta: {},
-        });
+      response.status(202).json({
+        data: await service.start(
+          authenticatedUser(response).userId,
+          request.params.pipelineId,
+          input.data.failStageKey,
+        ),
+        meta: {},
+      });
     }),
   );
   app.get(

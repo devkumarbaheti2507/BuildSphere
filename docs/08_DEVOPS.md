@@ -49,7 +49,8 @@ pnpm -r --parallel dev
 3. Production builds.
 4. All workspace tests.
 5. Helm strict lint and structured chart verification.
-6. No-push builds for all ten backend images and the frontend image.
+6. Prometheus rule syntax plus observability contract verification.
+7. No-push builds for all ten backend images and the frontend image.
 
 CI has read-only repository contents permission. Phase 10 does not configure a
 registry login, image push, signing key, Kubernetes credential, or deployment
@@ -102,11 +103,15 @@ The chart provides:
 - Optional host-based ingress with `/api` routed before `/` and an
   operator-owned TLS Secret.
 - A Helm test that checks frontend health, API routing, and seven applied
-  migrations.
+  migrations, plus all ten backend metric endpoints.
+- Internal scrape metadata on backend Services and optional Prometheus Operator
+  discovery and alert resources.
 
 The chart does not install PostgreSQL, Redis, MinIO, MailHog, ingress,
-cert-manager, monitoring, or a Secret. Operators must create the namespace and
-runtime Secret before install because migrations run as a pre-install hook.
+cert-manager, a monitoring stack, or a Secret. Operators must create the
+namespace and runtime Secret before install because migrations run as a
+pre-install hook. `ServiceMonitor` and `PrometheusRule` stay disabled unless an
+operator explicitly enables them against existing CRDs.
 
 Validate chart structure:
 
@@ -124,6 +129,42 @@ KIND_BIN=/path/to/kind HELM_BIN=/path/to/helm pnpm verify:phase10:kind
 The verifier creates and deletes its own kind cluster. It installs an ephemeral
 PostgreSQL fixture and random test-only Secret, runs migration/install/test,
 runs migration/upgrade/test again, and leaves no cluster behind.
+
+# Production observability baseline
+
+Every backend service exposes an internal `GET /metrics` endpoint with:
+
+- Node.js and process metrics prefixed by `buildsphere_`.
+- Request count, duration histogram, and in-flight request metrics.
+- A stable service label and bounded method, matched-route, and status labels.
+- No raw URL, query, user, project, correlation, or credential labels.
+
+Monitoring Service combines the shared metric families with its existing
+aggregate health gauges. `/metrics` requests are excluded from HTTP metrics,
+and unmatched requests use one literal route label to avoid leaking identifiers
+or creating unbounded series.
+
+The platform chart annotates only backend Services for scraping. Optional
+`ServiceMonitor` and `PrometheusRule` resources are disabled by default so the
+chart still installs without Prometheus Operator CRDs. When enabled, they
+provide service discovery, recording rules, and alerts for service down,
+API Gateway server errors, and API Gateway latency. Alert routing and receiver
+credentials remain external Alertmanager concerns.
+
+The API Gateway objectives are 99.9% availability over 30 days and 95% of
+eligible requests within 750 ms. The versioned Grafana dashboard is at
+`infrastructure/observability/grafana/buildsphere-overview.json`; response
+procedures are under `docs/runbooks/`.
+
+Validate the complete Phase 11 contract:
+
+```bash
+HELM_BIN=/path/to/helm PROMTOOL_BIN=/path/to/promtool pnpm verify:phase11
+```
+
+CI requires `promtool` and validates the rendered recording and alert rules.
+The existing Phase 10 image smoke now also checks each backend metric endpoint,
+and the disposable-cluster Helm test scrapes all ten backend Services.
 
 # Runtime configuration
 
@@ -159,19 +200,21 @@ manifests only and never invokes Helm. Generated Terraform remains limited to
 format, backend-disabled initialization, and static validation. BuildSphere
 does not run Terraform plan, apply, destroy, import, or state commands.
 
-# Observability
+# Observability boundaries
 
 Current:
 
-- Structured JSON request logs.
-- Correlation IDs.
+- Structured JSON request logs and correlation IDs.
 - Health endpoints and Kubernetes probes.
-- Monitoring Service health aggregation and Prometheus-format metrics.
+- Shared Prometheus runtime and bounded HTTP RED metrics on all ten backends.
+- Monitoring Service aggregate health gauges.
+- Operator-selectable ServiceMonitor and PrometheusRule resources.
+- A versioned Grafana dashboard, API SLOs, and checked-in alert runbooks.
 
 Future production work:
 
+- Operating Prometheus, Grafana, Alertmanager, and their retention/storage.
 - Centralized logs and retention.
-- Metrics scraping, dashboards, alerts, and SLOs.
 - Distributed tracing.
 - Deployment and infrastructure audit export.
 
@@ -184,9 +227,13 @@ Future production work:
 | staging     | Chart-ready after external images, database, secrets, ingress, and TLS. |
 | production  | Not release-certified; later security and reliability work required.    |
 
-# Phase 10 boundaries
+# Phase 10-11 boundaries
 
 Phase 10 creates deployable packaging but does not publish images, operate a
 registry, provision a cluster, manage production secrets, configure backups,
 install platform dependencies, or deploy externally. Any such action requires
 a separately approved release milestone and environment configuration.
+
+Phase 11 defines and validates observability signals but does not install a
+monitoring operator, expose metrics through ingress, configure alert receivers,
+or contact an external environment.

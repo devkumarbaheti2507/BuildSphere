@@ -66,6 +66,27 @@ migration:
   activeDeadlineSeconds: 300
   backoffLimit: 3
 
+observability:
+  serviceAnnotations:
+    enabled: true
+  serviceMonitor:
+    enabled: false
+    namespace: ""
+    additionalLabels: {}
+    interval: 30s
+    scrapeTimeout: 10s
+  prometheusRule:
+    enabled: false
+    namespace: ""
+    additionalLabels: {}
+    evaluationInterval: 30s
+  slo:
+    availabilityTargetPercent: 99.9
+    availabilityWindow: 30d
+    serverErrorRatioAlertThreshold: 0.0144
+    latencyTargetPercentile: 0.95
+    latencyTargetSeconds: 0.75
+
 ingress:
   enabled: false
   className: ""

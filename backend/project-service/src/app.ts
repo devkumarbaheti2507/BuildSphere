@@ -10,7 +10,7 @@ import {
   healthHandler,
   NoopNotificationPublisher,
   notFoundHandler,
-  requestContext,
+  installServiceObservability,
   requireAuthentication,
 } from "@buildsphere/service-core";
 import type { NotificationPublisher } from "@buildsphere/service-core";
@@ -112,7 +112,7 @@ export const createProjectApp = (
   const authenticate = requireAuthentication(accessSecret);
 
   app.use(express.json({ limit: "200kb" }));
-  app.use(requestContext(logger));
+  installServiceObservability(app, "project-service", logger);
   app.get("/health", healthHandler("project-service"));
   app.get("/templates", (_request, response) =>
     response.json({ data: templates.list(), meta: {} }),

@@ -1,0 +1,30 @@
+{{- if .Values.observability.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "buildsphere.fullname" . }}
+  {{- with .Values.observability.serviceMonitor.namespace }}
+  namespace: {{ . | quote }}
+  {{- end }}
+  labels:
+    {{- include "buildsphere.commonLabels" . | nindent 4 }}
+    {{- with .Values.observability.serviceMonitor.additionalLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace | quote }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "buildsphere.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      buildsphere.io/metrics: "true"
+  endpoints:
+    - port: http
+      path: /metrics
+      scheme: http
+      honorLabels: true
+      interval: {{ .Values.observability.serviceMonitor.interval }}
+      scrapeTimeout: {{ .Values.observability.serviceMonitor.scrapeTimeout }}
+{{- end }}

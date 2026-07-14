@@ -43,6 +43,7 @@ Create an ADR when a decision affects:
 | ADR-010 | Ephemeral kubeconfig inspection and offline deployment planning         | Accepted |
 | ADR-011 | Controlled Kubernetes execution and bounded rollback                    | Accepted |
 | ADR-012 | Shared production images and BuildSphere-owned Helm release             | Accepted |
+| ADR-013 | Shared Prometheus metrics and operator-owned monitoring stack           | Accepted |
 
 # ADR template
 

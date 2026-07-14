@@ -323,6 +323,35 @@ Acceptance criteria:
 - Phase 10 does not push images, create secrets, provision cloud resources, or
   deploy to an external production cluster.
 
+## FR-020 BuildSphere production observability baseline
+
+BuildSphere shall expose bounded-cardinality service metrics and ship
+operator-ready observability assets without requiring a monitoring stack in
+the default release.
+
+Acceptance criteria:
+
+- Every backend service exposes unauthenticated `GET /metrics` in Prometheus
+  exposition format on its internal HTTP port.
+- A shared implementation records request count, request duration, and
+  in-flight requests plus standard Node.js and process metrics.
+- HTTP metric labels use matched route templates, never raw URLs, query values,
+  project IDs, user IDs, correlation IDs, tokens, or request bodies.
+- Monitoring Service retains its aggregate service-availability and
+  health-check-duration metrics alongside its own runtime and HTTP metrics.
+- Backend Kubernetes Services advertise their metrics endpoint for standard
+  Prometheus discovery without exposing it through public ingress.
+- The production chart can optionally render one `ServiceMonitor` and one
+  `PrometheusRule` when Prometheus Operator CRDs are installed by the operator.
+- Recording and alerting rules cover service availability, API Gateway request
+  errors, and API Gateway latency with explicit thresholds and durable
+  runbooks.
+- A versioned Grafana dashboard visualizes availability, traffic, server error
+  ratio, and latency from the same metric contract.
+- Helm, endpoint, dashboard, alert-rule, and cross-phase regression tests pass.
+- Phase 11 does not install Prometheus, Grafana, Alertmanager, an ingress
+  controller, or any external monitoring service.
+
 # Non-functional requirements
 
 ## NFR-001 Usability

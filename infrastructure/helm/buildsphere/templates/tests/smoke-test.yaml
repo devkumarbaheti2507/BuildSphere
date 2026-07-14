@@ -45,6 +45,25 @@ spec:
 
           await request("http://{{ include "buildsphere.componentName" (dict "root" . "component" "frontend") }}:8080/healthz");
 
+          const metricsTargets = [
+            {{- $services := (include "buildsphere.backendServices" . | fromYaml).services }}
+            {{- range $service := $services }}
+            {
+              service: {{ $service.name | quote }},
+              url: "http://{{ include "buildsphere.componentName" (dict "root" $ "component" $service.name) }}:{{ $service.port }}/metrics",
+            },
+            {{- end }}
+          ];
+          for (const target of metricsTargets) {
+            const metrics = await (await request(target.url)).text();
+            if (!metrics.includes("buildsphere_http_requests_total")) {
+              throw new Error(`${target.service} did not expose HTTP request metrics`);
+            }
+            if (!metrics.includes(`service="${target.service}"`)) {
+              throw new Error(`${target.service} metrics did not include its service label`);
+            }
+          }
+
           const providers = await request("http://{{ include "buildsphere.componentName" (dict "root" . "component" "api-gateway") }}:8080/api/auth/providers");
           const body = await providers.json();
           if (body?.data?.github?.enabled !== false) {

@@ -84,6 +84,12 @@ Rules:
 - Runtime images must not contain `.env`, source-control metadata, local caches,
   or development dependency sets. Image tags must be explicit and cannot be
   `latest`.
+- Metrics must never label raw paths, URLs, query values, headers, bodies,
+  identities, project IDs, correlation IDs, credentials, or error text. Use
+  matched route templates, a single `unmatched` fallback, and `OTHER` for
+  uncommon HTTP methods.
+- Metrics endpoints stay on internal backend Services and are not exposed by
+  the platform ingress.
 
 # API security
 
@@ -139,6 +145,8 @@ Before sending data to an AI provider:
 | Unreviewed database schema drift        | Run the idempotent migration entrypoint as a bounded pre-install/pre-upgrade hook and fail the Helm release when migration fails.                                                   |
 | Accidental external release             | Keep CI to lint, tests, structural verification, and no-push image builds; require separate approval and configuration for registry or external-cluster actions.                    |
 | Mutable release selection               | Reject empty and `latest` image tags in the values schema and template validation.                                                                                                  |
+| Metric cardinality or identifier leak   | Permit only stable service, method, matched-route, and status labels; collapse unknown paths to `unmatched`; exclude scrape traffic.                                                |
+| Public metric disclosure                | Keep `/metrics` on internal backend Services, select targets explicitly, and create no metrics ingress or monitoring credential.                                                    |
 
 # Audit logs
 

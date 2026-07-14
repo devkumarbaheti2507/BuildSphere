@@ -9,7 +9,7 @@ import {
   errorHandler,
   healthHandler,
   notFoundHandler,
-  requestContext,
+  installServiceObservability,
   requireAuthentication,
 } from "@buildsphere/service-core";
 import type { NotificationRepository } from "./repository.js";
@@ -39,7 +39,7 @@ export const createNotificationApp = (
 ): Express => {
   const app = express();
   app.use(express.json({ limit: "100kb" }));
-  app.use(requestContext(logger));
+  installServiceObservability(app, "notification-service", logger);
   app.get("/health", healthHandler("notification-service"));
   app.post(
     "/internal/notifications",

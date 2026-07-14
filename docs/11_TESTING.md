@@ -248,3 +248,30 @@ Phase 10 production packaging completed and verified on 2026-07-14:
 - CI now runs chart verification and no-push builds for all 11 images. No
   registry, external cluster, cloud account, production Secret, Terraform
   state, or production resource was modified.
+
+Phase 11 production observability completed and verified on 2026-07-14:
+
+- Frozen installation, zero-warning lint, every production build, and all 63
+  automated tests pass. The two new Service Core tests verify Prometheus
+  content type, metric families, matched-route labels, raw identifier and query
+  redaction, scrape exclusion, and isolated registries.
+- API Gateway and Monitoring Service API tests confirm safe proxy route labels
+  and the unified shared plus aggregate-health metric response.
+- Helm v4.2.3 strict lint and the Phase 11 structural verifier pass. The default
+  chart still renders 38 resources with no monitoring CRDs or Secrets; opt-in
+  rendering produces one ServiceMonitor, one PrometheusRule, six recording
+  rules, and three runbook-linked alerts.
+- Prometheus v3.12.0 `promtool check rules` passes for the rendered rule groups.
+  Dashboard verification parses eight unique, non-overlapping panels and finds
+  no fixed endpoint or credential.
+- All 11 images rebuilt. Every backend image exposed its expected service label
+  on `/metrics` while running non-root with a read-only root, dropped
+  capabilities, and no privilege escalation.
+- The full gateway smoke, migrations 001-007, Phase 6 and Phase 9 PostgreSQL
+  verifiers, and Terraform v1.15.8 static validation remained green.
+- The Phase 10 kind install/test/upgrade/test gate passed with all ten backend
+  metrics scrapes before and after upgrade. The independent Phase 9 real-client
+  apply/status/rollback/prune/revocation cluster regression also passed, and
+  both disposable clusters were deleted.
+- No external monitoring stack, cluster, registry, cloud account, production
+  Secret, alert receiver, or production resource was contacted or modified.

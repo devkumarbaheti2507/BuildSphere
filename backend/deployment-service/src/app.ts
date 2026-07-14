@@ -9,7 +9,7 @@ import {
   errorHandler,
   healthHandler,
   notFoundHandler,
-  requestContext,
+  installServiceObservability,
   requireAuthentication,
 } from "@buildsphere/service-core";
 import type { NotificationPublisher } from "@buildsphere/service-core";
@@ -183,7 +183,7 @@ export const createDeploymentApp = (
     dependencies.now,
   );
   app.use(express.json({ limit: "2mb" }));
-  app.use(requestContext(logger));
+  installServiceObservability(app, "deployment-service", logger);
   app.get("/health", healthHandler("deployment-service"));
   app.use(requireAuthentication(accessSecret));
 

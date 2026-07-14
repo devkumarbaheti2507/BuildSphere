@@ -92,6 +92,31 @@ for service in \
   logging-service \
   ai-service \
   analytics-service \
+  notification-service; do
+  container="buildsphere-phase10-${service}-${RUN_ID}"
+  docker exec --env EXPECTED_SERVICE="${service}" "${container}" \
+    node --input-type=module --eval '
+      const response = await fetch(`http://127.0.0.1:${process.env.PORT}/metrics`);
+      const metrics = await response.text();
+      if (!response.ok || !metrics.includes("buildsphere_http_requests_total")) {
+        throw new Error(`${process.env.EXPECTED_SERVICE} metrics endpoint failed`);
+      }
+      if (!metrics.includes(`service="${process.env.EXPECTED_SERVICE}"`)) {
+        throw new Error(`${process.env.EXPECTED_SERVICE} metrics label is missing`);
+      }
+    '
+done
+
+for service in \
+  api-gateway \
+  auth-service \
+  project-service \
+  pipeline-service \
+  deployment-service \
+  monitoring-service \
+  logging-service \
+  ai-service \
+  analytics-service \
   notification-service \
   frontend; do
   user="$(docker image inspect --format '{{.Config.User}}' "buildsphere/${service}:${TAG}")"
@@ -103,4 +128,4 @@ for service in \
   esac
 done
 
-printf '%s\n' "Phase 10 image smoke passed for 10 backend services and the frontend."
+printf '%s\n' "Phase 10 image health and metrics smoke passed for 10 backend services and the frontend."

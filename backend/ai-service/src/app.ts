@@ -11,7 +11,7 @@ import {
   healthHandler,
   NoopNotificationPublisher,
   notFoundHandler,
-  requestContext,
+  installServiceObservability,
   requireAuthentication,
 } from "@buildsphere/service-core";
 import type { NotificationPublisher } from "@buildsphere/service-core";
@@ -58,7 +58,7 @@ export const createAiApp = (
   const app = express();
   const prompts = new PromptLoader(path.join(repoRoot, "prompts"));
   app.use(express.json({ limit: "2mb" }));
-  app.use(requestContext(logger));
+  installServiceObservability(app, "ai-service", logger);
   app.get("/health", healthHandler("ai-service"));
   app.use(requireAuthentication(accessSecret));
 
@@ -111,12 +111,10 @@ export const createAiApp = (
           metadata: { projectId: request.params.projectId },
         });
       }
-      response
-        .status(201)
-        .json({
-          data: suggestions,
-          meta: { mode: analyzer.mode, promptCount: prompts.list().length },
-        });
+      response.status(201).json({
+        data: suggestions,
+        meta: { mode: analyzer.mode, promptCount: prompts.list().length },
+      });
     }),
   );
   app.get(

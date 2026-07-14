@@ -5,8 +5,8 @@ import {
   createLogger,
   errorHandler,
   healthHandler,
+  installServiceObservability,
   notFoundHandler,
-  requestContext,
   requireAuthentication,
 } from "@buildsphere/service-core";
 import type { HealthChecker } from "./health-checker.js";
@@ -18,16 +18,10 @@ export const createMonitoringApp = (
   logger: Logger = createLogger("monitoring-service"),
 ): Express => {
   const app = express();
-  app.use(requestContext(logger));
-  app.get("/health", healthHandler("monitoring-service"));
-  app.get(
-    "/metrics",
-    asyncHandler(async (_request, response) => {
-      response
-        .type("text/plain")
-        .send(prometheusMetrics(await checker.check()));
-    }),
+  installServiceObservability(app, "monitoring-service", logger, async () =>
+    prometheusMetrics(await checker.check()),
   );
+  app.get("/health", healthHandler("monitoring-service"));
   app.get(
     "/monitoring/health",
     requireAuthentication(accessSecret),

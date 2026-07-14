@@ -92,8 +92,9 @@ not on `PATH`, then run `pnpm verify:phase10`.
 Build all ten backend images plus the frontend image with the local
 `phase10-local` tag. The smoke script starts every image with a read-only root,
 memory-backed `/tmp`, dropped capabilities, and no privilege escalation; waits
-for health; asserts each image declares a non-root user; and removes all test
-containers. Run both through `pnpm verify:phase10:images`.
+for health; asserts each image declares a non-root user; verifies every backend
+`/metrics` response and service label; and removes all test containers. Run
+both through `pnpm verify:phase10:images`.
 
 ## `verify-phase10-kind.sh`
 
@@ -106,3 +107,21 @@ release history, and cleans temporary files and the cluster. Set exact
 `pnpm verify:phase10:kind`.
 
 The script never pushes images or contacts an external Kubernetes cluster.
+
+## `verify-phase11-observability.mjs`
+
+Runs Helm strict lint and verifies the complete Phase 11 observability
+contract: default no-CRD rendering, backend discovery labels and annotations,
+opt-in ServiceMonitor and PrometheusRule structure, six recording rules, three
+alerts, SLO values, runbook links, dashboard layout and queries, bounded metric
+wiring, all ten chart-test scrape targets, and negative values-schema cases.
+
+Run it with:
+
+```bash
+HELM_BIN=/path/to/helm PROMTOOL_BIN=/path/to/promtool pnpm verify:phase11
+```
+
+`PROMTOOL_BIN` is optional for a local structural check and mandatory when
+`CI=true`. The verifier creates only temporary rendered files and does not
+contact a cluster or monitoring server.

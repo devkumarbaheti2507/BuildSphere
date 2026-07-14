@@ -53,7 +53,7 @@ This repository is prepared for a TypeScript-first implementation:
 | Packaging        | Helm                                                                        | Configurable Kubernetes application charts without automatic install. |
 | Infrastructure   | Terraform for AWS EKS                                                       | Reviewable infrastructure source with cloud creation disabled.        |
 | CI/CD            | GitHub Actions first                                                        | Common, accessible, and portfolio-friendly.                           |
-| Monitoring       | Prometheus + Grafana planned                                                | Standard cloud-native observability stack.                            |
+| Monitoring       | Prometheus metrics + Grafana assets                                         | Standard signals and operator-owned cloud-native monitoring.          |
 
 ## Repository structure
 
@@ -159,6 +159,13 @@ HELM_BIN=/path/to/helm pnpm verify:phase10
 KIND_BIN=/path/to/kind HELM_BIN=/path/to/helm pnpm verify:phase10:kind
 ```
 
+Validate the Phase 11 metrics, discovery, Prometheus rules, dashboard, and
+runbook contract:
+
+```bash
+HELM_BIN=/path/to/helm PROMTOOL_BIN=/path/to/promtool pnpm verify:phase11
+```
+
 The kind command creates and deletes its own local cluster. External staging
 or production installation is not performed by repository CI.
 
@@ -196,10 +203,12 @@ The pack excludes `.env`, credentials, provider tokens, personal account data, a
 
 ## Current status
 
-Status: Phases 0-10 are complete. Phase 9 adds secure Kubernetes inspection,
+Status: Phases 0-11 are complete. Phase 9 adds secure Kubernetes inspection,
 offline planning, opt-in approved apply, durable rollout summaries, and bounded
 rollback. Phase 10 packages BuildSphere itself as 11 non-root production images
-and a hardened Helm release with external secrets and PostgreSQL.
+and a hardened Helm release with external secrets and PostgreSQL. Phase 11 adds
+shared runtime and bounded HTTP metrics, optional Prometheus Operator discovery
+and rules, an eight-panel Grafana dashboard, API SLOs, and alert runbooks.
 
 Implemented workflows include local and GitHub authentication, project and
 tool configuration, selection-aware DevOps, Helm, and Terraform generation, GitHub
@@ -211,8 +220,10 @@ targets can retain separately encrypted credentials, require exact-artifact
 approval, apply only allowlisted resources, expose safe operation history, and
 restore a prior owned release. The BuildSphere chart passed install, all seven
 migrations, 11 ready workloads, an in-cluster frontend/API/database test,
-upgrade, and repeat test against a disposable kind cluster. All 61 automated
-tests and the current cross-phase smoke gates pass. Registry publication,
+all ten backend metric scrapes, upgrade, and repeat test against a disposable
+kind cluster. All 63 automated tests and the current cross-phase smoke gates
+pass. The observability resources remain disabled by default and require an
+operator-owned Prometheus/Grafana/Alertmanager stack. Registry publication,
 external staging installation, Terraform
 plan/apply, cloud or production deployment, production secret lifecycle,
 release hardening, and additional provider integrations remain future work.

@@ -29,3 +29,4 @@ Architecture Decision Records explain important BuildSphere design choices.
 - ADR-010: Ephemeral kubeconfig inspection and offline deployment planning.
 - ADR-011: Controlled Kubernetes execution and bounded rollback.
 - ADR-012: Package BuildSphere with shared backend builds and Helm.
+- ADR-013: Use isolated Prometheus registries and optional operator resources.

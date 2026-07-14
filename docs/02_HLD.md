@@ -126,6 +126,13 @@ Future production hardening adds managed secret rotation, high availability,
 autoscaling, network policy, backup/restore automation, Prometheus/Grafana,
 centralized logs, traces, alerting, and release certification.
 
+Phase 11 adds the first production observability boundary. Every backend
+process owns an isolated Prometheus registry and exposes runtime plus HTTP RED
+metrics on its internal service port. The Helm release advertises those
+endpoints and can emit Prometheus Operator discovery and alert resources only
+when an operator opts in. BuildSphere does not install or operate the
+monitoring stack.
+
 The generated Phase 7 chart is an inspectable deployment asset. Real Helm
 install, upgrade, rollback, and Kubernetes credential handling remain outside
 the generation boundary.
@@ -165,6 +172,22 @@ controls. Rollback can restore a prior successful snapshot but cannot delete a
 namespace or cluster-scoped resource.
 
 # Major workflows
+
+## Metrics and alerting flow
+
+```text
+Backend request -> Shared Service Core: count request and observe duration
+Prometheus -> Internal Service /metrics: scrape process and HTTP metrics
+Prometheus -> Monitoring Service /metrics: scrape aggregate health gauges
+PrometheusRule -> Prometheus: evaluate availability, error, and latency rules
+Alertmanager -> Operator: route alert according to external policy
+Operator -> BuildSphere runbook: investigate and mitigate
+Grafana -> Prometheus: query the versioned BuildSphere dashboard
+```
+
+Metrics stay pull-based and contain operational dimensions only. Public
+ingress routes remain `/api` and `/`; metric endpoints are not added to the
+external routing contract.
 
 ## Project generation flow
 
