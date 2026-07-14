@@ -1,8 +1,12 @@
-# infrastructure/kubernetes
+# BuildSphere Kubernetes Infrastructure
 
-Infrastructure files for BuildSphere live here.
+The raw files in this directory are early namespace examples and are not the
+Phase 10 platform release definition.
 
-MVP note:
+Use `infrastructure/helm/buildsphere/` to render or install BuildSphere itself.
+Use `templates/kubernetes/` and `templates/helm/` only as Project Service source
+for generated user-project assets.
 
-- Local infrastructure starts from `docker-compose.dev.yml` in the repository root.
-- Production-grade infrastructure will be added gradually according to `docs/08_DEVOPS.md`.
+Production cluster provisioning, ingress installation, certificate management,
+external secrets, and database operations remain outside this repository's
+completed scope.

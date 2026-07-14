@@ -1,14 +1,13 @@
 import path from "node:path";
-import { fileURLToPath } from "node:url";
-import { createLogger, loadEnvironment } from "@buildsphere/service-core";
+import {
+  createLogger,
+  loadEnvironment,
+  registerGracefulShutdown,
+  resolveBuildSphereRoot,
+} from "@buildsphere/service-core";
 import { createGatewayApp } from "./app.js";
 
-const repoRoot = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "..",
-  "..",
-  "..",
-);
+const repoRoot = resolveBuildSphereRoot(import.meta.url);
 loadEnvironment(path.join(repoRoot, ".env"));
 const serviceName = process.env.SERVICE_NAME ?? "api-gateway";
 const port = Number(process.env.PORT ?? 8080);
@@ -30,4 +29,9 @@ const app = createGatewayApp(
   logger,
 );
 
-app.listen(port, () => logger.info({ port }, "API gateway listening"));
+const server = app.listen(port, () =>
+  logger.info({ port }, "API gateway listening"),
+);
+registerGracefulShutdown(server, [], (error) =>
+  logger.error({ err: error }, "Graceful shutdown failed"),
+);

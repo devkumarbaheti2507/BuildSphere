@@ -150,6 +150,18 @@ persistence without contacting a cluster:
 pnpm smoke:phase9:postgres
 ```
 
+Build and smoke the Phase 10 production images, validate the BuildSphere Helm
+chart, and optionally run its disposable install/upgrade test:
+
+```bash
+pnpm verify:phase10:images
+HELM_BIN=/path/to/helm pnpm verify:phase10
+KIND_BIN=/path/to/kind HELM_BIN=/path/to/helm pnpm verify:phase10:kind
+```
+
+The kind command creates and deletes its own local cluster. External staging
+or production installation is not performed by repository CI.
+
 Controlled Kubernetes execution is disabled by default. Its exact environment
 policy and disposable-cluster procedure are documented in
 `backend/deployment-service/README.md` and `docs/08_DEVOPS.md`.
@@ -184,11 +196,10 @@ The pack excludes `.env`, credentials, provider tokens, personal account data, a
 
 ## Current status
 
-Status: Phases 0-9 are complete. Phase 9 adds secure Kubernetes inspection,
+Status: Phases 0-10 are complete. Phase 9 adds secure Kubernetes inspection,
 offline planning, opt-in approved apply, durable rollout summaries, and bounded
-rollback. The execution path was live-validated against a disposable local
-kind cluster and remains disabled unless an operator supplies every required
-policy value.
+rollback. Phase 10 packages BuildSphere itself as 11 non-root production images
+and a hardened Helm release with external secrets and PostgreSQL.
 
 Implemented workflows include local and GitHub authentication, project and
 tool configuration, selection-aware DevOps, Helm, and Terraform generation, GitHub
@@ -198,10 +209,13 @@ checks, health aggregation, and notifications. Generated Terraform defaults to
 no cloud resources and is statically validated without credentials. Kubernetes
 targets can retain separately encrypted credentials, require exact-artifact
 approval, apply only allowlisted resources, expose safe operation history, and
-restore a prior owned release. All 59 automated tests and the current
-cross-phase smoke gates pass. Helm installation, Terraform plan/apply, cloud or
-production deployment, and additional provider integrations remain future
-work.
+restore a prior owned release. The BuildSphere chart passed install, all seven
+migrations, 11 ready workloads, an in-cluster frontend/API/database test,
+upgrade, and repeat test against a disposable kind cluster. All 61 automated
+tests and the current cross-phase smoke gates pass. Registry publication,
+external staging installation, Terraform
+plan/apply, cloud or production deployment, production secret lifecycle,
+release hardening, and additional provider integrations remain future work.
 
 ## License
 

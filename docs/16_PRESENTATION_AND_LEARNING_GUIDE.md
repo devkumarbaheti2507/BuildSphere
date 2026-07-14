@@ -66,8 +66,11 @@ The project is valuable in three ways:
 > optional Helm chart source and disabled-by-default AWS EKS Terraform source.
 > Phase 9 adds fail-closed encrypted Kubernetes credentials, exact-artifact
 > approvals, ownership-checked server-side apply, safe rollout summaries, and
-> bounded rollback. It was verified against a disposable local kind cluster;
-> production and cloud deployment remain intentionally outside the boundary.
+> bounded rollback. Phase 10 packages all 11 platform components as non-root
+> images and adds a hardened BuildSphere-owned Helm release. Both workflows
+> were verified against disposable local kind clusters; registry publication,
+> external staging, production operations, and cloud deployment remain outside
+> the boundary.
 
 ## Recommended slide deck
 
@@ -159,12 +162,12 @@ Use the system graph from `docs/15_PROJECT_KNOWLEDGE_GRAPH.md`.
 
 - Frozen lockfile install.
 - ESLint and all production builds.
-- 59 automated tests in 19 test files.
+- 61 automated tests in 20 test files.
 - Memory and PostgreSQL gateway smoke workflows.
 - Migration idempotency and restart persistence.
 - Desktop/mobile browser checks.
 - Real GitHub integration validation.
-- Strict Helm v4.2.2 lint, rendered manifests, and PostgreSQL restart
+- Strict Helm v4.2.3 lint, rendered manifests, and PostgreSQL restart
   persistence for the Phase 7 artifact.
 - Checksum-verified Terraform v1.15.8 formatting, backend-disabled
   initialization, exact module resolution, and static validation.
@@ -174,6 +177,9 @@ Use the system graph from `docs/15_PROJECT_KNOWLEDGE_GRAPH.md`.
 - Phase 9 PostgreSQL credential/approval/operation verification plus a real
   disposable-kind two-release apply, healthy status, rollback, ownership-bound
   prune, credential revocation, and cluster cleanup.
+- All 11 production images passing non-root/read-only health smoke, plus the
+  BuildSphere chart passing seven migrations, 11 ready workloads,
+  frontend/API/database Helm tests, upgrade, repeat test, and cleanup.
 
 ### Slide 12: Boundaries and roadmap
 
@@ -181,11 +187,15 @@ Use the system graph from `docs/15_PROJECT_KNOWLEDGE_GRAPH.md`.
   Terraform source are implemented.
 - Kubernetes inspection, planning, approved apply, status, and bounded rollback
   are implemented, but execution is opt-in and not a production control plane.
+- Phase 10 production images and the platform Helm chart are implemented and
+  locally install-tested, but no registry or external staging environment is
+  operated by the repository.
 - No Terraform plan/apply/destroy, AWS credential handling, or state ownership.
 - No external LLM yet.
 - Redis/MinIO/MailHog prepared but not active.
-- Phase 9 is complete. The next milestone must be specified; candidates remain
-  Jenkins, cost estimation, collaboration, and external AI/observability.
+- Phase 10 is complete. The next milestone must be specified; candidates
+  include supply-chain security, runtime reliability/data operations,
+  observability/SLOs, Jenkins, cost estimation, collaboration, and external AI.
 - Explain that these are intentional roadmap boundaries, not hidden claims.
 
 ## Ten-minute live demonstration
@@ -517,11 +527,12 @@ scenario questions about failures, security boundaries, and future design.
 - Distinguish simulated pipeline execution from real GitHub Actions.
 - Distinguish generated scaffolding from complete application source.
 - Mention security controls with their purpose, not as a vocabulary list.
-- Show quality evidence: 59 tests, builds, smoke workflows, persistence,
+- Show quality evidence: 61 tests, builds, smoke workflows, persistence,
   browser checks including notification read interactions, live GitHub
   validation, strict Helm checks, real Terraform static validation, a 26-file
   PostgreSQL generation run, the four-resource offline deployment plan, and the
-  disposable-kind apply/status/rollback verification.
+  disposable-kind apply/status/rollback verification, and the Phase 10
+  image/chart install-upgrade verification.
 - Name at least two tradeoffs and two future milestones.
 - Keep secrets and `.env` off screen.
 - End with what you learned and the next bounded improvement.

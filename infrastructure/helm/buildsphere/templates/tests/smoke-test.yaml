@@ -1,0 +1,87 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ include "buildsphere.componentName" (dict "root" . "component" "chart-test") }}
+  labels:
+    {{- include "buildsphere.commonLabels" . | nindent 4 }}
+    app.kubernetes.io/component: chart-test
+  annotations:
+    helm.sh/hook: test
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  serviceAccountName: {{ include "buildsphere.componentName" (dict "root" . "component" "chart-test") }}
+  automountServiceAccountToken: false
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  {{- with .Values.image.pullSecrets }}
+  imagePullSecrets:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  containers:
+    - name: smoke
+      image: {{ include "buildsphere.image" (dict "root" . "component" "api-gateway") | quote }}
+      imagePullPolicy: {{ .Values.image.pullPolicy }}
+      workingDir: /app/node_modules/@buildsphere/service-core
+      command:
+        - node
+        - --input-type=module
+        - -e
+      args:
+        - |
+          import pg from "pg";
+
+          const request = async (url) => {
+            const response = await fetch(url, {
+              signal: AbortSignal.timeout(10_000),
+            });
+            if (!response.ok) {
+              throw new Error(`${url} returned HTTP ${response.status}`);
+            }
+            return response;
+          };
+
+          await request("http://{{ include "buildsphere.componentName" (dict "root" . "component" "frontend") }}:8080/healthz");
+
+          const providers = await request("http://{{ include "buildsphere.componentName" (dict "root" . "component" "api-gateway") }}:8080/api/auth/providers");
+          const body = await providers.json();
+          if (body?.data?.github?.enabled !== false) {
+            throw new Error("API gateway did not return disabled GitHub provider availability");
+          }
+
+          const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
+          await client.connect();
+          try {
+            const result = await client.query("SELECT COUNT(*)::int AS count FROM schema_migrations");
+            if (result.rows[0]?.count !== 7) {
+              throw new Error(`Expected 7 migrations, found ${result.rows[0]?.count}`);
+            }
+          } finally {
+            await client.end();
+          }
+
+          console.log("BuildSphere Helm smoke test passed");
+      envFrom:
+        - secretRef:
+            name: {{ .Values.runtime.existingSecret }}
+      resources:
+        {{- toYaml .Values.resources.test | nindent 8 }}
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        capabilities:
+          drop:
+            - ALL
+      volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+  volumes:
+    - name: tmp
+      emptyDir:
+        medium: Memory
+        sizeLimit: 32Mi

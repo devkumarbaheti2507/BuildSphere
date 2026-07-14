@@ -1,0 +1,36 @@
+# syntax=docker/dockerfile:1.7
+
+ARG NODE_IMAGE=node:22.23.1-alpine
+ARG NGINX_IMAGE=nginx:1.27-alpine
+
+FROM ${NODE_IMAGE} AS build
+ARG VITE_API_URL=/api
+ENV PNPM_HOME=/pnpm
+ENV PATH=${PNPM_HOME}:${PATH}
+WORKDIR /workspace
+
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json .npmrc ./
+RUN --mount=type=cache,id=buildsphere-pnpm,target=/pnpm/store \
+    pnpm config set store-dir /pnpm/store && \
+    pnpm fetch --frozen-lockfile
+
+COPY . .
+RUN --mount=type=cache,id=buildsphere-pnpm,target=/pnpm/store \
+    case "${VITE_API_URL}" in \
+      /*) ;; \
+      *) echo "VITE_API_URL must be a same-origin absolute path" >&2; exit 64 ;; \
+    esac && \
+    pnpm install --offline --frozen-lockfile --filter "@buildsphere/frontend..." && \
+    VITE_API_URL="${VITE_API_URL}" pnpm --filter "@buildsphere/frontend..." build
+
+FROM ${NGINX_IMAGE} AS runtime
+COPY infrastructure/nginx/frontend.conf /etc/nginx/nginx.conf
+COPY --from=build /workspace/frontend/dist /usr/share/nginx/html
+
+USER nginx
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget -q -O /dev/null http://127.0.0.1:8080/healthz || exit 1
+ENTRYPOINT []
+CMD ["nginx", "-g", "daemon off;"]

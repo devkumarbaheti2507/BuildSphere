@@ -18,6 +18,9 @@
     "smoke:phase6:postgres": "sh scripts/pnpm-workspace.sh --filter @buildsphere/auth-service exec tsx ../../scripts/verify-phase6-postgres.ts",
     "smoke:phase9:postgres": "sh scripts/pnpm-workspace.sh --filter @buildsphere/deployment-service exec tsx ../../scripts/verify-phase9-postgres.ts",
     "verify:phase9:kind": "sh scripts/pnpm-workspace.sh --filter @buildsphere/deployment-service exec tsx ../../scripts/verify-phase9-kind.ts",
+    "verify:phase10": "node scripts/verify-phase10-packaging.mjs",
+    "verify:phase10:images": "sh scripts/verify-phase10-images.sh && sh scripts/smoke-phase10-images.sh",
+    "verify:phase10:kind": "bash scripts/verify-phase10-kind.sh",
     "verify:terraform": "sh scripts/pnpm-workspace.sh --filter @buildsphere/project-service exec tsx ../../scripts/verify-terraform-template.ts",
     "db:migrate": "sh scripts/pnpm-workspace.sh --filter @buildsphere/service-core db:migrate",
     "format": "prettier --write \"**/*.{ts,tsx,mjs,md,json,yml,yaml}\""
@@ -25,6 +28,7 @@
   "devDependencies": {
     "@eslint/js": "^9.0.0",
     "eslint": "^9.0.0",
+    "js-yaml": "4.3.0",
     "prettier": "^3.3.3",
     "typescript": "^5.6.3",
     "typescript-eslint": "^8.0.0"

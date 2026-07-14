@@ -78,3 +78,31 @@ terraform validate -no-color
 Run `npm run verify:terraform` when `terraform` is available, or provide an
 explicit checksum-verified binary with `TERRAFORM_BIN=/path/to/terraform`. The
 script does not run plan, apply, destroy, state, or AWS commands.
+
+## `verify-phase10-packaging.mjs`
+
+Runs Helm strict lint, parses the BuildSphere chart as structured YAML, and
+checks exact workload counts, zero rendered Secrets, migration and test hooks,
+pod security, resources, probes, ingress routing, image-tag policy, execution
+defaults, Dockerfile invariants, and Nginx behavior. Set `HELM_BIN` when Helm is
+not on `PATH`, then run `pnpm verify:phase10`.
+
+## `verify-phase10-images.sh` and `smoke-phase10-images.sh`
+
+Build all ten backend images plus the frontend image with the local
+`phase10-local` tag. The smoke script starts every image with a read-only root,
+memory-backed `/tmp`, dropped capabilities, and no privilege escalation; waits
+for health; asserts each image declares a non-root user; and removes all test
+containers. Run both through `pnpm verify:phase10:images`.
+
+## `verify-phase10-kind.sh`
+
+Creates and deletes its own uniquely named kind cluster. It builds a
+single-platform PostgreSQL fixture from a pinned upstream digest, loads all 11
+BuildSphere images, generates random test-only runtime credentials, installs
+PostgreSQL, installs and tests BuildSphere, upgrades and tests it again, prints
+release history, and cleans temporary files and the cluster. Set exact
+`KIND_BIN` and `HELM_BIN` paths when the tools are not on `PATH`, then run
+`pnpm verify:phase10:kind`.
+
+The script never pushes images or contacts an external Kubernetes cluster.

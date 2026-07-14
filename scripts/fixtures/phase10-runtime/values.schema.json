@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["image", "runtimeSecret", "resources"],
+  "properties": {
+    "image": {
+      "type": "object",
+      "required": ["reference", "pullPolicy"],
+      "properties": {
+        "reference": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9./_-]+:[A-Za-z0-9._-]+(?:@sha256:[A-Fa-f0-9]{64})?$"
+        },
+        "pullPolicy": {
+          "type": "string",
+          "enum": ["Always", "IfNotPresent", "Never"]
+        }
+      }
+    },
+    "runtimeSecret": {
+      "type": "object",
+      "required": [
+        "name",
+        "databaseName",
+        "databaseUser",
+        "databasePassword",
+        "jwtAccessTokenSecret",
+        "jwtRefreshTokenSecret",
+        "internalServiceToken"
+      ],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "databaseName": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_]{2,31}$"
+        },
+        "databaseUser": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_]{2,31}$"
+        },
+        "databasePassword": {
+          "type": "string",
+          "pattern": "^[A-Fa-f0-9]{32,128}$"
+        },
+        "jwtAccessTokenSecret": { "type": "string", "minLength": 32 },
+        "jwtRefreshTokenSecret": { "type": "string", "minLength": 32 },
+        "internalServiceToken": { "type": "string", "minLength": 32 }
+      }
+    }
+  }
+}

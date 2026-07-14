@@ -1,0 +1,20 @@
+image:
+  reference: buildsphere/phase10-postgres:phase10-local
+  pullPolicy: Never
+
+runtimeSecret:
+  name: buildsphere-runtime
+  databaseName: ""
+  databaseUser: ""
+  databasePassword: ""
+  jwtAccessTokenSecret: ""
+  jwtRefreshTokenSecret: ""
+  internalServiceToken: ""
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi

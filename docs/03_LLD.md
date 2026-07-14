@@ -253,6 +253,53 @@ BS-801 inspection and planning remain non-executing. BS-802/BS-803 execution
 is unavailable unless runtime policy is complete, supports development targets
 by default, and never runs Terraform or Helm.
 
+# Phase 10 production packaging
+
+Phase 10 packages BuildSphere itself rather than changing generated project
+artifacts.
+
+Container modules:
+
+- `infrastructure/docker/Dockerfile.backend` builds one selected workspace
+  service and its workspace dependencies, then creates a production-only
+  deploy directory.
+- `infrastructure/docker/Dockerfile.frontend` compiles the Vite application
+  with `VITE_API_URL=/api` and serves it from a non-root web runtime.
+- `BUILDSPHERE_ROOT` points flattened service images to packaged templates,
+  prompts, and SQL migrations without depending on the monorepo directory
+  depth.
+
+Helm modules:
+
+- A shared ConfigMap contains only non-secret service URLs and feature flags.
+- An operator-created Secret supplies `DATABASE_URL`, JWT secrets, the internal
+  service token, and optional provider or Kubernetes encryption values.
+- One Deployment and ClusterIP Service are rendered for each backend plus the
+  frontend.
+- A pre-install/pre-upgrade Job runs the existing advisory-locked migration
+  runner.
+- Optional ingress routes `/api` to API Gateway and `/` to the frontend.
+- Pod security contexts, health probes, termination grace periods, and resource
+  bounds are applied consistently.
+
+## Sequence: package and deploy BuildSphere
+
+```text
+CI -> PNPM: frozen install, lint, build, and test
+CI -> Docker: build selected backend and frontend images without push
+CI -> Helm: lint and render chart with safe defaults
+Operator -> Registry: publish reviewed immutable image tags
+Operator -> Kubernetes: create runtime Secret out of band
+Operator -> Helm: install or upgrade the BuildSphere chart
+Helm hook -> PostgreSQL: run idempotent migrations
+Kubernetes -> Workloads: start and check /health or /healthz probes
+Ingress -> Frontend/API Gateway: route one public origin
+```
+
+Phase 10 does not provision PostgreSQL, a registry, DNS, certificates, cloud
+infrastructure, or external secrets. Those remain operator prerequisites and
+later production-hardening work.
+
 # Logging Service
 
 Responsibilities:

@@ -1,11 +1,11 @@
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import {
   createLogger,
   HttpNotificationPublisher,
   loadEnvironment,
   registerGracefulShutdown,
   requiredEnvironment,
+  resolveBuildSphereRoot,
 } from "@buildsphere/service-core";
 import { createProjectApp } from "./app.js";
 import { HttpDeliveryCoordinator } from "./delivery-coordinator.js";
@@ -15,12 +15,7 @@ import {
   PostgresProjectRepository,
 } from "./repository.js";
 
-const repoRoot = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "..",
-  "..",
-  "..",
-);
+const repoRoot = resolveBuildSphereRoot(import.meta.url);
 loadEnvironment(path.join(repoRoot, ".env"));
 const serviceName = process.env.SERVICE_NAME ?? "project-service";
 const port = Number(process.env.PORT ?? 8082);

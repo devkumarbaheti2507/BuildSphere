@@ -1,40 +1,50 @@
 # BuildSphere Project Context
 
-BuildSphere is an AI-assisted Developer Experience Platform for designing, generating, deploying, observing, and improving microservice applications.
+BuildSphere is an AI-assisted Developer Experience Platform for designing,
+generating, deploying, observing, and improving microservice applications.
 
 Current implementation status:
 
-- Phases 0-9 are implemented. BS-801 inspection/preflight, BS-802 approved
-  execution, and BS-803 status/rollback are complete.
-- Local and GitHub App authentication, project repository publishing, GitHub Actions synchronization, projects, generation, pipelines, logs, suggestions, deployment targets, monitoring, notifications, and frontend workflows are present.
-- Frozen dependency installation, lint, production builds, and automated tests pass.
-- Memory and PostgreSQL gateway smoke workflows pass.
-- Live migration, persistence after restart, and desktop/mobile browser verification are complete.
-- Phase 6 migrations, PostgreSQL provider persistence, token rotation, workflow-run upserts, and cleanup pass with provider doubles.
-- Phase 7 adds selection-aware generation and optional Helm chart packaging for
-  Kubernetes projects without performing cluster operations.
-- Phase 7 strict Helm lint/template rendering and its PostgreSQL persistence
-  checks pass.
-- Phase 8 adds optional, disabled-by-default AWS EKS Terraform generation with
-  exact VPC/EKS module pins, a Kubernetes dependency, generated static CI
-  checks, and no cloud execution authority.
-- Phase 9 adds official-client kubeconfig inspection, redacted targets, offline
-  plans, explicit AES-256-GCM credential retention, immutable-artifact
-  approvals, idempotent ownership-checked server-side apply, durable rollout
-  summaries, and bounded rollback.
-- Checksum-verified Terraform v1.15.8 format/init-without-backend/validate, the
-  26-file PostgreSQL gateway smoke with a four-resource plan, all 59 tests, and
-  the Phase 6 and Phase 9 PostgreSQL verifiers pass.
-- A real disposable kind workflow passed two releases, healthy status,
-  rollback, ownership-matched pruning, and credential revocation; the cluster
-  was deleted afterward.
+- Phases 0-10 are complete. Phase 9 provides inspected/planned/approved
+  Kubernetes apply, durable status, and bounded rollback. Phase 10 packages
+  BuildSphere itself for controlled staging.
+- Local and GitHub App authentication, project repository publishing, GitHub
+  Actions synchronization, projects, generation, pipelines, logs, suggestions,
+  deployment targets, monitoring, notifications, and frontend workflows are
+  implemented.
+- Selection-aware generation supports raw Kubernetes, optional Helm, and
+  disabled-by-default AWS EKS Terraform source.
+- Ten backend services share one monorepo-aware production Dockerfile. The
+  frontend uses a separate non-root Nginx image. All 11 images pass hardened
+  local health smoke checks.
+- `infrastructure/helm/buildsphere` deploys all 11 components, references an
+  external Secret and PostgreSQL, runs pre-install/pre-upgrade migrations, and
+  applies non-root/read-only/probe/resource safeguards.
+- Helm v4.2.3 strict and structural validation passes for 38 rendered resources
+  with zero Secrets and deployment execution disabled by default.
+- A checksum-verified kind v0.31.0 / Kubernetes v1.34.3 workflow passed seven
+  migrations, 11 ready Deployments, frontend/API/database Helm tests, upgrade,
+  repeated migration/test, and cleanup.
+- Frozen installation, zero-warning lint, all production builds, and all 61
+  automated tests pass.
+- The 26-file gateway smoke, migrations 001-007, Phase 6 and Phase 9 PostgreSQL
+  verifiers, Terraform v1.15.8 static validation, and the Phase 9 real
+  Kubernetes apply/status/rollback/prune/revocation regression remain green.
 - Database-backed services use a shared idempotent graceful-shutdown helper.
 
 Primary goal now:
 
-Select and specify the next post-Phase 9 milestone before implementing it.
-Current candidates are Jenkins integration, cost estimation, collaboration, or
-external AI/observability work; none is yet an approved Phase 10 ticket.
+Select and specify the first post-Phase 10 production-hardening milestone.
+Likely work includes image registry/signing/scanning, external-secret and
+database operations, network policy, autoscaling/high availability,
+observability/SLOs, backups/disaster recovery, and release certification. None
+is an approved Phase 11 ticket yet.
+
+Important boundary:
+
+Phase 10 is staging-deployable packaging, not a production operating model. CI
+does not push images or deploy. No external cluster, cloud account, production
+Secret, registry, remote state, or production resource has been modified.
 
 Learning pack:
 
@@ -45,10 +55,9 @@ Learning pack:
 Default stack:
 
 - React + Vite + TypeScript frontend.
-- Node.js + TypeScript backend services.
+- Node.js + TypeScript + Express backend services.
 - PostgreSQL for durable data.
-- Redis for cache and future lightweight queues.
-- Docker for local infrastructure.
-- GitHub Actions for CI.
-- Kubernetes manifests, optional Helm charts, and optional AWS EKS Terraform
-  source for deployment and infrastructure configuration.
+- Docker/Compose for local infrastructure and production images.
+- GitHub Actions for CI and no-push image builds.
+- Kubernetes and Helm for controlled deployment packaging.
+- Optional generated AWS EKS Terraform source with no apply authority.

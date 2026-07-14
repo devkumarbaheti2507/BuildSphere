@@ -6,7 +6,7 @@
 | Version           | 0.1.0                    |
 | Status            | Draft                    |
 | Author            | BuildSphere Team         |
-| Last Updated      | 2026-07-11               |
+| Last Updated      | 2026-07-14               |
 | Related Documents | 01_SRS.md, 13_BACKLOG.md |
 
 ---
@@ -313,13 +313,65 @@ Phase 9 completion verification outcome:
 - No production cluster, cloud account, Helm release, Terraform plan/apply, or
   remote state was touched.
 
-# Post-Phase 9 candidates
+# Phase 10: BuildSphere production deployment baseline
+
+Status: Complete as of 2026-07-14.
+
+Goal: Package BuildSphere itself as reproducible, non-root containers and a
+safe Helm release suitable for controlled staging verification.
+
+Completed slices:
+
+1. BS-1001 (complete 2026-07-14): monorepo-aware production backend images and
+   a production frontend image.
+2. BS-1002 (complete 2026-07-14): BuildSphere-owned Helm chart, external
+   runtime secret contract, migration hook, services, probes, and optional TLS
+   ingress.
+3. BS-1003 (complete 2026-07-14): structured packaging verification, CI
+   image-build gates, and full Phase 0-9 regression coverage.
+
+Exit criteria:
+
+- Every backend service and the frontend has a buildable production image.
+- Images run as non-root users and contain no `.env`, source-control metadata,
+  development dependency set, or embedded credentials.
+- Helm strict lint and structured render verification pass.
+- The chart renders all platform workloads with external secrets/database,
+  migration, probes, resource bounds, and deployment execution disabled.
+- No-push Docker builds and a disposable-cluster staging smoke pass when the
+  required local tooling is available.
+- Existing tests, PostgreSQL verifiers, Terraform validation, and gateway smoke
+  remain green.
+- No external cluster, registry, cloud account, or production secret is
+  modified.
+
+Verification outcome:
+
+- All ten backend images and the frontend build and pass non-root,
+  read-only-root local health smoke checks.
+- Helm v4.2.3 strict lint and structural verification pass for 38 resources,
+  including all 11 workloads, a migration hook, a Helm test, 13 token-disabled
+  ServiceAccounts, and zero Secrets.
+- A checksum-matched kind v0.31.0 cluster using the pinned Kubernetes v1.34.3
+  node image passed install, all seven migrations, 11 ready Deployments,
+  frontend/API/database tests, upgrade, repeated migrations, and a second test.
+  The cluster and random test-only credentials were deleted.
+- Frozen installation, zero-warning lint, all production builds, all 61 tests,
+  the complete gateway smoke, Phase 6 and Phase 9 PostgreSQL verifiers,
+  Terraform v1.15.8 static validation, and the Phase 9 disposable-cluster
+  apply/status/rollback flow remain green.
+- CI validates the chart and builds all 11 images without registry login or
+  push. No external cluster, cloud account, production Secret, or production
+  resource was contacted.
+
+# Post-Phase 10 candidates
 
 These items require separate specifications and backlog milestones:
 
 - Jenkins integration.
 - Cost estimation.
 - Team collaboration.
+- Production security, reliability, observability, and release certification.
 
 # Recommended first implementation order for Codex
 

@@ -1,10 +1,10 @@
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import {
   createLogger,
   loadEnvironment,
   registerGracefulShutdown,
   requiredEnvironment,
+  resolveBuildSphereRoot,
 } from "@buildsphere/service-core";
 import { createAuthApp } from "./app.js";
 import { HttpGitHubApiClient } from "./github-api.js";
@@ -19,12 +19,7 @@ import {
 } from "./repository.js";
 
 const serviceName = process.env.SERVICE_NAME ?? "auth-service";
-const repoRoot = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "..",
-  "..",
-  "..",
-);
+const repoRoot = resolveBuildSphereRoot(import.meta.url);
 loadEnvironment(path.join(repoRoot, ".env"));
 
 const port = Number(process.env.PORT ?? 8081);

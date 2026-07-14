@@ -6,7 +6,7 @@
 | Version           | 0.1.0                |
 | Status            | Draft                |
 | Author            | BuildSphere Team     |
-| Last Updated      | 2026-07-11           |
+| Last Updated      | 2026-07-14           |
 | Related Documents | 01_SRS.md, 03_LLD.md |
 
 ---
@@ -81,8 +81,9 @@ pnpm -r test
 Future additions:
 
 - Coverage reports.
-- Docker build checks.
 - Security scan.
+- Signed image publication.
+- Approved staging deployment.
 
 # MVP smoke test
 
@@ -198,7 +199,7 @@ Phase 9 BS-802/BS-803 completion verified on 2026-07-11:
   confirms one credential, three approvals, three operations, exact replay,
   serialized simultaneous same-key replay, prior-release resolution,
   active-release restoration, and cascade cleanup. `npm run
-  smoke:phase6:postgres` remains green.
+smoke:phase6:postgres` remains green.
 - The full gateway smoke passes with 26 generated files, seven stages, 14 logs,
   one suggestion, a four-resource plan, zero operations while execution is
   disabled, eight monitored services, four notifications, and persisted read
@@ -218,3 +219,32 @@ Phase 9 BS-802/BS-803 completion verified on 2026-07-11:
   requests.
 - No production or cloud resource was contacted. No Helm command, Terraform
   plan/apply/destroy, AWS request, or remote-state operation occurred.
+
+Phase 10 production packaging completed and verified on 2026-07-14:
+
+- Frozen installation, zero-warning lint, every production build, and all 61
+  automated tests pass. Service Core contributes two new runtime-root tests.
+- Helm v4.2.3 strict lint and structural parsing pass for 38 rendered resources:
+  11 Deployments, 11 Services, 13 ServiceAccounts, one migration Job, one test
+  Pod, and zero Secrets. Invalid `latest` tags and incomplete execution policy
+  fail rendering.
+- All ten backend images and the frontend image build from the repository root.
+  Each starts as a declared non-root user under read-only-root,
+  dropped-capability, no-privilege-escalation smoke restrictions and reaches
+  its health check.
+- A checksum-matched kind v0.31.0 binary with the pinned Kubernetes v1.34.3
+  node image installed the chart against an ephemeral PostgreSQL 16 fixture.
+  All seven migrations applied and all 11 Deployments became ready.
+- The Helm test passed from inside the namespace by checking frontend
+  `/healthz`, API Gateway to Auth Service provider routing, and exactly seven
+  `schema_migrations` records.
+- A Helm upgrade reran the idempotent pre-upgrade migration hook, reached
+  revision two, and passed the same test again. The cluster and random
+  test-only credentials were deleted afterward.
+- Cross-phase verification remained green: the 26-file gateway smoke, Phase 6
+  and Phase 9 PostgreSQL verifiers, Terraform v1.15.8
+  format/init-without-backend/validate, and the Phase 9 real Kubernetes
+  apply/status/rollback/prune/revocation flow.
+- CI now runs chart verification and no-push builds for all 11 images. No
+  registry, external cluster, cloud account, production Secret, Terraform
+  state, or production resource was modified.

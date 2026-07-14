@@ -6,7 +6,7 @@
 | Version           | 0.1.0                                    |
 | Status            | Draft                                    |
 | Author            | BuildSphere Team                         |
-| Last Updated      | 2026-07-11                               |
+| Last Updated      | 2026-07-14                               |
 | Related Documents | 00_PROJECT_VISION.md, 02_HLD.md, specs/* |
 
 ---
@@ -292,6 +292,36 @@ Acceptance criteria:
 - Namespace and cluster-scoped deletion is never performed by rollback.
 - Success, failure, and rollback results are persisted and published through
   the existing notification workflow.
+
+## FR-019 BuildSphere production deployment packaging
+
+BuildSphere shall package its own frontend and backend services for a
+controlled Kubernetes staging deployment without provisioning a cloud account
+or embedding runtime secrets.
+
+Acceptance criteria:
+
+- One reviewed monorepo-aware backend image definition can build every backend
+  service with production dependencies only.
+- The frontend is compiled with a same-origin API path and served by a
+  non-root, read-only production web container with SPA routing and a health
+  endpoint.
+- A BuildSphere-owned Helm chart deploys the frontend, API Gateway, every
+  backend service, internal services, and a pre-upgrade database migration job.
+- The chart references an operator-created Kubernetes Secret and an external
+  PostgreSQL endpoint; it never renders credentials or a database password.
+- Workloads use dedicated service accounts, disabled service-account token
+  mounting, non-root security contexts, read-only root filesystems, health
+  probes, resource requests/limits, and graceful termination settings.
+- Ingress and TLS are configurable. Browser API calls use `/api` so frontend
+  and API traffic can share one public origin.
+- Kubernetes deployment execution remains disabled by default and fails chart
+  validation when enabled without an explicit host and environment policy.
+- CI performs frozen installation, lint, builds, tests, Helm lint/render
+  verification, and no-push container builds.
+- Phase 0-9 regression verification remains green.
+- Phase 10 does not push images, create secrets, provision cloud resources, or
+  deploy to an external production cluster.
 
 # Non-functional requirements
 

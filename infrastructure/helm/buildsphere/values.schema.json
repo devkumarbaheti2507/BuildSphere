@@ -1,0 +1,131 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "publicUrl",
+    "image",
+    "runtime",
+    "resources",
+    "probes",
+    "migration",
+    "ingress",
+    "deploymentExecution"
+  ],
+  "properties": {
+    "publicUrl": {
+      "type": "string",
+      "format": "uri",
+      "pattern": "^https?://"
+    },
+    "image": {
+      "type": "object",
+      "required": ["repositoryPrefix", "tag", "pullPolicy"],
+      "properties": {
+        "repositoryPrefix": { "type": "string", "minLength": 1 },
+        "tag": {
+          "type": "string",
+          "minLength": 1,
+          "not": { "const": "latest" }
+        },
+        "pullPolicy": {
+          "type": "string",
+          "enum": ["Always", "IfNotPresent", "Never"]
+        },
+        "pullSecrets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "required": ["existingSecret", "logLevel", "pipelineStageDelayMs"],
+      "properties": {
+        "existingSecret": { "type": "string", "minLength": 1 },
+        "logLevel": {
+          "type": "string",
+          "enum": ["fatal", "error", "warn", "info", "debug", "trace", "silent"]
+        },
+        "pipelineStageDelayMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        }
+      }
+    },
+    "replicaCount": { "type": "integer", "minimum": 1, "maximum": 10 },
+    "terminationGracePeriodSeconds": {
+      "type": "integer",
+      "minimum": 10,
+      "maximum": 300
+    },
+    "deploymentExecution": {
+      "type": "object",
+      "required": [
+        "enabled",
+        "allowedServerHosts",
+        "allowedEnvironments",
+        "approvalTtlSeconds",
+        "requestTimeoutMs",
+        "operationTimeoutMs",
+        "maxAttempts"
+      ],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "allowedServerHosts": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^(\\[[0-9A-Fa-f:.]+\\]|[A-Za-z0-9.-]+):[0-9]{1,5}$"
+          },
+          "uniqueItems": true
+        },
+        "allowedEnvironments": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["development", "staging", "production"]
+          },
+          "uniqueItems": true,
+          "minItems": 1
+        },
+        "approvalTtlSeconds": {
+          "type": "integer",
+          "minimum": 60,
+          "maximum": 900
+        },
+        "requestTimeoutMs": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 30000
+        },
+        "operationTimeoutMs": {
+          "type": "integer",
+          "minimum": 5000,
+          "maximum": 300000
+        },
+        "maxAttempts": { "type": "integer", "minimum": 1, "maximum": 3 }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "enabled": { "const": true } },
+            "required": ["enabled"]
+          },
+          "then": {
+            "properties": {
+              "allowedServerHosts": { "minItems": 1 },
+              "allowedEnvironments": { "minItems": 1 }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

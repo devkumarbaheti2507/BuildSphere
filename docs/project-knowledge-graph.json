@@ -1,12 +1,12 @@
 {
   "schemaVersion": "1.0.0",
-  "snapshotDate": "2026-07-11",
+  "snapshotDate": "2026-07-14",
   "project": {
     "id": "buildsphere",
     "name": "BuildSphere",
     "version": "0.1.0",
     "kind": "AI-assisted Developer Experience Platform",
-    "status": "Phases 0-9 complete with controlled Kubernetes apply, status, and rollback live-validated",
+    "status": "Phases 0-10 complete with controlled Kubernetes execution and platform deployment packaging live-validated locally",
     "primaryAudience": [
       "learning developer",
       "backend or DevOps portfolio builder",
@@ -33,7 +33,7 @@
       "type": "product",
       "name": "BuildSphere",
       "status": "implemented",
-      "description": "Guided platform for project configuration, selection-aware DevOps, Helm, disabled AWS EKS Terraform generation, controlled Kubernetes deployment, explainable delivery workflows, recommendations, validation, and GitHub integration.",
+      "description": "Guided platform for project configuration, selection-aware DevOps, Helm, disabled AWS EKS Terraform generation, controlled Kubernetes deployment, explainable delivery workflows, recommendations, validation, GitHub integration, and locally verified production packaging.",
       "evidence": ["README.md", "docs/00_PROJECT_VISION.md"]
     },
     {
@@ -646,8 +646,12 @@
       "type": "technology",
       "name": "Helm",
       "status": "implemented",
-      "reason": "Packages generated Kubernetes workloads as configurable chart source without cluster access.",
-      "evidence": ["specs/HELM_SPEC.md", "templates/helm/"]
+      "reason": "Packages generated Kubernetes workloads as chart source and packages BuildSphere itself for controlled staging.",
+      "evidence": [
+        "specs/HELM_SPEC.md",
+        "templates/helm/",
+        "infrastructure/helm/buildsphere/"
+      ]
     },
     {
       "id": "technology.terraform",
@@ -681,6 +685,55 @@
       "id": "future.collaboration",
       "type": "future_candidate",
       "name": "Team collaboration",
+      "status": "future"
+    },
+    {
+      "id": "capability.production_images",
+      "type": "capability",
+      "name": "BuildSphere production images",
+      "status": "implemented",
+      "description": "Ten monorepo-aware backend images and one same-origin Nginx frontend image with non-root runtime and health contracts.",
+      "evidence": [
+        "infrastructure/docker/Dockerfile.backend",
+        "infrastructure/docker/Dockerfile.frontend",
+        "scripts/verify-phase10-images.sh"
+      ]
+    },
+    {
+      "id": "capability.platform_helm_release",
+      "type": "capability",
+      "name": "BuildSphere platform Helm release",
+      "status": "implemented",
+      "description": "Hardened 11-workload chart with external secrets and PostgreSQL, migration hooks, probes, resources, optional ingress, and Helm tests.",
+      "evidence": [
+        "infrastructure/helm/buildsphere/",
+        "specs/PRODUCTION_DEPLOYMENT_SPEC.md",
+        "docs/adr/ADR-012-Production-Packaging.md"
+      ]
+    },
+    {
+      "id": "workflow.phase10_packaging_verification",
+      "type": "workflow",
+      "name": "Phase 10 packaging verification",
+      "status": "implemented",
+      "description": "Strict chart parsing, hardened image smoke, and disposable install-test-upgrade-test with seven migrations and 11 ready workloads.",
+      "evidence": [
+        "scripts/verify-phase10-packaging.mjs",
+        "scripts/smoke-phase10-images.sh",
+        "scripts/verify-phase10-kind.sh"
+      ]
+    },
+    {
+      "id": "boundary.external_production_dependencies",
+      "type": "boundary",
+      "name": "External production dependencies",
+      "status": "prepared",
+      "description": "Registry, PostgreSQL operations, runtime Secret lifecycle, ingress, DNS, TLS, and external cluster authority remain operator-owned."
+    },
+    {
+      "id": "future.production_hardening",
+      "type": "future_candidate",
+      "name": "Production hardening and release certification",
       "status": "future"
     }
   ],
@@ -1314,6 +1367,56 @@
       "from": "product.buildsphere",
       "relation": "may_evolve_to",
       "to": "future.collaboration"
+    },
+    {
+      "from": "product.buildsphere",
+      "relation": "packaged_as",
+      "to": "capability.production_images"
+    },
+    {
+      "from": "capability.production_images",
+      "relation": "built_with",
+      "to": "technology.docker"
+    },
+    {
+      "from": "product.buildsphere",
+      "relation": "deployable_through",
+      "to": "capability.platform_helm_release"
+    },
+    {
+      "from": "capability.platform_helm_release",
+      "relation": "uses",
+      "to": "technology.helm"
+    },
+    {
+      "from": "capability.platform_helm_release",
+      "relation": "targets",
+      "to": "technology.kubernetes"
+    },
+    {
+      "from": "capability.platform_helm_release",
+      "relation": "requires",
+      "to": "store.postgresql"
+    },
+    {
+      "from": "capability.platform_helm_release",
+      "relation": "externalizes",
+      "to": "boundary.external_production_dependencies"
+    },
+    {
+      "from": "workflow.phase10_packaging_verification",
+      "relation": "verifies",
+      "to": "capability.production_images"
+    },
+    {
+      "from": "workflow.phase10_packaging_verification",
+      "relation": "verifies",
+      "to": "capability.platform_helm_release"
+    },
+    {
+      "from": "product.buildsphere",
+      "relation": "may_evolve_to",
+      "to": "future.production_hardening"
     }
   ],
   "generatedArtifact": {
@@ -1361,15 +1464,15 @@
     "validate_kubernetes_manifests"
   ],
   "verification": {
-    "automatedTests": 59,
-    "testFiles": 19,
+    "automatedTests": 61,
+    "testFiles": 20,
     "gates": [
       "pnpm install --frozen-lockfile",
       "pnpm lint",
       "pnpm -r build",
       "pnpm -r test",
       "Phase 7 memory gateway smoke with 17 generated files",
-      "Helm v4.2.2 strict lint and template rendering",
+      "Helm v4.2.3 strict lint and structural rendering for 38 resources with zero Secrets",
       "Phase 7 PostgreSQL gateway smoke with restart persistence",
       "Terraform v1.15.8 format, backend-disabled initialization, exact module resolution, and static validation",
       "Phase 8 PostgreSQL gateway smoke with 26 generated files and restart persistence",
@@ -1379,6 +1482,8 @@
       "PostgreSQL notification read persistence and desktop/mobile individual plus bulk read interactions",
       "Phase 9 kubeconfig redaction, four-resource offline plan, PostgreSQL credential/approval/operation verification, and desktop/mobile deployment workflow",
       "disposable kind two-release apply, healthy status, rollback, ownership-matched prune, credential revocation, and cluster cleanup",
+      "all 11 production image builds and hardened non-root health smoke",
+      "disposable kind platform install with seven migrations, 11 ready Deployments, Helm test, upgrade, repeated migration/test, and cleanup",
       "live GitHub OAuth, private repository publication, successful Actions synchronization, and no-op republish"
     ]
   },
@@ -1386,14 +1491,15 @@
     "Generated output is delivery/configuration scaffolding, not a complete application source tree.",
     "The internal pipeline is simulated.",
     "Kubernetes execution is opt-in, raw-manifest only, and intended for explicitly allowlisted non-production targets; BuildSphere is not a production cluster control plane.",
-    "Helm charts are linted and rendered locally but are not installed or validated against a live Kubernetes cluster.",
+    "Generated user-project Helm charts are not installed; BuildSphere's own platform chart is validated only against disposable local kind.",
     "Terraform is formatted and statically validated with its backend disabled, but BuildSphere does not run plan, apply, destroy, state operations, AWS calls, or own remote state.",
     "External AI provider calls are not implemented.",
     "Redis, MinIO, and MailHog are not consumed by active services.",
     "Artifacts are stored in PostgreSQL JSONB rather than object storage.",
     "Analytics Service is health-only.",
     "GitHub disconnect, organization SSO, workflow control, and log archive UI are out of scope.",
-    "Rate limiting, general security audit events, full RBAC, and production secret management are future hardening."
+    "Rate limiting, general security audit events, full RBAC, and production secret management are future hardening.",
+    "Phase 10 does not provide registry promotion, image signing/scanning, external Secret operations, database HA/backups, network policy, autoscaling, SLOs, or production release certification."
   ],
   "sourceMap": {
     "productAndRequirements": [
@@ -1423,6 +1529,8 @@
     "operationsAndEvidence": [
       "docker-compose.dev.yml",
       ".github/workflows/ci.yml",
+      "infrastructure/docker/",
+      "infrastructure/helm/buildsphere/",
       "scripts/",
       "docs/11_TESTING.md",
       "memory/"

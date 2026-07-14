@@ -6,18 +6,20 @@
 | Version           | 0.1.0                    |
 | Status            | Draft                    |
 | Author            | BuildSphere Team         |
-| Last Updated      | 2026-07-11               |
+| Last Updated      | 2026-07-14               |
 | Related Documents | 02_HLD.md, 12_ROADMAP.md |
 
 ---
 
 # Purpose
 
-This document defines how BuildSphere itself is built, tested, containerized, and deployed.
+This document defines how BuildSphere itself is built, tested, containerized,
+and prepared for controlled deployment. Generated project assets have separate
+contracts under `templates/` and `specs/`.
 
 # Local development
 
-Use PNPM workspaces.
+Use Node.js 22 and PNPM workspaces:
 
 ```bash
 corepack enable
@@ -25,128 +27,166 @@ pnpm install
 pnpm -r build
 ```
 
-Start dependencies:
+Start local dependencies and apply migrations:
 
 ```bash
 docker compose -f docker-compose.dev.yml up -d
+pnpm db:migrate
 ```
 
-Start services:
+Start the application:
 
 ```bash
 pnpm -r --parallel dev
 ```
 
-# CI/CD for BuildSphere
+# CI for BuildSphere
 
-GitHub Actions workflow:
+`.github/workflows/ci.yml` runs:
 
-- Checkout code.
-- Setup Node.
-- Enable Corepack.
-- Install dependencies.
-- Build packages.
-- Run tests.
+1. Frozen dependency installation.
+2. Zero-warning lint.
+3. Production builds.
+4. All workspace tests.
+5. Helm strict lint and structured chart verification.
+6. No-push builds for all ten backend images and the frontend image.
 
-Future workflow:
+CI has read-only repository contents permission. Phase 10 does not configure a
+registry login, image push, signing key, Kubernetes credential, or deployment
+job.
 
-- Lint.
-- Type check.
-- Unit tests.
-- Integration tests.
-- Docker image build.
-- Vulnerability scan.
-- Push images.
-- Deploy to staging Kubernetes.
+# Production container baseline
 
-# Docker strategy
+BuildSphere uses one parameterized backend Dockerfile and one frontend
+Dockerfile under `infrastructure/docker/`.
 
-Every backend service should have its own Dockerfile.
+Backend image guarantees:
 
-Minimum container requirements:
+- Repository-root build context for PNPM `workspace:*` dependencies.
+- Fixed allowlist of ten service names.
+- Frozen install, dependency-ordered TypeScript build, and production-only
+  `pnpm deploy` output.
+- Explicit `BUILDSPHERE_ROOT=/app` for templates, prompts, and migrations.
+- Non-root runtime user, service-specific port, and `/health` check.
+- No `.env`, VCS metadata, source workspace dependencies, caches, or previous
+  build output from the host.
 
-- Uses environment variables.
-- Exposes service port.
-- Has health endpoint.
-- Avoids committed secrets.
+Frontend image guarantees:
 
-# Kubernetes strategy
+- Compiled same-origin `/api` base.
+- Non-root Nginx on port 8080.
+- `/healthz`, SPA fallback, immutable asset caching, and browser security
+  headers.
+- Read-only-root compatibility through memory-backed `/tmp` paths.
 
-BuildSphere includes raw templates under `templates/kubernetes/` and optional
-Helm chart source under `templates/helm/`. Optional AWS EKS infrastructure
-source lives under `templates/terraform/aws-eks-basic/`.
+Build and smoke all images locally:
 
-Future BuildSphere deployment will use:
+```bash
+pnpm verify:phase10:images
+```
 
-- Namespace.
-- Deployment per service.
-- Service per service.
-- Ingress for API gateway and frontend.
-- ConfigMaps for non-secret config.
-- Secrets managed externally.
+# BuildSphere Helm release
 
-# Observability
+`infrastructure/helm/buildsphere/` deploys API Gateway, Auth, Project,
+Pipeline, Deployment, Monitoring, Logging, AI, Analytics, Notification, and
+Frontend.
 
-MVP:
+The chart provides:
 
-- Structured logs.
-- Health endpoints.
+- One Deployment and Service per component.
+- Dedicated ServiceAccounts with token mounting disabled.
+- Non-secret ConfigMap values and one external Secret reference.
+- A pre-install/pre-upgrade migration Job.
+- Non-root and read-only security contexts, seccomp, dropped capabilities,
+  resource requests/limits, probes, graceful termination, and writable `/tmp`.
+- Optional host-based ingress with `/api` routed before `/` and an
+  operator-owned TLS Secret.
+- A Helm test that checks frontend health, API routing, and seven applied
+  migrations.
 
-Future:
+The chart does not install PostgreSQL, Redis, MinIO, MailHog, ingress,
+cert-manager, monitoring, or a Secret. Operators must create the namespace and
+runtime Secret before install because migrations run as a pre-install hook.
 
-- Prometheus metrics.
-- Grafana dashboards.
-- Centralized logs.
-- Distributed tracing.
+Validate chart structure:
+
+```bash
+HELM_BIN=/path/to/helm pnpm verify:phase10
+```
+
+Run the complete local install and upgrade gate:
+
+```bash
+pnpm verify:phase10:images
+KIND_BIN=/path/to/kind HELM_BIN=/path/to/helm pnpm verify:phase10:kind
+```
+
+The verifier creates and deletes its own kind cluster. It installs an ephemeral
+PostgreSQL fixture and random test-only Secret, runs migration/install/test,
+runs migration/upgrade/test again, and leaves no cluster behind.
+
+# Runtime configuration
+
+Production deployments obtain non-secret service URLs and feature policy from
+the chart ConfigMap. Credential values come from the external Secret. Required
+keys are:
+
+```text
+DATABASE_URL
+JWT_ACCESS_TOKEN_SECRET
+JWT_REFRESH_TOKEN_SECRET
+INTERNAL_SERVICE_TOKEN
+```
+
+GitHub credentials are optional unless GitHub integration is enabled.
+Kubernetes execution remains disabled by default. Enabling it requires the
+dedicated encryption key plus non-empty exact API server and environment
+allowlists.
 
 # Generated DevOps assets
 
-BuildSphere will generate:
+BuildSphere can generate:
 
-- Dockerfile.
-- Docker Compose file.
-- GitHub Actions workflow.
-- Kubernetes deployment.
-- Kubernetes service.
-- Kubernetes ingress.
-- Optional Helm chart metadata, values, workload templates, and install notes.
-- Optional disabled AWS EKS Terraform root module with VPC, managed node group,
-  access, output, example-value, state, and operator files.
-- README instructions.
+- Dockerfile and Docker Compose source.
+- GitHub Actions workflows.
+- Raw Kubernetes resources.
+- Optional Helm source.
+- Optional disabled AWS EKS Terraform source.
+- Operator guidance.
 
-Generated charts are packaging assets only. BuildSphere does not run Helm
-install, upgrade, rollback, or uninstall commands in Phase 7.
+Generated Helm charts are source artifacts. Phase 9 executes constrained raw
+manifests only and never invokes Helm. Generated Terraform remains limited to
+format, backend-disabled initialization, and static validation. BuildSphere
+does not run Terraform plan, apply, destroy, import, or state commands.
 
-Generated Terraform is infrastructure source only. BuildSphere and generated
-CI may run formatting, `terraform init -backend=false`, and static validation.
-They do not run plan, apply, destroy, import, or state operations, do not own a
-remote backend, and do not receive AWS credentials in Phase 8.
+# Observability
 
-Phase 9 BS-801 inspection and planning remain offline and store only redacted
-connection metadata. BS-802/BS-803 add controlled raw-manifest apply, rollout
-observation, and bounded rollback, but the execution path is disabled by
-default. A development or test operator must set all of the following before
-Deployment Service exposes mutation actions:
+Current:
 
-```text
-KUBERNETES_EXECUTION_ENABLED=true
-KUBERNETES_CREDENTIAL_ENCRYPTION_KEY=<base64 encoded 32-byte key>
-KUBERNETES_ALLOWED_SERVER_HOSTS=127.0.0.1:6443
-KUBERNETES_ALLOWED_ENVIRONMENTS=development
-KUBERNETES_REQUEST_TIMEOUT_MS=10000
-KUBERNETES_OPERATION_TIMEOUT_MS=60000
-```
+- Structured JSON request logs.
+- Correlation IDs.
+- Health endpoints and Kubernetes probes.
+- Monitoring Service health aggregation and Prometheus-format metrics.
 
-The allowlist is exact and must contain only explicitly approved Kubernetes API
-servers. Production is not enabled by default. Phase 9 executes rendered raw
-manifests only; it does not invoke Helm or Terraform. Use a disposable local
-cluster for verification and revoke the target credential afterward.
+Future production work:
 
-# Environments
+- Centralized logs and retention.
+- Metrics scraping, dashboards, alerts, and SLOs.
+- Distributed tracing.
+- Deployment and infrastructure audit export.
 
-| Environment | Purpose                     |
-| ----------- | --------------------------- |
-| local       | Developer machine.          |
-| dev         | Shared development, future. |
-| staging     | Pre-production, future.     |
-| production  | Real users, future.         |
+# Environment status
+
+| Environment | Current purpose                                                         |
+| ----------- | ----------------------------------------------------------------------- |
+| local       | Developer runtime, Docker Compose, image smoke, and disposable kind.    |
+| dev         | Shared environment, not yet operated by this repository.                |
+| staging     | Chart-ready after external images, database, secrets, ingress, and TLS. |
+| production  | Not release-certified; later security and reliability work required.    |
+
+# Phase 10 boundaries
+
+Phase 10 creates deployable packaging but does not publish images, operate a
+registry, provision a cluster, manage production secrets, configure backups,
+install platform dependencies, or deploy externally. Any such action requires
+a separately approved release milestone and environment configuration.

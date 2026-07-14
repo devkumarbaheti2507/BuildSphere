@@ -1,0 +1,37 @@
+{{- $services := (include "buildsphere.backendServices" . | fromYaml).services -}}
+{{- range $service := $services }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "buildsphere.componentName" (dict "root" $ "component" $service.name) }}
+  labels:
+    {{- include "buildsphere.commonLabels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $service.name }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "buildsphere.selectorLabels" (dict "root" $ "component" $service.name) | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ $service.port }}
+      targetPort: http
+      protocol: TCP
+{{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "buildsphere.componentName" (dict "root" . "component" "frontend") }}
+  labels:
+    {{- include "buildsphere.commonLabels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "buildsphere.selectorLabels" (dict "root" . "component" "frontend") | nindent 4 }}
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP

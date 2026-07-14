@@ -1,15 +1,10 @@
 import { existsSync, promises as fs } from "node:fs";
-import path from "node:path";
 import process from "node:process";
-import { fileURLToPath } from "node:url";
+import path from "node:path";
 import { Pool, type PoolConfig } from "pg";
+import { resolveBuildSphereRoot } from "./config.js";
 
-const repoRoot = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "..",
-  "..",
-  "..",
-);
+const repoRoot = resolveBuildSphereRoot(import.meta.url);
 const environmentFile = path.join(repoRoot, ".env");
 if (existsSync(environmentFile)) {
   process.loadEnvFile(environmentFile);

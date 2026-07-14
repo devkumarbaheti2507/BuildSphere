@@ -1,0 +1,6 @@
+apiVersion: v2
+name: phase10-runtime
+description: Ephemeral PostgreSQL and Secret fixture for the BuildSphere Phase 10 kind test
+type: application
+version: 0.1.0
+appVersion: "16"

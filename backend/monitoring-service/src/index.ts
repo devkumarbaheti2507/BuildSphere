@@ -1,19 +1,15 @@
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import {
   createLogger,
   loadEnvironment,
+  registerGracefulShutdown,
   requiredEnvironment,
+  resolveBuildSphereRoot,
 } from "@buildsphere/service-core";
 import { createMonitoringApp } from "./app.js";
 import { HttpHealthChecker } from "./health-checker.js";
 
-const repoRoot = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "..",
-  "..",
-  "..",
-);
+const repoRoot = resolveBuildSphereRoot(import.meta.url);
 loadEnvironment(path.join(repoRoot, ".env"));
 const port = Number(process.env.PORT ?? 8085);
 const logger = createLogger(process.env.SERVICE_NAME ?? "monitoring-service");
@@ -51,8 +47,11 @@ const checker = new HttpHealthChecker([
     url: process.env.NOTIFICATION_SERVICE_URL ?? "http://localhost:8089",
   },
 ]);
-createMonitoringApp(
+const server = createMonitoringApp(
   checker,
   requiredEnvironment("JWT_ACCESS_TOKEN_SECRET"),
   logger,
 ).listen(port, () => logger.info({ port }, "Monitoring service listening"));
+registerGracefulShutdown(server, [], (error) =>
+  logger.error({ err: error }, "Graceful shutdown failed"),
+);

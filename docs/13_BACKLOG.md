@@ -6,7 +6,7 @@
 | Version           | 0.1.0                  |
 | Status            | Draft                  |
 | Author            | BuildSphere Team       |
-| Last Updated      | 2026-07-11             |
+| Last Updated      | 2026-07-14             |
 | Related Documents | 12_ROADMAP.md, specs/* |
 
 ---
@@ -484,3 +484,89 @@ deleted only the newly introduced ConfigMap, revoked the credential, and left
 no disposable cluster. All 59 tests, the full gateway smoke, Phase 6 and Phase 9
 PostgreSQL verifiers, Terraform validation, and desktop/mobile browser checks
 pass.
+
+# Phase 10 tickets
+
+## BS-1001: Build production service images
+
+Priority: High
+Milestone: Phase 10
+Status: Done
+
+Description:
+Replace the standalone service Docker stubs with reproducible images that
+understand the PNPM workspace and run only built production output.
+
+Acceptance criteria:
+
+- One backend Dockerfile builds all ten backend services by explicit build
+  argument and immutable service package name.
+- Workspace packages are built before a production-only deploy directory is
+  created.
+- The runtime is non-root, has a health check, preserves signal handling, and
+  includes only required templates, prompts, and migration assets.
+- The frontend uses a multi-stage build, same-origin `/api`, SPA fallback, and
+  a non-root read-only web runtime.
+- `.dockerignore` excludes secrets, VCS data, dependencies, build output, and
+  local caches.
+
+Verification outcome:
+All ten backend images and the frontend build from the repository root. Every
+image starts as a declared non-root user under read-only-root,
+no-privilege-escalation, dropped-capability smoke restrictions and reaches its
+health endpoint.
+
+## BS-1002: Package BuildSphere as a Helm release
+
+Priority: High
+Milestone: Phase 10
+Status: Done
+
+Description:
+Create the Helm chart used to deploy BuildSphere itself to a controlled
+Kubernetes staging namespace.
+
+Acceptance criteria:
+
+- The chart renders all ten backend Deployments/Services and the frontend.
+- A pre-install/pre-upgrade Job runs migrations with bounded retry behavior.
+- Runtime secrets and PostgreSQL remain external and no `Secret` resource is
+  rendered.
+- Workloads use non-root pod/container security, read-only root filesystems,
+  disabled service-account token mounting, probes, resources, and graceful
+  termination.
+- Optional ingress supports one host, `/api` routing, and operator-owned TLS.
+- Kubernetes execution defaults to disabled and requires explicit policy when
+  enabled.
+
+Verification outcome:
+Helm v4.2.3 strict lint and structural parsing pass for 11 Deployments, 11
+Services, 13 token-disabled ServiceAccounts, one pre-install/pre-upgrade
+migration Job, one test Pod, optional ingress, and zero rendered Secrets.
+
+## BS-1003: Verify production packaging and compatibility
+
+Priority: High
+Milestone: Phase 10
+Status: Done
+
+Description:
+Add deterministic local and CI verification for images and rendered Kubernetes
+resources while retaining all earlier regression gates.
+
+Acceptance criteria:
+
+- A verifier runs Helm strict lint and parses rendered YAML structurally.
+- CI runs frozen installation, lint, build, tests, packaging verification, and
+  no-push image builds.
+- Images start and answer their health endpoints in a local smoke environment.
+- A disposable-cluster chart install validates migration, rollout, routing,
+  and cleanup when Docker/kind are available.
+- Phase 0-9 verification remains green and no external deployment occurs.
+
+Verification outcome:
+The full workspace gate passes with 61 tests. Image smoke, the 38-resource
+packaging verifier, and a kind v0.31.0 install/test/upgrade/test cycle pass with
+all seven migrations and 11 ready Deployments. Gateway, Phase 6/Phase 9
+PostgreSQL, Terraform, and Phase 9 real-client regressions also pass. CI builds
+all images without push, and no external environment was modified.

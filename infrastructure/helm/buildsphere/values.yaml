@@ -1,0 +1,86 @@
+nameOverride: ""
+fullnameOverride: ""
+
+publicUrl: https://buildsphere.example.com
+
+image:
+  repositoryPrefix: ghcr.io/example/buildsphere
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+
+runtime:
+  existingSecret: buildsphere-runtime
+  logLevel: info
+  pipelineStageDelayMs: 700
+
+replicaCount: 1
+terminationGracePeriodSeconds: 30
+
+resources:
+  backend:
+    requests:
+      cpu: 50m
+      memory: 96Mi
+    limits:
+      cpu: 500m
+      memory: 384Mi
+  frontend:
+    requests:
+      cpu: 25m
+      memory: 32Mi
+    limits:
+      cpu: 250m
+      memory: 128Mi
+  migration:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+  test:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+probes:
+  startup:
+    failureThreshold: 30
+    periodSeconds: 2
+  readiness:
+    initialDelaySeconds: 2
+    periodSeconds: 10
+    timeoutSeconds: 2
+    failureThreshold: 3
+  liveness:
+    initialDelaySeconds: 15
+    periodSeconds: 20
+    timeoutSeconds: 2
+    failureThreshold: 3
+
+migration:
+  activeDeadlineSeconds: 300
+  backoffLimit: 3
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  host: buildsphere.example.com
+  tls:
+    enabled: true
+    secretName: buildsphere-tls
+
+deploymentExecution:
+  enabled: false
+  allowedServerHosts: []
+  allowedEnvironments:
+    - staging
+  approvalTtlSeconds: 300
+  requestTimeoutMs: 10000
+  operationTimeoutMs: 60000
+  maxAttempts: 3

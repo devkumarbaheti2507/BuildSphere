@@ -1,0 +1,16 @@
+BuildSphere has been rendered for {{ .Release.Namespace }}.
+
+The chart expects the existing Secret {{ .Values.runtime.existingSecret }} with:
+  DATABASE_URL
+  JWT_ACCESS_TOKEN_SECRET
+  JWT_REFRESH_TOKEN_SECRET
+  INTERNAL_SERVICE_TOKEN
+
+Create runtime credentials out of band before installation. Kubernetes
+deployment execution is {{ ternary "enabled" "disabled" .Values.deploymentExecution.enabled }}.
+{{- if .Values.ingress.enabled }}
+Public URL: {{ .Values.publicUrl }}
+{{- else }}
+Ingress is disabled. Port-forward the frontend Service only for controlled
+staging diagnostics.
+{{- end }}

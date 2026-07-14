@@ -1,0 +1,31 @@
+{{- include "buildsphere.validate" . -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "buildsphere.fullname" . }}-config
+  labels:
+    {{- include "buildsphere.commonLabels" . | nindent 4 }}
+data:
+  NODE_ENV: production
+  LOG_LEVEL: {{ .Values.runtime.logLevel | quote }}
+  STORAGE_DRIVER: postgres
+  FRONTEND_URL: {{ trimSuffix "/" .Values.publicUrl | quote }}
+  API_GATEWAY_URL: {{ printf "http://%s:8080" (include "buildsphere.componentName" (dict "root" . "component" "api-gateway")) | quote }}
+  AUTH_SERVICE_URL: {{ printf "http://%s:8081" (include "buildsphere.componentName" (dict "root" . "component" "auth-service")) | quote }}
+  PROJECT_SERVICE_URL: {{ printf "http://%s:8082" (include "buildsphere.componentName" (dict "root" . "component" "project-service")) | quote }}
+  PIPELINE_SERVICE_URL: {{ printf "http://%s:8083" (include "buildsphere.componentName" (dict "root" . "component" "pipeline-service")) | quote }}
+  DEPLOYMENT_SERVICE_URL: {{ printf "http://%s:8084" (include "buildsphere.componentName" (dict "root" . "component" "deployment-service")) | quote }}
+  MONITORING_SERVICE_URL: {{ printf "http://%s:8085" (include "buildsphere.componentName" (dict "root" . "component" "monitoring-service")) | quote }}
+  LOGGING_SERVICE_URL: {{ printf "http://%s:8086" (include "buildsphere.componentName" (dict "root" . "component" "logging-service")) | quote }}
+  AI_SERVICE_URL: {{ printf "http://%s:8087" (include "buildsphere.componentName" (dict "root" . "component" "ai-service")) | quote }}
+  NOTIFICATION_SERVICE_URL: {{ printf "http://%s:8089" (include "buildsphere.componentName" (dict "root" . "component" "notification-service")) | quote }}
+  GITHUB_OAUTH_CALLBACK_URL: {{ printf "%s/auth/github/callback" (trimSuffix "/" .Values.publicUrl) | quote }}
+  PIPELINE_STAGE_DELAY_MS: {{ .Values.runtime.pipelineStageDelayMs | quote }}
+  AI_PROVIDER: rules
+  KUBERNETES_EXECUTION_ENABLED: {{ .Values.deploymentExecution.enabled | quote }}
+  KUBERNETES_ALLOWED_SERVER_HOSTS: {{ join "," .Values.deploymentExecution.allowedServerHosts | quote }}
+  KUBERNETES_ALLOWED_ENVIRONMENTS: {{ join "," .Values.deploymentExecution.allowedEnvironments | quote }}
+  KUBERNETES_APPROVAL_TTL_SECONDS: {{ .Values.deploymentExecution.approvalTtlSeconds | quote }}
+  KUBERNETES_REQUEST_TIMEOUT_MS: {{ .Values.deploymentExecution.requestTimeoutMs | quote }}
+  KUBERNETES_OPERATION_TIMEOUT_MS: {{ .Values.deploymentExecution.operationTimeoutMs | quote }}
+  KUBERNETES_MAX_ATTEMPTS: {{ .Values.deploymentExecution.maxAttempts | quote }}

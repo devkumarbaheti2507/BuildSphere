@@ -215,3 +215,42 @@
 - No production cluster or cloud account was touched. Real Helm operations,
   Terraform plan/apply/destroy, AWS credentials/state, and production deployment
   remain outside the completed scope.
+
+## 2026-07-14
+
+- Defined and completed Phase 10 through FR-019, the production deployment
+  packaging specification, ADR-012, and tickets BS-1001 through BS-1003.
+- Replaced ten isolated workspace-incompatible Docker stubs with one
+  allowlisted monorepo-aware backend Dockerfile using frozen PNPM builds and
+  production-only deploy trees.
+- Added a separate multi-stage frontend image with same-origin `/api`, non-root
+  Nginx, SPA fallback, security headers, immutable assets, and `/healthz`.
+- Added explicit `BUILDSPHERE_ROOT` resolution for flattened images while
+  preserving local monorepo behavior, plus graceful shutdown registration for
+  the remaining long-running services.
+- Added the BuildSphere-owned Helm chart with 11 Deployments/Services, 13
+  token-disabled ServiceAccounts, external Secret/PostgreSQL contracts,
+  pre-install/pre-upgrade migrations, hardened pod security, probes, resources,
+  optional TLS ingress, and an in-cluster smoke test.
+- Added structured Helm verification, values schema controls, no-push CI image
+  matrices, hardened image smoke, and a disposable kind
+  install/test/upgrade/test orchestrator with an ephemeral PostgreSQL fixture.
+- The real cluster gate found and fixed a misspelled backend root variable, a
+  PNPM package-local test dependency path, and an assertion mismatch with the
+  public auth-provider contract.
+- Passed Helm v4.2.3 strict and structural checks for 38 resources with zero
+  Secrets and execution disabled by default.
+- Built and smoke-tested all 11 images as non-root under read-only-root,
+  dropped-capability, no-privilege-escalation restrictions.
+- Passed a checksum-verified kind v0.31.0 / Kubernetes v1.34.3 workflow with
+  all seven migrations, 11 ready Deployments, frontend/API/database Helm tests,
+  revision-two upgrade, repeated migration/test, and cluster cleanup.
+- Passed frozen installation, zero-warning lint, every production build, all
+  61 automated tests, the 26-file gateway smoke, migrations 001-007 twice,
+  Phase 6 and Phase 9 PostgreSQL verifiers, and checksum-verified Terraform
+  v1.15.8 static validation.
+- Re-ran the Phase 9 official-client kind workflow successfully: two releases,
+  healthy rollout, rollback, ownership-matched pruning, credential revocation,
+  and complete cluster/kubeconfig cleanup.
+- No image was pushed and no external cluster, cloud account, production
+  Secret, Terraform state, or production resource was contacted or modified.

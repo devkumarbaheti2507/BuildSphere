@@ -1,11 +1,11 @@
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import {
   createLogger,
   HttpNotificationPublisher,
   loadEnvironment,
   registerGracefulShutdown,
   requiredEnvironment,
+  resolveBuildSphereRoot,
 } from "@buildsphere/service-core";
 import { createAiApp } from "./app.js";
 import { MockSuggestionAnalyzer, RuleSuggestionAnalyzer } from "./analyzer.js";
@@ -14,12 +14,7 @@ import {
   PostgresSuggestionRepository,
 } from "./repository.js";
 
-const repoRoot = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "..",
-  "..",
-  "..",
-);
+const repoRoot = resolveBuildSphereRoot(import.meta.url);
 loadEnvironment(path.join(repoRoot, ".env"));
 const port = Number(process.env.PORT ?? 8087);
 const logger = createLogger(process.env.SERVICE_NAME ?? "ai-service");

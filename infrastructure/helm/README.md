@@ -1,8 +1,9 @@
-# infrastructure/helm
+# BuildSphere Helm Infrastructure
 
-Infrastructure files for BuildSphere live here.
+`buildsphere/` is the Phase 10 chart for deploying the BuildSphere platform.
+It is distinct from `templates/helm/`, which Project Service uses to generate
+charts for user projects.
 
-MVP note:
-
-- Local infrastructure starts from `docker-compose.dev.yml` in the repository root.
-- Production-grade infrastructure will be added gradually according to `docs/08_DEVOPS.md`.
+The production chart expects external PostgreSQL, an operator-created runtime
+Secret, and operator-managed ingress/TLS infrastructure. See
+`buildsphere/README.md` for its values contract and verification commands.

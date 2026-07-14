@@ -1,10 +1,10 @@
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import {
   createLogger,
   loadEnvironment,
   registerGracefulShutdown,
   requiredEnvironment,
+  resolveBuildSphereRoot,
 } from "@buildsphere/service-core";
 import { createNotificationApp } from "./app.js";
 import {
@@ -12,12 +12,7 @@ import {
   PostgresNotificationRepository,
 } from "./repository.js";
 
-const repoRoot = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "..",
-  "..",
-  "..",
-);
+const repoRoot = resolveBuildSphereRoot(import.meta.url);
 loadEnvironment(path.join(repoRoot, ".env"));
 const port = Number(process.env.PORT ?? 8089);
 const logger = createLogger(process.env.SERVICE_NAME ?? "notification-service");

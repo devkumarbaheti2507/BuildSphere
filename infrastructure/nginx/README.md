@@ -1,8 +1,18 @@
-# infrastructure/nginx
+# BuildSphere Nginx Runtime
 
-Infrastructure files for BuildSphere live here.
+`frontend.conf` serves the Phase 10 frontend image as the unprivileged Nginx
+user on port 8080.
 
-MVP note:
+It provides:
 
-- Local infrastructure starts from `docker-compose.dev.yml` in the repository root.
-- Production-grade infrastructure will be added gradually according to `docs/08_DEVOPS.md`.
+- `/healthz` for container and Kubernetes probes.
+- SPA fallback to `index.html`.
+- Immutable caching for Vite assets.
+- No caching for the application shell.
+- Basic browser security headers.
+- Temporary and PID paths under writable `/tmp` so the root filesystem can be
+  read-only.
+
+API traffic is not proxied by this Nginx process. The deployed ingress routes
+`/api` directly to API Gateway and `/` to the frontend Service, preserving one
+browser origin.

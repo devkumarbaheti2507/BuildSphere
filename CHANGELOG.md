@@ -48,6 +48,14 @@ The project follows semantic versioning once the first implementation milestone 
   scripts, deployment notifications, gateway routes, and a responsive
   approve/deploy/status/rollback frontend workflow.
 - A BuildSphere favicon used by the browser shell.
+- Phase 10 monorepo-aware production images for all ten backend services and a
+  non-root Nginx frontend image with same-origin `/api` routing.
+- A BuildSphere-owned Helm chart with 11 workloads, external runtime secrets
+  and PostgreSQL, pre-install/pre-upgrade migrations, hardened pod security,
+  probes, resources, optional TLS ingress, and an in-cluster smoke test.
+- Structured chart verification, no-push CI image builds, hardened local image
+  smoke, and a repeatable disposable kind install/test/upgrade/test verifier.
+- ADR-012 and the production deployment packaging specification.
 
 ### Fixed
 
@@ -71,6 +79,10 @@ The project follows semantic versioning once the first implementation milestone 
   approvals or operations.
 - Serialize simultaneous retries for the same deployment idempotency key and
   treat rollback delete 404 responses as an already achieved outcome.
+- Resolve templates, prompts, and migrations from an explicit flattened image
+  root while retaining the monorepo-relative local fallback.
+- Correct the backend image root variable so migration hooks read packaged SQL
+  files from `/app/infrastructure/database/migrations`.
 
 ### Verified
 
@@ -106,6 +118,13 @@ The project follows semantic versioning once the first implementation milestone 
 - A real two-release apply, healthy rollout read, rollback, one-resource prune,
   ownership check, credential revocation, and cluster cleanup against a
   disposable kind v0.31.0 cluster using Kubernetes v1.34.3.
+- The complete Phase 10 gate with frozen install, zero-warning lint, every
+  production build, all 61 tests, all 11 hardened image health checks, Helm
+  v4.2.3 strict/structural validation, and all cross-phase smoke and PostgreSQL
+  regressions.
+- A disposable kind v0.31.0 / Kubernetes v1.34.3 chart workflow with seven
+  migrations, 11 ready Deployments, successful frontend/API/database Helm
+  tests before and after upgrade, and complete cluster cleanup.
 
 ## [0.1.0] - 2026-06-28
 

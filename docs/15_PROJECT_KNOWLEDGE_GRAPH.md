@@ -5,8 +5,8 @@
 | Field                  | Value                                                                                    |
 | ---------------------- | ---------------------------------------------------------------------------------------- |
 | Purpose                | Self-contained technical and product context for learning, presentation, and AI tutoring |
-| Snapshot date          | 2026-07-11                                                                               |
-| Current milestone      | Phase 9 complete; controlled Kubernetes apply, status, and rollback live-validated       |
+| Snapshot date          | 2026-07-14                                                                               |
+| Current milestone      | Phase 10 complete; production images and the BuildSphere chart locally live-validated    |
 | Intended readers       | Project owner, reviewers, interviewers, mentors, and ChatGPT                             |
 | Structured companion   | `docs/project-knowledge-graph.json`                                                      |
 | Presentation companion | `docs/16_PRESENTATION_AND_LEARNING_GUIDE.md`                                             |
@@ -25,7 +25,8 @@ explainable pipeline simulation, recommendations, deployment validation,
 optional Helm packaging, disabled-by-default AWS EKS Terraform generation,
 secure Kubernetes connection inspection, offline planning, opt-in approved
 apply, durable status and bounded rollback, plus optional real GitHub repository
-and Actions integration.
+and Actions integration. BuildSphere itself is packaged as non-root containers
+and a hardened Helm release for controlled staging.
 
 ## What problem it solves
 
@@ -48,18 +49,19 @@ Use these labels throughout this graph:
 
 ## Current status
 
-| Area                     | Status                                                   | Evidence                                                                          |
-| ------------------------ | -------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| Roadmap Phases 1-5       | Implemented                                              | `docs/12_ROADMAP.md`, `docs/13_BACKLOG.md`                                        |
-| Phase 6 GitHub milestone | Implemented and live-validated                           | `specs/GITHUB_INTEGRATION_SPEC.md`, `memory/completed-features.md`                |
-| Phase 7 Helm generation  | Implemented and gateway-validated                        | `specs/HELM_SPEC.md`, `memory/completed-features.md`                              |
-| Phase 8 Terraform        | Implemented and statically validated                     | `specs/TERRAFORM_SPEC.md`, `memory/completed-features.md`                         |
-| Phase 9 Kubernetes       | Inspection, planning, apply, status, and rollback complete | `specs/DEPLOYMENT_SPEC.md`, ADR-010, ADR-011                                     |
-| Automated verification   | 59 tests plus lint and production builds pass             | `docs/11_TESTING.md`, `memory/next-session.md`                                   |
-| PostgreSQL persistence   | Implemented and restart-tested                           | migrations and smoke scripts                                                      |
-| Browser workflow         | Auth, project, notification, and deployment flows checked | `memory/completed-features.md`                                                   |
-| Real deployment          | Opt-in non-production Kubernetes workflow live-validated  | `scripts/verify-phase9-kind.ts`, `docs/11_TESTING.md`                            |
-| External LLM             | Future                                                   | local `rules` and `mock` modes only                                               |
+| Area                     | Status                                                     | Evidence                                                           |
+| ------------------------ | ---------------------------------------------------------- | ------------------------------------------------------------------ |
+| Roadmap Phases 1-5       | Implemented                                                | `docs/12_ROADMAP.md`, `docs/13_BACKLOG.md`                         |
+| Phase 6 GitHub milestone | Implemented and live-validated                             | `specs/GITHUB_INTEGRATION_SPEC.md`, `memory/completed-features.md` |
+| Phase 7 Helm generation  | Implemented and gateway-validated                          | `specs/HELM_SPEC.md`, `memory/completed-features.md`               |
+| Phase 8 Terraform        | Implemented and statically validated                       | `specs/TERRAFORM_SPEC.md`, `memory/completed-features.md`          |
+| Phase 9 Kubernetes       | Inspection, planning, apply, status, and rollback complete | `specs/DEPLOYMENT_SPEC.md`, ADR-010, ADR-011                       |
+| Phase 10 packaging       | 11 images and platform Helm release locally live-validated | `specs/PRODUCTION_DEPLOYMENT_SPEC.md`, ADR-012                     |
+| Automated verification   | 61 tests plus lint and production builds pass              | `docs/11_TESTING.md`, `memory/next-session.md`                     |
+| PostgreSQL persistence   | Implemented and restart-tested                             | migrations and smoke scripts                                       |
+| Browser workflow         | Auth, project, notification, and deployment flows checked  | `memory/completed-features.md`                                     |
+| Real deployment          | Opt-in non-production Kubernetes workflow live-validated   | `scripts/verify-phase9-kind.ts`, `docs/11_TESTING.md`              |
+| External LLM             | Future                                                     | local `rules` and `mock` modes only                                |
 
 ## System context graph
 
@@ -116,7 +118,7 @@ flowchart LR
 | Auth Service         | 8081 | Password auth, JWT sessions, refresh-token revocation, GitHub OAuth, provider tokens, repository publishing, Actions synchronization                | Calls GitHub; owns provider secret boundary                                    | Implemented                   |
 | Project Service      | 8082 | Projects, dependency-checked tool selections, Helm/Terraform rendering, artifact bundles, TAR downloads, project-scoped GitHub endpoints            | Coordinates Pipeline and AI after generation; calls Auth internally for GitHub | Implemented                   |
 | Pipeline Service     | 8083 | Explainable pipeline definitions, simulated executions, status transitions, cancellation                                                            | Writes logs through Logging Service and emits notifications                    | Implemented, simulated runner |
-| Deployment Service   | 8084 | Targets, validation, inspection, plans, encrypted credentials, approved apply, status, and rollback                                                  | Reads owned artifacts; optionally calls exact allowlisted Kubernetes APIs      | Phase 9 implemented           |
+| Deployment Service   | 8084 | Targets, validation, inspection, plans, encrypted credentials, approved apply, status, and rollback                                                 | Reads owned artifacts; optionally calls exact allowlisted Kubernetes APIs      | Phase 9 implemented           |
 | Monitoring Service   | 8085 | Aggregates eight service health endpoints and emits Prometheus text metrics                                                                         | Polls Gateway and seven domain services                                        | Implemented foundation        |
 | Logging Service      | 8086 | Internal log ingestion and owner-scoped execution log retrieval                                                                                     | Receives simulated pipeline logs                                               | Implemented                   |
 | AI Service           | 8087 | Rule-based or mock suggestions, prompt-file loading, suggestion status                                                                              | Reads project/artifact context; emits notifications                            | Implemented locally           |
@@ -127,34 +129,34 @@ flowchart LR
 
 ## Why each technology is used
 
-| Technology             | Where it appears                                  | Why it was chosen                                      | How it helps this project                                               | Status                                                 |
-| ---------------------- | ------------------------------------------------- | ------------------------------------------------------ | ----------------------------------------------------------------------- | ------------------------------------------------------ |
-| TypeScript             | Frontend, services, shared packages, scripts      | One typed language across the workspace                | Shared contracts catch integration mistakes during compilation          | Active                                                 |
-| Node.js 22             | All TypeScript runtime services and scripts       | Mature async I/O and strong tooling                    | Runs many small HTTP services with one toolchain                        | Active                                                 |
-| React 18               | Frontend                                          | Component model and broad ecosystem                    | Organizes the wizard, dashboards, tabs, and stateful workflows          | Active                                                 |
-| Vite 5                 | Frontend dev/build                                | Fast local server and simple production bundling       | Keeps the local feedback loop short                                     | Active                                                 |
-| Express 4              | Gateway and services                              | Small, explicit REST framework                         | Makes routing, middleware, and service boundaries easy to inspect       | Active                                                 |
-| Zod 3                  | Request validation                                | Runtime data validation complements TypeScript         | Rejects malformed API input before business logic                       | Active                                                 |
-| Pino 9                 | Backend logging                                   | Structured, low-overhead JSON logging                  | Adds service, correlation ID, status, and duration to requests          | Active                                                 |
-| PostgreSQL 16          | Durable product state                             | Relational constraints, transactions, auditability     | Stores users, projects, runs, suggestions, targets, and events          | Active                                                 |
-| `pg`                   | Service Core data access                          | Direct and transparent PostgreSQL driver               | Keeps SQL and ownership visible without an ORM                          | Active                                                 |
-| PNPM workspaces        | Monorepo package management                       | Efficient workspace linking and reproducible installs  | Coordinates 14 workspace packages from one lockfile                     | Active                                                 |
-| Docker Compose         | Local infrastructure                              | Repeatable local dependencies                          | Starts PostgreSQL, Redis, MinIO, and MailHog consistently               | PostgreSQL active; others prepared                     |
-| Docker templates       | Generated delivery assets and service Dockerfiles | Portable runtime packaging                             | Teaches image construction and prepares deployments                     | Active generation                                      |
-| Kubernetes API/YAML    | Generated assets and Deployment Service            | Declarative resources plus a standard control API      | Supports review, validation, policy-bounded apply, status, and rollback | Active generation and controlled execution             |
-| GitHub Actions         | BuildSphere CI and generated workflows            | Accessible CI/CD with strong portfolio value           | Validates BuildSphere and connects generated repositories to real runs  | Active                                                 |
-| GitHub App OAuth       | Optional identity and provider integration        | Fine-grained permissions and short-lived user tokens   | Supports secure login, repository creation, publishing, and run sync    | Active and live-tested                                 |
-| JWT HS256              | BuildSphere sessions                              | Stateless access-token validation across services      | Lets each service enforce user ownership without a session service call | Active                                                 |
-| scrypt                 | Password hashing                                  | Memory-hard password derivation                        | Protects stored passwords with per-password random salts                | Active                                                 |
-| AES-256-GCM            | GitHub provider token encryption                  | Authenticated encryption at rest                       | Keeps provider tokens confidential and detects tampering                | Active                                                 |
-| SHA-256                | Artifact checksums and refresh-token hashing      | Stable one-way digest                                  | Detects artifact identity and avoids plaintext refresh-token storage    | Active                                                 |
-| Git blob SHA-1         | GitHub publish idempotency                        | GitHub Contents API identifies blobs this way          | Skips unchanged files and prevents needless commits/runs                | Active                                                 |
-| Prometheus text format | Monitoring `/metrics`                             | Standard scrape format                                 | Exposes service-up and response-time gauges                             | Active foundation                                      |
-| Redis                  | Compose and project tool model                    | Intended cache and lightweight coordination            | Future ephemeral state and queues                                       | Prepared, not used by runtime code                     |
-| MinIO/S3 settings      | Compose and environment examples                  | Intended object storage                                | Future external storage for artifact archives                           | Prepared, artifacts currently live in PostgreSQL JSONB |
-| MailHog                | Compose                                           | Intended local email capture                           | Future notification delivery testing                                    | Prepared, not used by runtime code                     |
-| Helm                   | Optional generated Kubernetes packaging           | Configurable application charts without cluster access | Produces API v2 chart metadata, values, helpers, resources, and notes   | Active generation                                      |
-| Terraform 1.x          | Optional generated AWS EKS infrastructure source  | Declarative, reviewable infrastructure configuration   | Produces an inert nine-file root module and supports static validation  | Active generation; no plan/apply                       |
+| Technology             | Where it appears                                    | Why it was chosen                                     | How it helps this project                                                 | Status                                                 |
+| ---------------------- | --------------------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------ |
+| TypeScript             | Frontend, services, shared packages, scripts        | One typed language across the workspace               | Shared contracts catch integration mistakes during compilation            | Active                                                 |
+| Node.js 22             | All TypeScript runtime services and scripts         | Mature async I/O and strong tooling                   | Runs many small HTTP services with one toolchain                          | Active                                                 |
+| React 18               | Frontend                                            | Component model and broad ecosystem                   | Organizes the wizard, dashboards, tabs, and stateful workflows            | Active                                                 |
+| Vite 5                 | Frontend dev/build                                  | Fast local server and simple production bundling      | Keeps the local feedback loop short                                       | Active                                                 |
+| Express 4              | Gateway and services                                | Small, explicit REST framework                        | Makes routing, middleware, and service boundaries easy to inspect         | Active                                                 |
+| Zod 3                  | Request validation                                  | Runtime data validation complements TypeScript        | Rejects malformed API input before business logic                         | Active                                                 |
+| Pino 9                 | Backend logging                                     | Structured, low-overhead JSON logging                 | Adds service, correlation ID, status, and duration to requests            | Active                                                 |
+| PostgreSQL 16          | Durable product state                               | Relational constraints, transactions, auditability    | Stores users, projects, runs, suggestions, targets, and events            | Active                                                 |
+| `pg`                   | Service Core data access                            | Direct and transparent PostgreSQL driver              | Keeps SQL and ownership visible without an ORM                            | Active                                                 |
+| PNPM workspaces        | Monorepo package management                         | Efficient workspace linking and reproducible installs | Coordinates 14 workspace packages from one lockfile                       | Active                                                 |
+| Docker Compose         | Local infrastructure                                | Repeatable local dependencies                         | Starts PostgreSQL, Redis, MinIO, and MailHog consistently                 | PostgreSQL active; others prepared                     |
+| Docker                 | Generated assets and BuildSphere production images  | Portable runtime packaging                            | Teaches image construction and packages all 11 platform components        | Active generation and Phase 10 packaging               |
+| Kubernetes API/YAML    | Generated assets and Deployment Service             | Declarative resources plus a standard control API     | Supports review, validation, policy-bounded apply, status, and rollback   | Active generation and controlled execution             |
+| GitHub Actions         | BuildSphere CI and generated workflows              | Accessible CI/CD with strong portfolio value          | Validates BuildSphere and connects generated repositories to real runs    | Active                                                 |
+| GitHub App OAuth       | Optional identity and provider integration          | Fine-grained permissions and short-lived user tokens  | Supports secure login, repository creation, publishing, and run sync      | Active and live-tested                                 |
+| JWT HS256              | BuildSphere sessions                                | Stateless access-token validation across services     | Lets each service enforce user ownership without a session service call   | Active                                                 |
+| scrypt                 | Password hashing                                    | Memory-hard password derivation                       | Protects stored passwords with per-password random salts                  | Active                                                 |
+| AES-256-GCM            | GitHub provider token encryption                    | Authenticated encryption at rest                      | Keeps provider tokens confidential and detects tampering                  | Active                                                 |
+| SHA-256                | Artifact checksums and refresh-token hashing        | Stable one-way digest                                 | Detects artifact identity and avoids plaintext refresh-token storage      | Active                                                 |
+| Git blob SHA-1         | GitHub publish idempotency                          | GitHub Contents API identifies blobs this way         | Skips unchanged files and prevents needless commits/runs                  | Active                                                 |
+| Prometheus text format | Monitoring `/metrics`                               | Standard scrape format                                | Exposes service-up and response-time gauges                               | Active foundation                                      |
+| Redis                  | Compose and project tool model                      | Intended cache and lightweight coordination           | Future ephemeral state and queues                                         | Prepared, not used by runtime code                     |
+| MinIO/S3 settings      | Compose and environment examples                    | Intended object storage                               | Future external storage for artifact archives                             | Prepared, artifacts currently live in PostgreSQL JSONB |
+| MailHog                | Compose                                             | Intended local email capture                          | Future notification delivery testing                                      | Prepared, not used by runtime code                     |
+| Helm                   | Generated charts and BuildSphere's platform release | Configurable Kubernetes packaging                     | Produces user chart source and deploys the platform in controlled staging | Active generation and locally verified platform chart  |
+| Terraform 1.x          | Optional generated AWS EKS infrastructure source    | Declarative, reviewable infrastructure configuration  | Produces an inert nine-file root module and supports static validation    | Active generation; no plan/apply                       |
 
 ## Architecture decisions
 
@@ -175,8 +177,12 @@ flowchart LR
     requires encrypted target-bound credentials, exact server/environment
     policy, immutable-artifact approval, ownership checks, durable audit, and
     bounded rollback.
+12. **Externalized production runtime state**: BuildSphere uses shared
+    monorepo-aware images and a platform-owned Helm chart, while PostgreSQL,
+    credentials, ingress, TLS, registry publication, and external deployment
+    remain operator responsibilities.
 
-Evidence: `docs/adr/ADR-001-*` through `ADR-011-*`.
+Evidence: `docs/adr/ADR-001-*` through `ADR-012-*`.
 
 ## Domain and data graph
 
@@ -206,26 +212,26 @@ database foreign key because the owning services intentionally remain separate.
 
 ### Data ownership
 
-| Entity/table                  | Owning service                | Important rules                                                   |
-| ----------------------------- | ----------------------------- | ----------------------------------------------------------------- |
-| `users`                       | Auth                          | Unique email; password hash nullable only for provider-only users |
-| `refresh_tokens`              | Auth                          | Stores token hash, expiry, revocation, and user reference         |
-| `github_connections`          | Auth                          | One per user; stable GitHub ID; encrypted access/refresh tokens   |
-| `projects`                    | Project                       | Unique name per owner; active or archived                         |
-| `project_tool_selections`     | Project                       | One tool per category per project                                 |
-| `generated_artifacts`         | Project                       | JSONB file bundle, SHA-256 checksum, creation time                |
-| `pipeline_definitions`        | Pipeline                      | Owner/project, provider, seven explainable stages                 |
-| `pipeline_executions`         | Pipeline                      | Execution and per-stage status snapshots                          |
-| `pipeline_logs`               | Logging                       | Owner, execution, stage, level, message, timestamp                |
-| `suggestions`                 | AI                            | Category, severity, explanation, action, confidence, state        |
-| `deployment_targets`          | Deployment                    | Kubernetes target and environment per project/name                |
-| `deployment_target_credentials` | Deployment                  | Minimized owner/target-bound AES-GCM credential ciphertext         |
-| `deployment_approvals`        | Deployment                    | Expiring single-use artifact or rollback authorization             |
-| `deployment_operations`       | Deployment                    | Durable apply/rollback audit and safe resource/rollout summaries   |
-| `notifications`               | Notification                  | User-scoped event with unread/read state                          |
-| `project_github_repositories` | Auth                          | One durable GitHub repository link per logical project            |
-| `github_workflow_runs`        | Auth                          | Upserted by stable GitHub run ID                                  |
-| `schema_migrations`           | Service Core migration runner | Records additive migration filenames                              |
+| Entity/table                    | Owning service                | Important rules                                                   |
+| ------------------------------- | ----------------------------- | ----------------------------------------------------------------- |
+| `users`                         | Auth                          | Unique email; password hash nullable only for provider-only users |
+| `refresh_tokens`                | Auth                          | Stores token hash, expiry, revocation, and user reference         |
+| `github_connections`            | Auth                          | One per user; stable GitHub ID; encrypted access/refresh tokens   |
+| `projects`                      | Project                       | Unique name per owner; active or archived                         |
+| `project_tool_selections`       | Project                       | One tool per category per project                                 |
+| `generated_artifacts`           | Project                       | JSONB file bundle, SHA-256 checksum, creation time                |
+| `pipeline_definitions`          | Pipeline                      | Owner/project, provider, seven explainable stages                 |
+| `pipeline_executions`           | Pipeline                      | Execution and per-stage status snapshots                          |
+| `pipeline_logs`                 | Logging                       | Owner, execution, stage, level, message, timestamp                |
+| `suggestions`                   | AI                            | Category, severity, explanation, action, confidence, state        |
+| `deployment_targets`            | Deployment                    | Kubernetes target and environment per project/name                |
+| `deployment_target_credentials` | Deployment                    | Minimized owner/target-bound AES-GCM credential ciphertext        |
+| `deployment_approvals`          | Deployment                    | Expiring single-use artifact or rollback authorization            |
+| `deployment_operations`         | Deployment                    | Durable apply/rollback audit and safe resource/rollout summaries  |
+| `notifications`                 | Notification                  | User-scoped event with unread/read state                          |
+| `project_github_repositories`   | Auth                          | One durable GitHub repository link per logical project            |
+| `github_workflow_runs`          | Auth                          | Upserted by stable GitHub run ID                                  |
+| `schema_migrations`             | Service Core migration runner | Records additive migration filenames                              |
 
 ## User-facing journey
 
@@ -619,26 +625,26 @@ approval, and durable idempotency key.
 
 ## Security graph
 
-| Threat or concern           | Current control                                                                         | Remaining work                                                |
-| --------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| Password disclosure         | scrypt with random salt; no password hashes returned                                    | Password reset and stronger policy are future                 |
-| Stolen access token         | Short default 15-minute JWT expiry                                                      | Rate limiting and centralized revocation are future           |
-| Stolen refresh token        | SHA-256 hash in DB, expiry, revocation, rotation                                        | Device/session management is future                           |
-| Cross-user data access      | JWT identity plus owner checks in every domain service                                  | Team sharing and RBAC are future                              |
-| OAuth callback forgery      | Signed expiring state plus PKCE S256                                                    | Multi-provider abstraction is future                          |
-| Provider token leakage      | AES-256-GCM at rest; never sent to frontend or Project Service                          | Disconnect/reconnect UI is future                             |
-| GitHub path traversal       | Reject empty, absolute, duplicate, dot, and parent paths                                | Broader policy scanning is future                             |
-| Partial GitHub publish      | Persist link first; serial writes; retries reuse repository                             | Background job model could improve long operations            |
-| Duplicate GitHub commits    | Compare Git blob SHA and skip unchanged content                                         | Batched Git tree commits are a future optimization            |
-| Partial-artifact CI runs    | Publish workflow files after other files                                                | Existing external repositories may retain old run history     |
-| Secret leakage in templates | Placeholder values and `.env.example`; `.env` ignored                                   | Production secret manager is future                           |
-| Broken Kubernetes YAML      | Structural validation for API version, kind, name, labels, probes, resources            | Server-side schema validation and cluster dry-run are future  |
-| Kubeconfig credential leak  | Ephemeral inspection plus minimized AES-GCM retention bound to owner/target and kept outside public target JSON | External secret-manager references are future |
-| Accidental cluster mutation | Disabled by default; exact host/environment policy, immutable-artifact approval, ownership precheck, and non-forced SSA | Production RBAC/admission integration is future |
-| Destructive rollback        | Separate approval; prior snapshot only; prune only newer owned namespaced resources; never delete Namespace/cluster scope | Multi-release policy remains intentionally bounded |
-| Accidental cloud creation   | Terraform defaults disabled; generated CI has format/init-without-backend/validate only | Cost/IAM/state review and any execution remain operator-owned |
-| Terraform secret/state leak | No credentials or active backend; generated ignore rules exclude state and plans        | Production secret and remote-state workflows are future       |
-| Untraceable requests        | Correlation ID generated/propagated and logged                                          | Distributed tracing is future                                 |
+| Threat or concern           | Current control                                                                                                           | Remaining work                                                |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Password disclosure         | scrypt with random salt; no password hashes returned                                                                      | Password reset and stronger policy are future                 |
+| Stolen access token         | Short default 15-minute JWT expiry                                                                                        | Rate limiting and centralized revocation are future           |
+| Stolen refresh token        | SHA-256 hash in DB, expiry, revocation, rotation                                                                          | Device/session management is future                           |
+| Cross-user data access      | JWT identity plus owner checks in every domain service                                                                    | Team sharing and RBAC are future                              |
+| OAuth callback forgery      | Signed expiring state plus PKCE S256                                                                                      | Multi-provider abstraction is future                          |
+| Provider token leakage      | AES-256-GCM at rest; never sent to frontend or Project Service                                                            | Disconnect/reconnect UI is future                             |
+| GitHub path traversal       | Reject empty, absolute, duplicate, dot, and parent paths                                                                  | Broader policy scanning is future                             |
+| Partial GitHub publish      | Persist link first; serial writes; retries reuse repository                                                               | Background job model could improve long operations            |
+| Duplicate GitHub commits    | Compare Git blob SHA and skip unchanged content                                                                           | Batched Git tree commits are a future optimization            |
+| Partial-artifact CI runs    | Publish workflow files after other files                                                                                  | Existing external repositories may retain old run history     |
+| Secret leakage in templates | Placeholder values and `.env.example`; `.env` ignored                                                                     | Production secret manager is future                           |
+| Broken Kubernetes YAML      | Structural validation for API version, kind, name, labels, probes, resources                                              | Server-side schema validation and cluster dry-run are future  |
+| Kubeconfig credential leak  | Ephemeral inspection plus minimized AES-GCM retention bound to owner/target and kept outside public target JSON           | External secret-manager references are future                 |
+| Accidental cluster mutation | Disabled by default; exact host/environment policy, immutable-artifact approval, ownership precheck, and non-forced SSA   | Production RBAC/admission integration is future               |
+| Destructive rollback        | Separate approval; prior snapshot only; prune only newer owned namespaced resources; never delete Namespace/cluster scope | Multi-release policy remains intentionally bounded            |
+| Accidental cloud creation   | Terraform defaults disabled; generated CI has format/init-without-backend/validate only                                   | Cost/IAM/state review and any execution remain operator-owned |
+| Terraform secret/state leak | No credentials or active backend; generated ignore rules exclude state and plans                                          | Production secret and remote-state workflows are future       |
+| Untraceable requests        | Correlation ID generated/propagated and logged                                                                            | Distributed tracing is future                                 |
 
 ## Observability model
 
@@ -659,29 +665,35 @@ flowchart LR
   Lint --> Build[pnpm -r build]
   Build --> Tests[pnpm -r test]
   Tests --> MemorySmoke[Gateway smoke in memory mode]
-  Tests --> HelmLint[Helm v4.2.2 strict lint + template]
+  Tests --> HelmLint[Helm v4.2.3 strict lint + structural render]
   Tests --> TerraformValidate[Terraform v1.15.8 fmt + backend-disabled init + validate]
   Tests --> PostgresSmoke[26-file gateway + offline plan + Phase 6 verification]
   Tests --> Phase9Postgres[Credential + approval + operation persistence]
   Phase9Postgres --> Kind[Disposable kind apply + status + rollback]
+  HelmLint --> Images[11 image builds + hardened health smoke]
+  Images --> Phase10Kind[Platform install + migrations + test + upgrade + test]
   PostgresSmoke --> Browser[Desktop/mobile auth, project, notification, deployment workflows]
   PostgresSmoke --> LiveGitHub[Live OAuth, private repo, publish, Actions sync]
 ```
 
-The repository contains 19 test files and 59 automated tests covering shared
+The repository contains 20 test files and 61 automated tests covering shared
 authentication and shutdown, gateway forwarding, every service's principal
 behavior, pipeline state/cancellation, generation, validation, OAuth security,
 GitHub publication idempotency, token refresh, workflow-run upserts, Helm
 dependency validation, selection-aware rendering, validation isolation,
 kubeconfig redaction/file-reference safety, owner-scoped targets, offline
 resource ordering, encrypted credentials, approval/idempotency races, execution
-policy, ownership prechecks, retries, rollout status, and bounded rollback.
+policy, ownership prechecks, retries, rollout status, bounded rollback, and
+flattened production-image root resolution.
 
 Primary commands:
 
 ```bash
 pnpm verify
 pnpm verify:terraform
+pnpm verify:phase10
+pnpm verify:phase10:images
+KIND_BIN=/path/to/kind HELM_BIN=/path/to/helm pnpm verify:phase10:kind
 pnpm smoke
 pnpm smoke:phase6:postgres
 pnpm smoke:phase9:postgres
@@ -697,7 +709,12 @@ observation, rollback to the prior active release, pruning of one newer owned
 ConfigMap, direct ownership-label reads, credential revocation, and cluster
 deletion. It did not touch a production or cloud cluster.
 
-The structured companion validates as 80 unique nodes and 130 relationships
+The Phase 10 kind test confirmed the platform chart itself: all seven
+migrations, 11 ready Deployments, frontend/API/database checks, an upgrade,
+idempotent repeated migrations, a second successful test, and cluster cleanup.
+It used ephemeral PostgreSQL and random test-only credentials.
+
+The structured companion validates as 85 unique nodes and 140 relationships
 with no dangling edges.
 
 The notification browser test confirmed complete message rendering, individual
@@ -742,6 +759,9 @@ persistence after relisting.
 - Optional seven-file Helm chart generation for Kubernetes projects.
 - Optional nine-file, disabled AWS EKS Terraform generation for Kubernetes
   projects with exact VPC/EKS module pins and safe generated CI validation.
+- Eleven non-root production images and a BuildSphere-owned Helm release with
+  external secrets/database, migrations, probes, security bounds, and local
+  install/upgrade verification.
 - Seven-stage explainable simulated pipelines with success, failure, cancellation, and logs.
 - Thirteen deterministic recommendation rules and suggestion lifecycle.
 - Kubernetes target records, manifest validation, ephemeral kubeconfig
@@ -758,7 +778,6 @@ persistence after relisting.
 - Redis container and Redis tool selection.
 - MinIO/S3 settings and volume.
 - MailHog container.
-- Nginx configuration.
 - Spring Boot and Jenkins starter templates outside the active catalog.
 - External analyzer interface and prompt library.
 - Analytics Service boundary.
@@ -768,13 +787,16 @@ persistence after relisting.
 - Jenkins integration.
 - Cost estimation.
 - Team collaboration and template sharing.
-- External LLM provider, Grafana, centralized logs, tracing, security scanning, and production deployment.
+- External LLM provider, Grafana, centralized logs, tracing, registry/signing,
+  security scanning, high availability, backup/restore, and production release
+  certification.
 
 ## Important limitations to state honestly
 
 1. The generated bundle is DevOps/configuration scaffolding, not a complete application source tree.
-2. Helm charts pass strict lint and local template rendering, but BuildSphere
-   does not install chart releases or validate them against a live cluster.
+2. Generated user-project Helm charts pass strict lint and local rendering, but
+   BuildSphere does not install those generated releases. Its own platform
+   chart is separately validated against disposable local kind only.
 3. Terraform passes format and static validation with its backend disabled, but
    BuildSphere does not run plan/apply/destroy, own state, hold AWS credentials,
    estimate cost, or create EKS resources.
@@ -787,9 +809,13 @@ persistence after relisting.
 8. Artifacts are stored as JSONB in PostgreSQL, not in object storage.
 9. Analytics Service exposes health only.
 10. Monitoring does not include Analytics Service and does not yet persist metrics.
-11. The frontend uses session storage and a lightweight custom route helper.
-12. GitHub disconnect, organization SSO, run dispatch/rerun/cancel, and log archive UI are out of scope.
-13. Rate limiting, audit logs, full RBAC, production secret management, and automated checked-in browser E2E tests remain future hardening.
+11. Phase 10 packaging is suitable for controlled staging, but it does not
+    provide registry promotion, image signing/scanning, external secret
+    operations, database HA/backups, network policy, autoscaling, SLOs, or
+    production release certification.
+12. The frontend uses session storage and a lightweight custom route helper.
+13. GitHub disconnect, organization SSO, run dispatch/rerun/cancel, and log archive UI are out of scope.
+14. Rate limiting, audit logs, full RBAC, production secret management, and automated checked-in browser E2E tests remain future hardening.
 
 ## Presentation-ready elevator pitch
 

@@ -6,7 +6,7 @@
 | Version           | 0.1.0                                       |
 | Status            | Draft                                       |
 | Author            | BuildSphere Team                            |
-| Last Updated      | 2026-07-11                                  |
+| Last Updated      | 2026-07-14                                  |
 | Related Documents | 01_SRS.md, 03_LLD.md, 04_DATABASE_DESIGN.md |
 
 ---
@@ -111,16 +111,28 @@ Local development:
 - Services run with `pnpm -r --parallel dev`.
 - PostgreSQL, Redis, MinIO, and MailHog run through Docker Compose.
 
-Future production:
+Phase 10 staging baseline:
 
-- Each service runs as a container.
-- Kubernetes handles orchestration.
-- Helm charts manage deployment.
-- Prometheus and Grafana handle observability.
+- A shared monorepo-aware image definition builds independently tagged backend
+  service images.
+- A separate non-root web image serves the compiled frontend with a
+  same-origin `/api` base path.
+- Kubernetes handles orchestration through a BuildSphere-owned Helm chart.
+- A Helm hook runs idempotent SQL migrations before install or upgrade.
+- Runtime secrets and PostgreSQL are external inputs owned by the operator.
+- Only the frontend and API Gateway are exposed through optional TLS ingress.
+
+Future production hardening adds managed secret rotation, high availability,
+autoscaling, network policy, backup/restore automation, Prometheus/Grafana,
+centralized logs, traces, alerting, and release certification.
 
 The generated Phase 7 chart is an inspectable deployment asset. Real Helm
 install, upgrade, rollback, and Kubernetes credential handling remain outside
 the generation boundary.
+
+The Phase 10 chart is different: it packages BuildSphere itself. It does not
+change the Phase 7 generated chart or grant BuildSphere cloud provisioning
+authority. Its default deployment-execution setting remains disabled.
 
 # Kubernetes execution boundary
 

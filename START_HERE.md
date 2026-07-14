@@ -6,11 +6,11 @@ Use this file first when opening the project with Codex.
 
 BuildSphere is an AI-assisted Developer Experience Platform for designing, generating, deploying, observing, and improving microservice applications.
 
-It is a documentation-first, Codex-friendly local platform with Phases 0-9
+It is a documentation-first, Codex-friendly local platform with Phases 0-10
 complete. The current implementation includes the tracked GitHub milestone,
-optional Helm and AWS EKS Terraform generation, plus secure Kubernetes
-inspection, offline planning, opt-in approved apply, status, and bounded
-rollback.
+optional Helm and AWS EKS Terraform generation, secure Kubernetes inspection,
+offline planning, opt-in approved apply, status, and bounded rollback, plus
+production containers and a BuildSphere-owned Helm release.
 
 ## First reading order
 
@@ -68,6 +68,9 @@ Before coding, verify:
     idempotent server-side apply.
 19. Implement durable rollout summaries and separately approved bounded
     rollback.
+20. Package every BuildSphere service as a non-root production image and verify
+    the platform chart through install, migration, smoke, and upgrade in a
+    disposable cluster.
 
 ## Learning and presentation pack
 
