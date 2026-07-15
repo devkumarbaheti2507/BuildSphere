@@ -9,8 +9,16 @@ metadata:
     {{- include "buildsphere.commonLabels" $ | nindent 4 }}
     app.kubernetes.io/component: {{ $service.name }}
 spec:
+  {{- if not $.Values.availability.autoscaling.enabled }}
   replicas: {{ $.Values.replicaCount }}
+  {{- end }}
   revisionHistoryLimit: 3
+  minReadySeconds: {{ $.Values.availability.rollout.minReadySeconds }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: {{ $.Values.availability.rollout.maxUnavailable }}
+      maxSurge: {{ $.Values.availability.rollout.maxSurge }}
   selector:
     matchLabels:
       {{- include "buildsphere.selectorLabels" (dict "root" $ "component" $service.name) | nindent 6 }}
@@ -28,6 +36,15 @@ spec:
         runAsNonRoot: true
         seccompProfile:
           type: RuntimeDefault
+      {{- if $.Values.availability.topologySpread.enabled }}
+      topologySpreadConstraints:
+        - maxSkew: {{ $.Values.availability.topologySpread.maxSkew }}
+          topologyKey: {{ $.Values.availability.topologySpread.topologyKey | quote }}
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              {{- include "buildsphere.selectorLabels" (dict "root" $ "component" $service.name) | nindent 14 }}
+      {{- end }}
       {{- with $.Values.image.pullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -101,8 +118,16 @@ metadata:
     {{- include "buildsphere.commonLabels" . | nindent 4 }}
     app.kubernetes.io/component: frontend
 spec:
+  {{- if not .Values.availability.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
+  {{- end }}
   revisionHistoryLimit: 3
+  minReadySeconds: {{ .Values.availability.rollout.minReadySeconds }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: {{ .Values.availability.rollout.maxUnavailable }}
+      maxSurge: {{ .Values.availability.rollout.maxSurge }}
   selector:
     matchLabels:
       {{- include "buildsphere.selectorLabels" (dict "root" . "component" "frontend") | nindent 6 }}
@@ -118,6 +143,15 @@ spec:
         runAsNonRoot: true
         seccompProfile:
           type: RuntimeDefault
+      {{- if .Values.availability.topologySpread.enabled }}
+      topologySpreadConstraints:
+        - maxSkew: {{ .Values.availability.topologySpread.maxSkew }}
+          topologyKey: {{ .Values.availability.topologySpread.topologyKey | quote }}
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              {{- include "buildsphere.selectorLabels" (dict "root" . "component" "frontend") | nindent 14 }}
+      {{- end }}
       {{- with .Values.image.pullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}

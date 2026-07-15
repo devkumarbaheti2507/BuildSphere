@@ -14,12 +14,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version-file: .nvmrc
+          package-manager-cache: false
 
       - name: Enable Corepack
         run: corepack enable
@@ -37,7 +38,9 @@ jobs:
         run: pnpm -r test
 
       - name: Setup Helm
-        uses: azure/setup-helm@v4
+        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+        with:
+          version: v4.2.3
 
       - name: Setup Prometheus rule validator
         env:
@@ -57,6 +60,17 @@ jobs:
 
       - name: Verify production observability
         run: pnpm verify:phase11
+
+      - name: Verify runtime reliability and network security
+        run: pnpm verify:phase12
+
+      - name: Setup workflow validator
+        run: |
+          sh scripts/install-actionlint.sh "${RUNNER_TEMP}/actionlint"
+          echo "ACTIONLINT_BIN=${RUNNER_TEMP}/actionlint/actionlint" >> "${GITHUB_ENV}"
+
+      - name: Verify software supply-chain release certification
+        run: pnpm verify:phase13
 
   container-builds:
     needs: build-test
@@ -87,7 +101,7 @@ jobs:
             port: 8089
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Build ${{ matrix.component }} image without push
         run: >-
@@ -103,7 +117,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Build frontend image without push
         run: >-

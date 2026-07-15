@@ -282,3 +282,66 @@
 - Deleted both disposable kind clusters. No monitoring stack, registry,
   external cluster, cloud account, production Secret, alert receiver, or
   production resource was contacted or modified.
+
+## 2026-07-15
+
+- Defined and completed Phase 12 through FR-021, the runtime reliability and
+  network security specification, ADR-014, and tickets BS-1201 through BS-1203.
+- Added explicit zero-unavailable rolling updates, a five-second readiness
+  settling period, and selector-matched soft hostname topology spreading to all
+  11 platform Deployments.
+- Added optional selector-matched PDBs with render-time validation that rejects
+  singleton and non-disruptable minimum configurations.
+- Added optional `autoscaling/v2` HPAs for all 11 workloads with two-to-five
+  replica defaults, CPU/memory targets, bounded scale-up, stabilized scale-down,
+  and Deployment replica ownership transferred away from Helm.
+- Added optional ingress-only NetworkPolicies for all 11 workloads. They encode
+  25 exact internal caller edges, chart-test access, configurable public-ingress
+  and backend-metrics peers, exact destination ports, and no `ipBlock`, broad
+  peer, or egress policy.
+- Bumped the BuildSphere chart to `0.3.0`, expanded values/schema/operator
+  documentation, added the Phase 12 structured verifier and CI gate, and added
+  a two-replica reliability mode to the disposable kind orchestrator.
+- Passed Helm v4.2.3 strict and structural checks: the default remains 38
+  resources and zero Secrets; opt-in renders produce 11 PDBs, 11 HPAs, and 11
+  NetworkPolicies, with unsafe replica, scaling, topology, and ingress settings
+  failing validation.
+- Passed a checksum-verified kind v0.31.0 / Kubernetes v1.34.3
+  install/test/upgrade/test using two replicas for all 11 applications with all
+  11 PDBs and NetworkPolicies enabled, seven migrations, backend metrics
+  scrapes, and complete cleanup.
+- Passed frozen installation, zero-warning lint, every production build, all
+  63 automated tests, Prometheus v3.12.0 rule validation, and all 11 current
+  non-root/read-only image health and metrics smokes.
+- Re-ran the 26-file gateway smoke, migrations 001-007, Phase 6 and Phase 9
+  PostgreSQL verifiers, Terraform v1.15.8 static validation, and the independent
+  Phase 9 real-client apply/status/rollback/prune/revocation cluster workflow.
+- Deleted both disposable kind clusters. No external cluster, Metrics API,
+  network plugin, registry, cloud account, production Secret, or production
+  resource was contacted or modified.
+- Defined and completed Phase 13 through FR-022, the software supply-chain
+  security specification, ADR-015, and tickets BS-1301 through BS-1303.
+- Bumped the platform chart to `0.4.0` and added fail-closed digest mode for all
+  11 Deployments plus migration and test images while retaining the unchanged
+  38-resource tag-mode default.
+- Pinned every backend/frontend base to an exact digest and added release-time
+  OCI version, revision, source, and license identity. Backend runtime layers
+  remove bundled npm/Corepack/PNPM/Yarn tools.
+- Added the canonical 11-component release inventory, deterministic component
+  and bundle evidence builders, digest values, manifest, packaged chart, 11
+  CycloneDX SBOMs, and 14-entry checksum verification with six negative cases.
+- Added a protected semantic-version GitHub workflow with pinned actions,
+  BuildKit maximal provenance/SBOM, blocking Trivy scans, keyless Cosign image
+  and evidence signatures, signature verification, and draft release creation.
+  Normal CI stays read-only and no-push.
+- Passed actionlint `1.7.12`, Phase 13 strict/structural verification, all 11
+  rebuilt image checks, and Trivy `0.70.0` with zero HIGH/CRITICAL
+  vulnerabilities, zero detected secrets, and 11 valid CycloneDX SBOMs.
+- Passed the exact-digest kind install/test/upgrade/test with Phase 12
+  reliability controls, seven migrations, and cleanup, as well as the tag-mode
+  Phase 12 and independent Phase 9 disposable-cluster regressions.
+- Re-ran frozen installation, lint, all builds and 63 tests, PostgreSQL
+  migrations/provider/operation checks, the 26-file gateway smoke, Terraform
+  v1.15.8 validation, and Prometheus v3.12.0 rule checks successfully.
+- No GHCR image, signing certificate, GitHub Release, external cluster, cloud
+  account, production Secret, or production resource was created or modified.

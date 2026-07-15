@@ -69,10 +69,16 @@ The project is valuable in three ways:
 > bounded rollback. Phase 10 packages all 11 platform components as non-root
 > images and adds a hardened BuildSphere-owned Helm release. Phase 11 gives all
 > ten backends bounded Prometheus metrics and adds optional discovery/rules,
-> API SLOs, a Grafana dashboard, and alert runbooks. The Kubernetes workflows
-> were verified against disposable local kind clusters; operating a monitoring
-> stack, registry publication, external staging, production operations, and
-> cloud deployment remain outside the boundary.
+> API SLOs, a Grafana dashboard, and alert runbooks. Phase 12 adds
+> zero-unavailable rollout, soft topology spreading, and optional validated
+> disruption budgets, autoscaling, and exact ingress-only NetworkPolicies. The
+> Phase 13 binds all 11 platform images to immutable digests, blocks vulnerable
+> or secret-bearing candidates, emits CycloneDX SBOMs, defines keyless signing,
+> and builds deterministic draft-release evidence. The Kubernetes workflows
+> were verified against disposable local kind clusters; a real GHCR/signing
+> release was not triggered, and operating cluster add-ons, a monitoring stack,
+> external staging, production operations, and cloud deployment remain outside
+> the boundary.
 
 ## Recommended slide deck
 
@@ -150,6 +156,10 @@ Use the system graph from `docs/15_PROJECT_KNOWLEDGE_GRAPH.md`.
 - Safe path validation and placeholder secrets.
 - Target-bound encrypted kubeconfig, exact server/environment policy, expiring
   artifact approval, ownership checks, and bounded rollback.
+- Exact same-release ingress peers, configurable controller/collector
+  selectors, safe rolling updates, and disruption-budget validation.
+- Immutable image digests, pinned workflow actions and tools, blocking
+  vulnerability/secret scans, SBOM checksums, and protected keyless signing.
 
 ### Slide 10: GitHub integration
 
@@ -186,6 +196,12 @@ Use the system graph from `docs/15_PROJECT_KNOWLEDGE_GRAPH.md`.
   optional ServiceMonitor, six recording rules, three alerts, eight dashboard
   panels, three runbooks, and ten in-cluster metric scrapes before and after
   upgrade.
+- Safe rollout and topology checks for all 11 Deployments, plus 11 optional
+  PDBs, 11 HPAs, 11 ingress-only NetworkPolicies, 25 internal caller edges, and
+  a two-replica install/test/upgrade/test cluster run.
+- Phase 13 checks for 11 exact image digests, 11 zero-finding image scans, 11
+  CycloneDX SBOMs, deterministic 14-file checksums, six hostile evidence cases,
+  and a complete exact-digest kind install/test/upgrade/test run.
 
 ### Slide 12: Boundaries and roadmap
 
@@ -199,13 +215,19 @@ Use the system graph from `docs/15_PROJECT_KNOWLEDGE_GRAPH.md`.
 - Phase 11 metrics, SLOs, rules, dashboard, and runbooks are implemented and
   verified, but Prometheus, Grafana, Alertmanager, retention, and receiver
   credentials remain operator-owned.
+- Phase 12 rollout, topology, disruption, autoscaling, and ingress-isolation
+  resources are implemented and verified. Metrics API, enforcing CNI, ingress,
+  and metric-collector operation remain operator-owned.
+- Phase 13 digest release, scan/SBOM, keyless-signing, and deterministic draft
+  certification automation is implemented and locally verified. A live tag,
+  GHCR push, OIDC signature, and GitHub Release still require explicit protected
+  environment approval and have not been exercised.
 - No Terraform plan/apply/destroy, AWS credential handling, or state ownership.
 - No external LLM yet.
 - Redis/MinIO/MailHog prepared but not active.
-- Phase 11 is complete. Phase 12 must be specified; candidates include
-  supply-chain security, runtime reliability/network policy, production data
-  and secret operations, Jenkins, cost estimation, collaboration, and external
-  AI.
+- Phases 0-13 are complete. The recommended Phase 14 subject is production data
+  and secret operations, with Jenkins, cost estimation, collaboration, and
+  external AI still later options.
 - Explain that these are intentional roadmap boundaries, not hidden claims.
 
 ## Ten-minute live demonstration
@@ -269,6 +291,9 @@ requiring a real build runner.
 | Docker          | Packages software and local dependencies | Reproducible images plus Compose-based local infrastructure                 |
 | Kubernetes      | Describes how containers run together    | Declarative workload, networking, probes, resources, and ingress model      |
 | GitHub Actions  | Runs automated workflow jobs             | Real connected CI provider whose runs are normalized into BuildSphere       |
+| Trivy           | Checks release container images          | Pinned vulnerability/secret gate plus CycloneDX SBOM generation             |
+| CycloneDX       | Describes software inside each image     | Portable SBOM bound by digest and checksum to release evidence              |
+| Cosign          | Signs accepted release artifacts         | GitHub OIDC identity-bound image and evidence signing without stored keys   |
 | Pino            | Writes machine-readable logs             | Structured logging with request correlation and latency metadata            |
 | Prometheus      | Collects numeric service signals         | Bounded RED/runtime metrics, recording rules, and SLO evaluation            |
 | Grafana         | Displays operational dashboards          | Versioned panels over an operator-selected Prometheus data source           |
@@ -482,6 +507,22 @@ Be able to explain non-root images, external runtime state, metric cardinality,
 RED signals, optional operator resources, SLO measurement, alert response, and
 why BuildSphere validates but does not operate the external monitoring plane.
 
+### Module 12: Reliability and release certification
+
+Read:
+
+- `specs/RUNTIME_RELIABILITY_SPEC.md`
+- `specs/SUPPLY_CHAIN_SECURITY_SPEC.md`
+- `docs/adr/ADR-015-Software-Supply-Chain-Release-Certification.md`
+- `.github/workflows/release.yml`
+- `scripts/create-release-evidence.mjs`
+- `docs/17_RELEASE_CERTIFICATION.md`
+
+Be able to explain safe rollout and ingress controls, tag versus digest mode,
+scan-before-sign, SBOM/provenance roles, protected OIDC authority,
+deterministic evidence, draft review, and why local verification does not claim
+a live registry release.
+
 ## ChatGPT study prompts
 
 ### Guided tutor
@@ -560,7 +601,10 @@ scenario questions about failures, security boundaries, and future design.
   PostgreSQL generation run, the four-resource offline deployment plan, and the
   disposable-kind apply/status/rollback verification, and the Phase 10
   image/chart install-upgrade verification, plus Phase 11 metric, Prometheus
-  rule, dashboard, runbook, image, and in-cluster scrape verification.
+  rule, dashboard, runbook, image, and in-cluster scrape verification, plus
+  Phase 12 PDB/HPA/NetworkPolicy structure and two-replica cluster validation,
+  plus Phase 13 digest, scan, SBOM, evidence, workflow, and exact-digest cluster
+  validation.
 - Name at least two tradeoffs and two future milestones.
 - Keep secrets and `.env` off screen.
 - End with what you learned and the next bounded improvement.

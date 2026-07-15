@@ -6,7 +6,7 @@
 | Version           | 0.1.0               |
 | Status            | Draft               |
 | Author            | BuildSphere Team    |
-| Last Updated      | 2026-07-14          |
+| Last Updated      | 2026-07-15          |
 | Related Documents | All docs            |
 
 ---
@@ -37,6 +37,7 @@ This folder is the single source of truth for BuildSphere product and engineerin
 | `15_PROJECT_KNOWLEDGE_GRAPH.md`         | Self-contained product and engineering graph for learning and AI tutoring.              |
 | `project-knowledge-graph.json`          | Structured nodes, relationships, evidence, status, and limitations.                     |
 | `16_PRESENTATION_AND_LEARNING_GUIDE.md` | Presentation plan, live demo, study curriculum, interview answers, and ChatGPT prompts. |
+| `17_RELEASE_CERTIFICATION.md`           | Defines Phase 13 release authorization, evidence, verification, and publication steps.  |
 | `runbooks/`                             | Checked-in response procedures for production observability alerts.                     |
 
 # Rule

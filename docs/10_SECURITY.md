@@ -6,7 +6,7 @@
 | Version           | 0.1.0                         |
 | Status            | Draft                         |
 | Author            | BuildSphere Team              |
-| Last Updated      | 2026-07-14                    |
+| Last Updated      | 2026-07-15                    |
 | Related Documents | 01_SRS.md, specs/AUTH_SPEC.md |
 
 ---
@@ -22,6 +22,8 @@ This document defines BuildSphere security expectations.
 - Avoid secret leakage.
 - Make generated templates reasonably safe by default.
 - Keep AI inputs free of secrets.
+- Bind platform release candidates to immutable, scanned, inventoried, and
+  signed artifacts.
 
 # Authentication
 
@@ -84,6 +86,13 @@ Rules:
 - Runtime images must not contain `.env`, source-control metadata, local caches,
   or development dependency sets. Image tags must be explicit and cannot be
   `latest`.
+- Certified platform releases must use the complete 11-component digest mode;
+  no workload, migration, or test image may fall back to a tag.
+- Release images must pass the pinned HIGH/CRITICAL vulnerability and secret
+  gate before signing. Certification must bind each digest to its CycloneDX
+  SBOM, source revision, chart, values overlay, and checksums.
+- Normal CI must remain read-only and no-push. OIDC and package-write authority
+  belong only to the protected semantic-version release workflow.
 - Metrics must never label raw paths, URLs, query values, headers, bodies,
   identities, project IDs, correlation IDs, credentials, or error text. Use
   matched route templates, a single `unmatched` fallback, and `OTHER` for
@@ -147,6 +156,10 @@ Before sending data to an AI provider:
 | Mutable release selection               | Reject empty and `latest` image tags in the values schema and template validation.                                                                                                  |
 | Metric cardinality or identifier leak   | Permit only stable service, method, matched-route, and status labels; collapse unknown paths to `unmatched`; exclude scrape traffic.                                                |
 | Public metric disclosure                | Keep `/metrics` on internal backend Services, select targets explicitly, and create no metrics ingress or monitoring credential.                                                    |
+| Mutable or incomplete platform release  | Require all 11 exact image digests, fail chart/evidence validation closed, and bind source, SBOM hashes, chart hash, values, and checksums in one canonical manifest.               |
+| Vulnerable or secret-bearing image      | Scan immutable image references with checksum-pinned Trivy and block HIGH/CRITICAL vulnerabilities or detected secrets before signing.                                              |
+| Unauthorized artifact publication       | Keep normal CI read-only; require a semantic-version tag, default-branch ancestry, GitHub OIDC, and protected `production-release` environment for the separate release workflow.   |
+| Unverified release evidence             | Verify digest signatures, keylessly sign the canonical manifest and checksums, and create only a draft GitHub Release for human review.                                             |
 
 # Audit logs
 

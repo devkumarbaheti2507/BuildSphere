@@ -547,10 +547,12 @@
 .git/refs/heads/main
 .git/refs/remotes/origin/HEAD
 .git/refs/remotes/origin/main
+.github/dependabot.yml
 .github/ISSUE_TEMPLATE/bug_report.md
 .github/ISSUE_TEMPLATE/feature_request.md
 .github/PULL_REQUEST_TEMPLATE.md
 .github/workflows/ci.yml
+.github/workflows/release.yml
 .gitignore
 .npmrc
 .nvmrc
@@ -564,6 +566,7 @@ CONTRIBUTING.md
 LICENSE
 Makefile
 README.md
+SECURITY.md
 START_HERE.md
 assets/demo/.gitkeep
 assets/logo/.gitkeep
@@ -698,6 +701,7 @@ docs/13_BACKLOG.md
 docs/14_GLOSSARY.md
 docs/15_PROJECT_KNOWLEDGE_GRAPH.md
 docs/16_PRESENTATION_AND_LEARNING_GUIDE.md
+docs/17_RELEASE_CERTIFICATION.md
 docs/README.md
 docs/adr/ADR-001-Repository-Structure.md
 docs/adr/ADR-002-Architecture.md
@@ -712,6 +716,8 @@ docs/adr/ADR-010-Kubernetes-Deployment-Preflight.md
 docs/adr/ADR-011-Controlled-Kubernetes-Execution.md
 docs/adr/ADR-012-Production-Packaging.md
 docs/adr/ADR-013-Production-Observability.md
+docs/adr/ADR-014-Runtime-Reliability-and-Network-Security.md
+docs/adr/ADR-015-Software-Supply-Chain-Release-Certification.md
 docs/adr/README.md
 docs/diagrams/README.md
 docs/diagrams/database.drawio
@@ -770,8 +776,11 @@ infrastructure/helm/buildsphere/templates/NOTES.txt
 infrastructure/helm/buildsphere/templates/_helpers.tpl
 infrastructure/helm/buildsphere/templates/configmap.yaml
 infrastructure/helm/buildsphere/templates/deployments.yaml
+infrastructure/helm/buildsphere/templates/horizontalpodautoscalers.yaml
 infrastructure/helm/buildsphere/templates/ingress.yaml
 infrastructure/helm/buildsphere/templates/migration-job.yaml
+infrastructure/helm/buildsphere/templates/networkpolicies.yaml
+infrastructure/helm/buildsphere/templates/poddisruptionbudgets.yaml
 infrastructure/helm/buildsphere/templates/prometheusrule.yaml
 infrastructure/helm/buildsphere/templates/serviceaccounts.yaml
 infrastructure/helm/buildsphere/templates/servicemonitor.yaml
@@ -788,6 +797,8 @@ infrastructure/nginx/frontend.conf
 infrastructure/nginx/nginx.conf
 infrastructure/observability/README.md
 infrastructure/observability/grafana/buildsphere-overview.json
+infrastructure/release/components.json
+infrastructure/release/README.md
 infrastructure/terraform/README.md
 memory/architecture-summary.md
 memory/coding-guidelines.md
@@ -834,6 +845,7 @@ research/product-notes.md
 research/user-feedback.md
 scripts/README.md
 scripts/check-toolchain.sh
+scripts/create-release-evidence.mjs
 scripts/fixtures/phase10-runtime/Chart.yaml
 scripts/fixtures/phase10-runtime/Dockerfile.postgres
 scripts/fixtures/phase10-runtime/templates/deployment.yaml
@@ -842,6 +854,8 @@ scripts/fixtures/phase10-runtime/templates/service.yaml
 scripts/fixtures/phase10-runtime/templates/serviceaccount.yaml
 scripts/fixtures/phase10-runtime/values.schema.json
 scripts/fixtures/phase10-runtime/values.yaml
+scripts/install-actionlint.sh
+scripts/install-trivy.sh
 scripts/pnpm-workspace.sh
 scripts/smoke-mvp.ts
 scripts/smoke-phase10-images.sh
@@ -849,6 +863,9 @@ scripts/verify-phase10-images.sh
 scripts/verify-phase10-kind.sh
 scripts/verify-phase10-packaging.mjs
 scripts/verify-phase11-observability.mjs
+scripts/verify-phase12-reliability.mjs
+scripts/verify-phase13-images.mjs
+scripts/verify-phase13-supply-chain.mjs
 scripts/verify-phase6-postgres.ts
 scripts/verify-phase9-kind.ts
 scripts/verify-phase9-postgres.ts
@@ -864,6 +881,8 @@ specs/NOTIFICATION_SPEC.md
 specs/PIPELINE_SPEC.md
 specs/PRODUCTION_DEPLOYMENT_SPEC.md
 specs/PRODUCTION_OBSERVABILITY_SPEC.md
+specs/RUNTIME_RELIABILITY_SPEC.md
+specs/SUPPLY_CHAIN_SECURITY_SPEC.md
 specs/PROJECT_SPEC.md
 specs/README.md
 specs/TEMPLATE_SPEC.md

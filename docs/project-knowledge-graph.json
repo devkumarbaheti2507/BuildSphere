@@ -1,12 +1,12 @@
 {
   "schemaVersion": "1.0.0",
-  "snapshotDate": "2026-07-14",
+  "snapshotDate": "2026-07-15",
   "project": {
     "id": "buildsphere",
     "name": "BuildSphere",
     "version": "0.1.0",
     "kind": "AI-assisted Developer Experience Platform",
-    "status": "Phases 0-11 complete with controlled Kubernetes execution, platform packaging, and production observability live-validated locally",
+    "status": "Phases 0-13 complete with controlled Kubernetes execution, platform packaging, observability, runtime reliability, and supply-chain release certification validated locally",
     "primaryAudience": [
       "learning developer",
       "backend or DevOps portfolio builder",
@@ -33,7 +33,7 @@
       "type": "product",
       "name": "BuildSphere",
       "status": "implemented",
-      "description": "Guided platform for project configuration, selection-aware DevOps, Helm, disabled AWS EKS Terraform generation, controlled Kubernetes deployment, explainable delivery workflows, recommendations, validation, GitHub integration, locally verified production packaging, and a production observability baseline.",
+      "description": "Guided platform for project configuration, selection-aware DevOps, Helm, disabled AWS EKS Terraform generation, controlled Kubernetes deployment, explainable delivery workflows, recommendations, validation, GitHub integration, locally verified production packaging, observability, optional Kubernetes runtime reliability controls, and deterministic supply-chain release certification.",
       "evidence": ["README.md", "docs/00_PROJECT_VISION.md"]
     },
     {
@@ -710,7 +710,7 @@
       "type": "capability",
       "name": "BuildSphere platform Helm release",
       "status": "implemented",
-      "description": "Hardened 11-workload chart with external secrets and PostgreSQL, migration hooks, probes, resources, optional ingress, and Helm tests.",
+      "description": "Hardened 11-workload chart with external secrets and PostgreSQL, migration hooks, probes, resources, safe rollout/topology defaults, optional ingress/reliability/network resources, and Helm tests.",
       "evidence": [
         "infrastructure/helm/buildsphere/",
         "specs/PRODUCTION_DEPLOYMENT_SPEC.md",
@@ -734,7 +734,7 @@
       "type": "boundary",
       "name": "External production dependencies",
       "status": "prepared",
-      "description": "Registry, PostgreSQL operations, runtime Secret lifecycle, ingress, DNS, TLS, and external cluster authority remain operator-owned."
+      "description": "Live registry credentials and promotion, PostgreSQL operations, runtime Secret lifecycle, ingress, DNS, TLS, Metrics API, network-policy enforcement, protected-environment approval, and external cluster authority remain operator-owned."
     },
     {
       "id": "technology.prometheus",
@@ -795,9 +795,104 @@
       ]
     },
     {
-      "id": "future.production_hardening",
+      "id": "capability.runtime_reliability",
+      "type": "capability",
+      "name": "Kubernetes rollout, disruption, and autoscaling controls",
+      "status": "implemented",
+      "description": "All 11 Deployments use zero-unavailable rollout and soft topology spreading; opt-in selector-matched PDBs and autoscaling/v2 HPAs transfer replica ownership safely.",
+      "evidence": [
+        "specs/RUNTIME_RELIABILITY_SPEC.md",
+        "infrastructure/helm/buildsphere/templates/deployments.yaml",
+        "infrastructure/helm/buildsphere/templates/poddisruptionbudgets.yaml",
+        "infrastructure/helm/buildsphere/templates/horizontalpodautoscalers.yaml"
+      ]
+    },
+    {
+      "id": "capability.ingress_network_security",
+      "type": "capability",
+      "name": "BuildSphere ingress network isolation",
+      "status": "implemented",
+      "description": "Opt-in ingress-only policies select all 11 workloads and allow the exact same-release caller graph, chart tests, configured public ingress, and configured backend metric collection on destination ports only.",
+      "evidence": [
+        "infrastructure/helm/buildsphere/templates/networkpolicies.yaml",
+        "docs/adr/ADR-014-Runtime-Reliability-and-Network-Security.md"
+      ]
+    },
+    {
+      "id": "workflow.phase12_reliability_verification",
+      "type": "workflow",
+      "name": "Phase 12 reliability and network verification",
+      "status": "implemented",
+      "description": "Checks safe defaults, all 11 optional PDB/HPA/NetworkPolicy resources, 25 internal caller edges, negative configurations, and a two-replica disposable install-test-upgrade-test lifecycle.",
+      "evidence": [
+        "scripts/verify-phase12-reliability.mjs",
+        "scripts/verify-phase10-kind.sh",
+        "docs/11_TESTING.md"
+      ]
+    },
+    {
+      "id": "technology.trivy",
+      "type": "technology",
+      "name": "Trivy",
+      "status": "implemented",
+      "reason": "Provide a checksum-pinned blocking vulnerability and secret gate plus CycloneDX image inventory generation.",
+      "evidence": [
+        "scripts/install-trivy.sh",
+        "scripts/verify-phase13-images.mjs"
+      ]
+    },
+    {
+      "id": "technology.cyclonedx",
+      "type": "technology",
+      "name": "CycloneDX SBOM",
+      "status": "implemented",
+      "reason": "Represent each release image's software inventory in a portable, checksummed format bound to its digest.",
+      "evidence": [
+        "scripts/create-release-evidence.mjs",
+        ".github/workflows/release.yml"
+      ]
+    },
+    {
+      "id": "technology.cosign",
+      "type": "technology",
+      "name": "Cosign with GitHub OIDC",
+      "status": "implemented",
+      "reason": "Define keyless identity-bound signatures for accepted image digests and canonical release evidence without storing a signing key.",
+      "evidence": [
+        ".github/workflows/release.yml",
+        "docs/17_RELEASE_CERTIFICATION.md"
+      ]
+    },
+    {
+      "id": "capability.release_certification",
+      "type": "capability",
+      "name": "Software supply-chain release certification",
+      "status": "implemented",
+      "description": "A protected semantic-version workflow requires all 11 immutable image records, scan/SBOM evidence, verified image signatures, digest-only Helm values, canonical checksums, and signed draft-release evidence without deployment.",
+      "evidence": [
+        "specs/SUPPLY_CHAIN_SECURITY_SPEC.md",
+        ".github/workflows/release.yml",
+        "infrastructure/release/components.json",
+        "scripts/create-release-evidence.mjs"
+      ]
+    },
+    {
+      "id": "workflow.phase13_supply_chain_verification",
+      "type": "workflow",
+      "name": "Phase 13 supply-chain verification",
+      "status": "implemented",
+      "description": "Checks immutable workflow/tool inputs, complete digest rendering, hostile evidence failures, all 11 image scans/SBOMs, deterministic checksums, and an exact-digest disposable install-test-upgrade-test lifecycle.",
+      "evidence": [
+        "scripts/verify-phase13-supply-chain.mjs",
+        "scripts/verify-phase13-images.mjs",
+        "scripts/verify-phase10-kind.sh",
+        "docs/11_TESTING.md"
+      ]
+    },
+    {
+      "id": "future.production_data_operations",
       "type": "future_candidate",
-      "name": "Production hardening and release certification",
+      "name": "Production data and secret operations",
       "status": "future"
     }
   ],
@@ -1528,9 +1623,89 @@
       "to": "boundary.external_production_dependencies"
     },
     {
+      "from": "capability.platform_helm_release",
+      "relation": "offers",
+      "to": "capability.runtime_reliability"
+    },
+    {
+      "from": "capability.platform_helm_release",
+      "relation": "offers",
+      "to": "capability.ingress_network_security"
+    },
+    {
+      "from": "workflow.phase12_reliability_verification",
+      "relation": "verifies",
+      "to": "capability.runtime_reliability"
+    },
+    {
+      "from": "workflow.phase12_reliability_verification",
+      "relation": "verifies",
+      "to": "capability.ingress_network_security"
+    },
+    {
+      "from": "capability.runtime_reliability",
+      "relation": "externalizes",
+      "to": "boundary.external_production_dependencies"
+    },
+    {
+      "from": "capability.ingress_network_security",
+      "relation": "externalizes",
+      "to": "boundary.external_production_dependencies"
+    },
+    {
+      "from": "product.buildsphere",
+      "relation": "offers",
+      "to": "capability.release_certification"
+    },
+    {
+      "from": "capability.release_certification",
+      "relation": "certifies",
+      "to": "capability.production_images"
+    },
+    {
+      "from": "capability.release_certification",
+      "relation": "packages",
+      "to": "capability.platform_helm_release"
+    },
+    {
+      "from": "capability.release_certification",
+      "relation": "uses",
+      "to": "technology.trivy"
+    },
+    {
+      "from": "capability.release_certification",
+      "relation": "emits",
+      "to": "technology.cyclonedx"
+    },
+    {
+      "from": "capability.release_certification",
+      "relation": "uses",
+      "to": "technology.cosign"
+    },
+    {
+      "from": "workflow.phase13_supply_chain_verification",
+      "relation": "verifies",
+      "to": "capability.release_certification"
+    },
+    {
+      "from": "workflow.phase13_supply_chain_verification",
+      "relation": "verifies",
+      "to": "capability.production_images"
+    },
+    {
+      "from": "workflow.phase13_supply_chain_verification",
+      "relation": "verifies",
+      "to": "capability.platform_helm_release"
+    },
+    {
+      "from": "capability.release_certification",
+      "relation": "externalizes",
+      "to": "boundary.external_production_dependencies"
+    },
+    {
       "from": "product.buildsphere",
       "relation": "may_evolve_to",
-      "to": "future.production_hardening"
+      "to": "future.production_data_operations"
     }
   ],
   "generatedArtifact": {
@@ -1600,6 +1775,10 @@
       "disposable kind platform install with seven migrations, 11 ready Deployments, Helm test, upgrade, repeated migration/test, and cleanup",
       "Phase 11 shared metrics tests, default and opt-in chart verification, Prometheus v3.12.0 rule validation, eight dashboard panels, and three runbooks",
       "all ten backend image metric checks and disposable-cluster metric scrapes before and after chart upgrade",
+      "Phase 12 verification for 11 safe-rollout Deployments, 11 optional PDBs, 11 HPAs, 11 ingress-only NetworkPolicies, 25 internal caller edges, and unsafe-value failures",
+      "two-replica disposable platform install with all 11 PDBs and NetworkPolicies, Helm smoke, upgrade, repeat smoke, and cleanup",
+      "Phase 13 verification for 21 pinned action references, complete digest-mode Helm rendering, deterministic 11-component evidence with 14 checksums, and six hostile evidence failures",
+      "all 11 images scanned with zero HIGH/CRITICAL vulnerability or secret findings, 11 CycloneDX SBOMs, and an exact-digest disposable install-test-upgrade-test lifecycle",
       "live GitHub OAuth, private repository publication, successful Actions synchronization, and no-op republish"
     ]
   },
@@ -1616,7 +1795,8 @@
     "GitHub disconnect, organization SSO, workflow control, and log archive UI are out of scope.",
     "Rate limiting, general security audit events, full RBAC, and production secret management are future hardening.",
     "The repository defines metrics, SLOs, rules, a dashboard, and runbooks but does not operate or persist Prometheus, Grafana, Alertmanager, or receiver credentials.",
-    "Phases 10-11 do not provide registry promotion, image signing/scanning, external Secret operations, database HA/backups, network policy, autoscaling, environment alert routing, or production release certification."
+    "Phase 12 reliability resources are optional: HPA runtime scaling needs an operator Metrics API, policy enforcement needs an enforcing CNI and correct controller selectors, and the disposable fixture does not claim load tuning or CNI enforcement.",
+    "Phase 13 defines and locally verifies registry build, scanning, SBOM, keyless signing, and draft-certification automation, but no live tag-triggered GHCR push, OIDC signature, or GitHub Release has been exercised; external Secret operations, database HA/backups, environment alert routing, and staging/production promotion remain open."
   ],
   "sourceMap": {
     "productAndRequirements": [
@@ -1646,9 +1826,12 @@
     "operationsAndEvidence": [
       "docker-compose.dev.yml",
       ".github/workflows/ci.yml",
+      ".github/workflows/release.yml",
       "infrastructure/docker/",
       "infrastructure/helm/buildsphere/",
+      "infrastructure/release/",
       "infrastructure/observability/",
+      "docs/17_RELEASE_CERTIFICATION.md",
       "docs/runbooks/",
       "scripts/",
       "docs/11_TESTING.md",

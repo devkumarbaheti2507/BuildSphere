@@ -1,0 +1,51 @@
+{{- if .Values.availability.autoscaling.enabled -}}
+{{- $components := (include "buildsphere.applicationComponents" . | fromYaml).components -}}
+{{- range $component := $components }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "buildsphere.componentName" (dict "root" $ "component" $component.name) }}
+  labels:
+    {{- include "buildsphere.commonLabels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $component.name }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "buildsphere.componentName" (dict "root" $ "component" $component.name) }}
+  minReplicas: {{ $.Values.availability.autoscaling.minReplicas }}
+  maxReplicas: {{ $.Values.availability.autoscaling.maxReplicas }}
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: {{ $.Values.availability.autoscaling.scaleUpStabilizationWindowSeconds }}
+      selectPolicy: Max
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 60
+        - type: Pods
+          value: 2
+          periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: {{ $.Values.availability.autoscaling.scaleDownStabilizationWindowSeconds }}
+      selectPolicy: Max
+      policies:
+        - type: Percent
+          value: 25
+          periodSeconds: 60
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ $.Values.availability.autoscaling.cpuUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ $.Values.availability.autoscaling.memoryUtilizationPercentage }}
+{{- end }}
+{{- end }}

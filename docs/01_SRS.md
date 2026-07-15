@@ -352,6 +352,78 @@ Acceptance criteria:
 - Phase 11 does not install Prometheus, Grafana, Alertmanager, an ingress
   controller, or any external monitoring service.
 
+## FR-021 BuildSphere runtime reliability and network security
+
+BuildSphere shall provide reviewed Kubernetes controls for safe rolling
+updates, voluntary disruption, horizontal scaling, and least-privilege ingress
+without making unsupported cluster capabilities mandatory.
+
+Acceptance criteria:
+
+- Every application Deployment uses an explicit rolling-update strategy with
+  zero unavailable replicas, a bounded surge, and a readiness settling period.
+- Every application Deployment can spread replicas across nodes through a
+  soft topology constraint that remains schedulable on a single-node cluster.
+- The chart can optionally render one `policy/v1` PodDisruptionBudget per
+  application workload and rejects disruption budgets when the effective
+  minimum replica count cannot tolerate one voluntary disruption.
+- The chart can optionally render one `autoscaling/v2`
+  HorizontalPodAutoscaler per application workload with bounded minimum and
+  maximum replicas, CPU and memory targets, and conservative scale-down
+  behavior.
+- Deployment replica ownership transfers to the autoscaler when autoscaling is
+  enabled; a cluster Metrics API remains an operator prerequisite.
+- The chart can optionally render one ingress-only NetworkPolicy per
+  application workload. Internal rules allow only the checked-in
+  service-to-service caller graph and Helm test traffic.
+- Public frontend and API traffic is allowed only from configurable ingress
+  controller selectors. Backend metric scrapes are allowed only from
+  configurable collector selectors.
+- Network policies do not restrict egress in this phase because DNS,
+  PostgreSQL, GitHub, and Kubernetes API destinations are environment-owned.
+- PodDisruptionBudget, HorizontalPodAutoscaler, and NetworkPolicy resources are
+  disabled by default, so the existing single-node and no-Metrics-API release
+  remains installable.
+- Helm lint, structured render checks, invalid-value checks, CI, and complete
+  Phase 0-11 regression verification pass.
+- Phase 12 does not install a Metrics API, ingress controller, monitoring
+  collector, service mesh, or external network-policy engine and does not
+  modify an external cluster.
+
+## FR-022 BuildSphere software supply-chain release certification
+
+BuildSphere shall produce reviewable, cryptographically verifiable release
+evidence for its own container images and Helm package before an operator can
+treat a version as a deployment candidate.
+
+Acceptance criteria:
+
+- Normal pull-request and main-branch CI remains read-only and never logs into
+  a registry, pushes an image, signs an artifact, or creates a release.
+- The release workflow accepts only a semantic-version Git tag whose commit is
+  contained in the default branch and runs through a separately protectable
+  GitHub environment.
+- Every third-party GitHub Action is pinned to a full commit SHA and automated
+  dependency updates can propose reviewed action, package, and base-image
+  changes.
+- All ten backend images and the frontend image carry OCI source, revision,
+  version, and license metadata and are built from the tagged commit.
+- Every published image receives BuildKit provenance and SBOM attestations, a
+  CycloneDX SBOM, and a blocking HIGH/CRITICAL vulnerability and secret scan.
+- Every accepted image digest is signed keylessly with the release workflow's
+  GitHub OIDC identity; tags alone are never release evidence.
+- Release certification rejects missing, duplicate, unknown, malformed, or
+  mismatched component records and requires all eleven image digests.
+- The release bundle contains a deterministic manifest binding version,
+  commit, source, image digests, SBOM hashes, chart hash, scan policy, and
+  signing identity, plus a digest-only Helm values file and checksums.
+- The Helm chart supports an explicit digest mode that rejects a missing or
+  malformed digest for any application component and renders no tag-based
+  application image reference while that mode is enabled.
+- Release artifacts are signed and uploaded to a draft GitHub Release for
+  human review. This phase does not publish a release during local
+  verification or deploy one to an external cluster.
+
 # Non-functional requirements
 
 ## NFR-001 Usability

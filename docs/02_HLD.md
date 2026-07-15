@@ -51,7 +51,7 @@ API Gateway
 | Pipeline Service     | Pipeline definitions, stages, executions, statuses.                         |
 | Deployment Service   | Deployment target definitions and generated deployment assets.              |
 | Logging Service      | Log ingestion, storage, and streaming model.                                |
-| Monitoring Service   | Health, metrics, and future Prometheus/Grafana integration.                 |
+| Monitoring Service   | Aggregate health and Prometheus-compatible operational metrics.             |
 | AI Service           | Rule-based and LLM-assisted suggestions.                                    |
 | Notification Service | User notifications and event messages.                                      |
 | Analytics Service    | Product usage and engineering metrics.                                      |
@@ -122,9 +122,9 @@ Phase 10 staging baseline:
 - Runtime secrets and PostgreSQL are external inputs owned by the operator.
 - Only the frontend and API Gateway are exposed through optional TLS ingress.
 
-Future production hardening adds managed secret rotation, high availability,
-autoscaling, network policy, backup/restore automation, Prometheus/Grafana,
-centralized logs, traces, alerting, and release certification.
+Future production hardening adds managed secret rotation, backup/restore
+automation, centralized logs, traces, supply-chain security, and release
+certification.
 
 Phase 11 adds the first production observability boundary. Every backend
 process owns an isolated Prometheus registry and exposes runtime plus HTTP RED
@@ -132,6 +132,25 @@ metrics on its internal service port. The Helm release advertises those
 endpoints and can emit Prometheus Operator discovery and alert resources only
 when an operator opts in. BuildSphere does not install or operate the
 monitoring stack.
+
+Phase 12 adds a chart-owned runtime reliability boundary. Deployments use an
+explicit zero-unavailable rolling strategy and soft node topology spreading.
+Pod disruption budgets and horizontal autoscaling remain opt-in because they
+require at least two effective replicas and a cluster Metrics API,
+respectively. Optional ingress-only NetworkPolicies encode the current
+service caller graph while leaving environment-dependent egress unrestricted.
+Ingress controller and metrics collector identities are operator-supplied
+selectors; BuildSphere does not install either dependency.
+
+Phase 13 adds a release-certification boundary around BuildSphere's own images
+and Helm package. Pull-request and main-branch CI continue to build without
+registry credentials or push authority. An explicit semantic-version tag can
+enter a protected release environment, where each image is built from that
+commit, scanned, accompanied by SBOM and provenance attestations, and signed by
+the workflow's short-lived GitHub OIDC identity. A final evidence bundle binds
+all eleven immutable image digests to the chart package and a digest-only Helm
+values overlay. The workflow creates a draft release for operator review; it
+does not deploy the candidate.
 
 The generated Phase 7 chart is an inspectable deployment asset. Real Helm
 install, upgrade, rollback, and Kubernetes credential handling remain outside
@@ -188,6 +207,40 @@ Grafana -> Prometheus: query the versioned BuildSphere dashboard
 Metrics stay pull-based and contain operational dimensions only. Public
 ingress routes remain `/api` and `/`; metric endpoints are not added to the
 external routing contract.
+
+## Runtime reliability flow
+
+```text
+Helm -> Deployment: set zero-unavailable rollout and soft topology spread
+Operator -> Values: opt into two or more effective replicas and disruption budgets
+Metrics API -> HPA: provide CPU and memory utilization when autoscaling is enabled
+HPA -> Deployment scale: own desired replicas within configured bounds
+Ingress controller -> NetworkPolicy -> Frontend/API Gateway: allow public traffic
+BuildSphere service -> NetworkPolicy -> Destination service: allow reviewed internal call
+Metrics collector -> NetworkPolicy -> Backend /metrics: allow internal scrape
+```
+
+NetworkPolicy applies only to ingress in Phase 12. PostgreSQL, DNS, GitHub, and
+Kubernetes API egress remain reachable until an environment-specific egress
+contract can name their destinations safely.
+
+## Release certification flow
+
+```text
+Semantic-version tag -> Protected release environment: authorize release job
+Release job -> BuildKit: build and push 11 images with SBOM/provenance
+Trivy -> Published digest: reject HIGH/CRITICAL vulnerabilities or secrets
+GitHub OIDC -> Cosign: keylessly sign each accepted immutable digest
+Release evidence tool -> SBOMs/chart/digests: validate and bind one candidate
+Helm -> Digest values: render every application image by sha256 digest
+Cosign -> Evidence/checksums: sign release artifacts
+GitHub Release -> Operator: expose a draft candidate for human review
+Operator -> External staging: separately approve deployment and verification
+```
+
+Image publication and release creation exist only in the tag-triggered
+workflow. The standard CI workflow retains `contents: read` and no package,
+OIDC, attestation, release, or deployment authority.
 
 ## Project generation flow
 

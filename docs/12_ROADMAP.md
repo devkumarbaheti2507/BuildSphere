@@ -6,7 +6,7 @@
 | Version           | 0.1.0                    |
 | Status            | Draft                    |
 | Author            | BuildSphere Team         |
-| Last Updated      | 2026-07-14               |
+| Last Updated      | 2026-07-15               |
 | Related Documents | 01_SRS.md, 13_BACKLOG.md |
 
 ---
@@ -394,9 +394,10 @@ Exit criteria:
   Phases 0-10 remain green.
 - No external monitoring stack or production environment is modified.
 
+Phase 12 now owns the network policy and autoscaling slices identified here.
 Later production-hardening phases remain responsible for centralized log
-retention, distributed tracing, network policy, autoscaling, database
-operations, supply-chain release security, and external release certification.
+retention, distributed tracing, database operations, supply-chain release
+security, and external release certification.
 
 Verification outcome:
 
@@ -413,14 +414,130 @@ Verification outcome:
   upgrade. The separate Phase 9 real-client apply/status/rollback regression
   also passed; both clusters were deleted and no external environment changed.
 
-# Post-Phase 11 candidates
+# Phase 12: Runtime reliability and network security
+
+Status: Complete as of 2026-07-15.
+
+Goal: Add safe rollout, scheduling, disruption, scaling, and ingress-isolation
+controls without making cluster add-ons mandatory for the default release.
+
+Completed slices:
+
+1. BS-1201: explicit rolling-update, readiness settling, soft topology spread,
+   and optional disruption-budget controls.
+2. BS-1202: optional autoscaling/v2 resources with CPU and memory targets and
+   clear Metrics API ownership.
+3. BS-1203: optional least-privilege ingress policies, structured
+   verification, CI integration, and complete cross-phase regression.
+
+Exit criteria:
+
+- All 11 Deployments use zero-unavailable rollout behavior and selector-matched
+  soft topology spreading.
+- Optional disruption budgets are emitted only for a configuration that can
+  preserve one available replica during voluntary disruption.
+- Optional HPAs target all 11 Deployments and transfer replica ownership away
+  from Helm.
+- Optional ingress-only NetworkPolicies cover all 11 workloads, the exact
+  internal caller graph, Helm tests, selected ingress controllers, and selected
+  backend metrics collectors.
+- The default render retains the Phase 10 38-resource, zero-Secret contract and
+  requires neither Metrics API nor NetworkPolicy support.
+- CI and all Phase 0-11 workspace, image, chart, PostgreSQL, Terraform, and
+  disposable-cluster regressions remain green.
+- No external cluster, cluster add-on, cloud account, or production resource is
+  modified.
+
+Verification outcome:
+
+- Helm v4.2.3 strict lint and structured checks pass for zero-unavailable
+  rollout and selector-matched soft topology spreading across all 11
+  Deployments. The default release remains 38 resources with no PDB, HPA,
+  NetworkPolicy, or Secret.
+- Opt-in renders produce 11 `policy/v1` disruption budgets, 11
+  `autoscaling/v2` HPAs, and 11 ingress-only NetworkPolicies. Verification
+  covers replica ownership, CPU/memory behavior, 25 exact internal caller
+  edges, external controller/collector selectors, ports, and unsafe-value
+  failures.
+- A checksum-matched kind v0.31.0 / Kubernetes v1.34.3 cluster ran two fixed
+  replicas of every application with all disruption budgets and network
+  policies installed. Install, seven migrations, Helm test, upgrade, repeated
+  migrations/test, and cleanup passed.
+- Frozen install, lint, all builds, all 63 tests, all 11 hardened image smokes,
+  the 26-file gateway flow, Phase 6/Phase 9 PostgreSQL checks, Terraform v1.15.8
+  validation, and the independent Phase 9 real-client apply/status/rollback
+  regression remain green.
+- Both disposable clusters were deleted. No external cluster, Metrics API,
+  network plugin, registry, cloud account, or production resource was changed.
+
+# Phase 13: Software supply-chain security and release certification
+
+Status: Complete as of 2026-07-15.
+
+Goal: Bind every BuildSphere deployment candidate to reviewed source, scanned
+and signed immutable images, SBOMs, provenance, and a digest-only Helm release
+without granting publication authority to normal CI or deploying externally.
+
+Planned slices:
+
+1. BS-1301: digest-aware images and Helm release identity.
+2. BS-1302: SBOM, vulnerability, provenance, and keyless image signing flow.
+3. BS-1303: deterministic release evidence, draft certification, and complete
+   cross-phase verification.
+
+Exit criteria:
+
+- Normal CI remains read-only and no-push, and all workflow actions are pinned
+  to immutable commits.
+- All eleven images carry OCI source identity and a tag-triggered protected
+  workflow builds them with SBOM/provenance attestations.
+- A pinned scanner rejects HIGH/CRITICAL vulnerabilities or secrets before an
+  immutable digest is keylessly signed.
+- Certification requires all eleven component records and emits a manifest,
+  CycloneDX SBOM set, checksums, packaged chart, and digest values overlay.
+- The chart renders all application images by digest in explicit digest mode
+  and fails closed for an incomplete or malformed digest set.
+- Release evidence and checksums are keylessly signed and attached to a draft
+  release for human review.
+- Phase 0-12 workspace, image, chart, PostgreSQL, Terraform, gateway, and
+  disposable-cluster regressions remain green.
+- Local verification pushes no image, requests no signing certificate, creates
+  no GitHub Release, and changes no external cluster or production resource.
+
+Verification outcome:
+
+- Normal CI is read-only, all 21 action references are immutable commit SHAs,
+  and the separate semantic-version release workflow is protected by the
+  `production-release` environment.
+- All 11 Docker targets use digest-pinned bases and carry release-supplied OCI
+  identity. Trivy `0.70.0` found zero HIGH/CRITICAL vulnerabilities and zero
+  secrets across the rebuilt images, and 11 CycloneDX SBOMs were generated.
+- The chart retains its 38-resource tag-mode default. Complete digest mode
+  renders all 11 application, migration, and test references by exact digest;
+  six incomplete, duplicate, unknown, inconsistent, malformed, or invalid-SBOM
+  evidence cases fail closed.
+- Deterministic certification emits 11 component records, 11 SBOMs, a packaged
+  chart, digest values, a canonical manifest, and 14 checksum entries. The
+  release workflow verifies image signatures and signs the manifest and
+  checksums before creating only a draft GitHub Release.
+- A disposable kind cluster installed the complete platform with exact local
+  digest references, all Phase 12 reliability controls, seven migrations,
+  Helm smoke, upgrade, repeated smoke, and cleanup.
+- Frozen installation, zero-warning lint, all builds and 63 tests, all image
+  gates, PostgreSQL/gateway/Terraform/Prometheus checks, the Phase 12 tag-mode
+  cluster, and the independent Phase 9 real-client regression remain green.
+- No image was pushed, no signing certificate was requested, no GitHub Release
+  was created, and no external cluster or production resource was changed.
+
+# Post-Phase 13 candidates
 
 These items require separate specifications and backlog milestones:
 
 - Jenkins integration.
 - Cost estimation.
 - Team collaboration.
-- Production security, reliability, observability, and release certification.
+- Production data and secret operations.
+- Centralized log retention and distributed tracing.
 
 # Recommended first implementation order for Codex
 

@@ -5,8 +5,8 @@
 | Field                  | Value                                                                                    |
 | ---------------------- | ---------------------------------------------------------------------------------------- |
 | Purpose                | Self-contained technical and product context for learning, presentation, and AI tutoring |
-| Snapshot date          | 2026-07-14                                                                               |
-| Current milestone      | Phase 11 complete; production observability and SLO baseline locally live-validated      |
+| Snapshot date          | 2026-07-15                                                                               |
+| Current milestone      | Phase 13 complete; supply-chain release certification locally validated                  |
 | Intended readers       | Project owner, reviewers, interviewers, mentors, and ChatGPT                             |
 | Structured companion   | `docs/project-knowledge-graph.json`                                                      |
 | Presentation companion | `docs/16_PRESENTATION_AND_LEARNING_GUIDE.md`                                             |
@@ -28,7 +28,11 @@ apply, durable status and bounded rollback, plus optional real GitHub repository
 and Actions integration. BuildSphere itself is packaged as non-root containers
 and a hardened Helm release for controlled staging, with shared Prometheus
 metrics, optional operator discovery/rules, a Grafana dashboard, SLOs, and alert
-runbooks.
+runbooks. Its platform Deployments also have safe rollout/topology defaults and
+optional validated disruption budgets, autoscaling, and ingress isolation.
+Certified platform candidates bind all 11 images to immutable digests, scan
+and inventory them, define keyless signatures, and produce deterministic
+draft-release evidence through a separately protected workflow.
 
 ## What problem it solves
 
@@ -60,6 +64,8 @@ Use these labels throughout this graph:
 | Phase 9 Kubernetes       | Inspection, planning, apply, status, and rollback complete | `specs/DEPLOYMENT_SPEC.md`, ADR-010, ADR-011                       |
 | Phase 10 packaging       | 11 images and platform Helm release locally live-validated | `specs/PRODUCTION_DEPLOYMENT_SPEC.md`, ADR-012                     |
 | Phase 11 observability   | Metrics, SLOs, rules, dashboard, and runbooks complete     | `specs/PRODUCTION_OBSERVABILITY_SPEC.md`, ADR-013                  |
+| Phase 12 reliability     | Rollout, PDB, HPA, and ingress policy controls complete    | `specs/RUNTIME_RELIABILITY_SPEC.md`, ADR-014                       |
+| Phase 13 supply chain    | Digest, scan, SBOM, signing, and evidence flow complete    | `specs/SUPPLY_CHAIN_SECURITY_SPEC.md`, ADR-015                     |
 | Automated verification   | 63 tests plus lint and production builds pass              | `docs/11_TESTING.md`, `memory/next-session.md`                     |
 | PostgreSQL persistence   | Implemented and restart-tested                             | migrations and smoke scripts                                       |
 | Browser workflow         | Auth, project, notification, and deployment flows checked  | `memory/completed-features.md`                                     |
@@ -152,6 +158,9 @@ flowchart LR
 | Docker                 | Generated assets and BuildSphere production images  | Portable runtime packaging                            | Teaches image construction and packages all 11 platform components        | Active generation and Phase 10 packaging               |
 | Kubernetes API/YAML    | Generated assets and Deployment Service             | Declarative resources plus a standard control API     | Supports review, validation, policy-bounded apply, status, and rollback   | Active generation and controlled execution             |
 | GitHub Actions         | BuildSphere CI and generated workflows              | Accessible CI/CD with strong portfolio value          | Validates BuildSphere and connects generated repositories to real runs    | Active                                                 |
+| Trivy                  | Phase 13 image and release gate                     | One pinned scanner for image vulnerabilities/secrets  | Blocks HIGH/CRITICAL findings and emits CycloneDX SBOMs                   | Active local gate                                      |
+| CycloneDX              | Per-image release inventories                       | Portable machine-readable software inventory          | Binds each accepted image digest to a checksummed SBOM                    | Active                                                 |
+| Cosign + GitHub OIDC   | Protected semantic-version release workflow         | Keyless identity-bound signing                        | Signs accepted image digests and canonical release evidence               | Implemented; live signing not yet exercised            |
 | GitHub App OAuth       | Optional identity and provider integration          | Fine-grained permissions and short-lived user tokens  | Supports secure login, repository creation, publishing, and run sync      | Active and live-tested                                 |
 | JWT HS256              | BuildSphere sessions                                | Stateless access-token validation across services     | Lets each service enforce user ownership without a session service call   | Active                                                 |
 | scrypt                 | Password hashing                                    | Memory-hard password derivation                       | Protects stored passwords with per-password random salts                  | Active                                                 |
@@ -193,8 +202,15 @@ flowchart LR
     owns an isolated, bounded Prometheus registry; the chart offers discovery
     and rules without installing or credentialing Prometheus, Grafana, or
     Alertmanager.
+14. **Opt-in reliability and ingress isolation**: safe rollout/topology
+    defaults apply everywhere, while PDB, HPA, and exact ingress policy remain
+    explicit because cluster capabilities are operator-owned.
+15. **Protected all-component release certification**: normal CI stays
+    read-only; a semantic-version workflow scans and signs immutable images,
+    requires all 11 component records, signs deterministic evidence, and
+    creates only a draft release without deploying.
 
-Evidence: `docs/adr/ADR-001-*` through `ADR-013-*`.
+Evidence: `docs/adr/ADR-001-*` through `ADR-015-*`.
 
 ## Domain and data graph
 
@@ -638,27 +654,33 @@ approval, and durable idempotency key.
 
 ## Security graph
 
-| Threat or concern           | Current control                                                                                                           | Remaining work                                                |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| Password disclosure         | scrypt with random salt; no password hashes returned                                                                      | Password reset and stronger policy are future                 |
-| Stolen access token         | Short default 15-minute JWT expiry                                                                                        | Rate limiting and centralized revocation are future           |
-| Stolen refresh token        | SHA-256 hash in DB, expiry, revocation, rotation                                                                          | Device/session management is future                           |
-| Cross-user data access      | JWT identity plus owner checks in every domain service                                                                    | Team sharing and RBAC are future                              |
-| OAuth callback forgery      | Signed expiring state plus PKCE S256                                                                                      | Multi-provider abstraction is future                          |
-| Provider token leakage      | AES-256-GCM at rest; never sent to frontend or Project Service                                                            | Disconnect/reconnect UI is future                             |
-| GitHub path traversal       | Reject empty, absolute, duplicate, dot, and parent paths                                                                  | Broader policy scanning is future                             |
-| Partial GitHub publish      | Persist link first; serial writes; retries reuse repository                                                               | Background job model could improve long operations            |
-| Duplicate GitHub commits    | Compare Git blob SHA and skip unchanged content                                                                           | Batched Git tree commits are a future optimization            |
-| Partial-artifact CI runs    | Publish workflow files after other files                                                                                  | Existing external repositories may retain old run history     |
-| Secret leakage in templates | Placeholder values and `.env.example`; `.env` ignored                                                                     | Production secret manager is future                           |
-| Broken Kubernetes YAML      | Structural validation for API version, kind, name, labels, probes, resources                                              | Server-side schema validation and cluster dry-run are future  |
-| Kubeconfig credential leak  | Ephemeral inspection plus minimized AES-GCM retention bound to owner/target and kept outside public target JSON           | External secret-manager references are future                 |
-| Accidental cluster mutation | Disabled by default; exact host/environment policy, immutable-artifact approval, ownership precheck, and non-forced SSA   | Production RBAC/admission integration is future               |
-| Destructive rollback        | Separate approval; prior snapshot only; prune only newer owned namespaced resources; never delete Namespace/cluster scope | Multi-release policy remains intentionally bounded            |
-| Accidental cloud creation   | Terraform defaults disabled; generated CI has format/init-without-backend/validate only                                   | Cost/IAM/state review and any execution remain operator-owned |
-| Terraform secret/state leak | No credentials or active backend; generated ignore rules exclude state and plans                                          | Production secret and remote-state workflows are future       |
-| Untraceable requests        | Correlation ID generated/propagated and logged                                                                            | Distributed tracing is future                                 |
-| Metric identifier leakage   | Stable service/status labels, known methods or `OTHER`, and matched routes; unknown paths collapse to `unmatched`         | Production retention and access policy are operator-owned     |
+| Threat or concern           | Current control                                                                                                            | Remaining work                                                    |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Password disclosure         | scrypt with random salt; no password hashes returned                                                                       | Password reset and stronger policy are future                     |
+| Stolen access token         | Short default 15-minute JWT expiry                                                                                         | Rate limiting and centralized revocation are future               |
+| Stolen refresh token        | SHA-256 hash in DB, expiry, revocation, rotation                                                                           | Device/session management is future                               |
+| Cross-user data access      | JWT identity plus owner checks in every domain service                                                                     | Team sharing and RBAC are future                                  |
+| OAuth callback forgery      | Signed expiring state plus PKCE S256                                                                                       | Multi-provider abstraction is future                              |
+| Provider token leakage      | AES-256-GCM at rest; never sent to frontend or Project Service                                                             | Disconnect/reconnect UI is future                                 |
+| GitHub path traversal       | Reject empty, absolute, duplicate, dot, and parent paths                                                                   | Broader policy scanning is future                                 |
+| Partial GitHub publish      | Persist link first; serial writes; retries reuse repository                                                                | Background job model could improve long operations                |
+| Duplicate GitHub commits    | Compare Git blob SHA and skip unchanged content                                                                            | Batched Git tree commits are a future optimization                |
+| Partial-artifact CI runs    | Publish workflow files after other files                                                                                   | Existing external repositories may retain old run history         |
+| Secret leakage in templates | Placeholder values and `.env.example`; `.env` ignored                                                                      | Production secret manager is future                               |
+| Broken Kubernetes YAML      | Structural validation for API version, kind, name, labels, probes, resources                                               | Server-side schema validation and cluster dry-run are future      |
+| Kubeconfig credential leak  | Ephemeral inspection plus minimized AES-GCM retention bound to owner/target and kept outside public target JSON            | External secret-manager references are future                     |
+| Accidental cluster mutation | Disabled by default; exact host/environment policy, immutable-artifact approval, ownership precheck, and non-forced SSA    | Production RBAC/admission integration is future                   |
+| Destructive rollback        | Separate approval; prior snapshot only; prune only newer owned namespaced resources; never delete Namespace/cluster scope  | Multi-release policy remains intentionally bounded                |
+| Accidental cloud creation   | Terraform defaults disabled; generated CI has format/init-without-backend/validate only                                    | Cost/IAM/state review and any execution remain operator-owned     |
+| Terraform secret/state leak | No credentials or active backend; generated ignore rules exclude state and plans                                           | Production secret and remote-state workflows are future           |
+| Untraceable requests        | Correlation ID generated/propagated and logged                                                                             | Distributed tracing is future                                     |
+| Metric identifier leakage   | Stable service/status labels, known methods or `OTHER`, and matched routes; unknown paths collapse to `unmatched`          | Production retention and access policy are operator-owned         |
+| Unreviewed pod ingress      | Optional exact release/component NetworkPolicies, chart-test peer, selected ingress/metrics peers, and destination ports   | Enforcing CNI and environment selector verification are external  |
+| Voluntary disruption        | Optional selector-matched PDBs reject singleton/non-disruptable minimum configurations                                     | Multi-zone placement and capacity certification are future        |
+| Mutable release identity    | Complete digest-only chart mode covers every application, migration, and test image and has no tag fallback                | Live registry policy remains environment-owned                    |
+| Vulnerable release image    | Checksum-pinned Trivy blocks HIGH/CRITICAL vulnerabilities and secrets before signing and emits one CycloneDX SBOM/image   | Exception governance must be defined before production use        |
+| Unauthorized publication    | Normal CI is read-only; semver tags, default-branch ancestry, protected environment approval, and GitHub OIDC gate release | A live protected release has not yet been exercised               |
+| Incomplete evidence         | Certification rejects incomplete/inconsistent inputs and signs canonical manifest and checksum files                       | Draft review and external promotion remain human/operator actions |
 
 ## Observability model
 
@@ -681,6 +703,44 @@ approval, and durable idempotency key.
   centralized logs, OpenTelemetry, and general security audit events are future
   work.
 
+## Runtime reliability model
+
+- Every application Deployment uses `RollingUpdate` with zero unavailable
+  replicas, one surge, and a five-second readiness settling period.
+- A selector-matched soft `kubernetes.io/hostname` topology constraint spreads
+  replicas where possible without blocking one-node local clusters.
+- Optional PDBs require at least two effective replicas and a `minAvailable`
+  lower than the fixed count or HPA minimum.
+- Optional `autoscaling/v2` HPAs own Deployment scale, target CPU and memory,
+  and apply responsive scale-up plus stabilized 25-percent scale-down. A
+  Kubernetes Metrics API remains operator-owned.
+- Optional ingress-only NetworkPolicies cover all 11 workloads and 25 current
+  internal caller edges. Frontend/API Gateway public ingress and backend metric
+  collection use configurable namespace-plus-pod selectors.
+- Phase 12 renders no egress restriction because DNS, PostgreSQL, GitHub, and
+  Kubernetes API destinations vary by environment. Network enforcement depends
+  on the cluster CNI.
+
+## Release certification model
+
+- `infrastructure/release/components.json` defines the exact 11-component
+  release set. Missing, duplicate, unknown, mismatched, malformed, or invalid
+  evidence fails certification.
+- Docker bases are exact tags plus digests. Release builds supply OCI version,
+  revision, source, and license labels and emit BuildKit SBOM/provenance
+  attestations.
+- Trivy scans immutable references for HIGH/CRITICAL vulnerabilities and
+  secrets and emits one CycloneDX SBOM per component before Cosign signing.
+- The chart's explicit digest mode requires every component digest and reuses
+  the correct backend/frontend references for migrations and tests without tag
+  fallback.
+- Certification emits component records, an SBOM set, digest values, a packaged
+  chart, a canonical manifest, and `SHA256SUMS`. Image signatures are verified;
+  the manifest and checksums receive keyless verification bundles.
+- The release workflow creates a draft GitHub Release only and never deploys.
+  Local verification tests the data and policy path without pushing images,
+  exchanging OIDC credentials, signing externally, or creating a release.
+
 ## Testing and verification graph
 
 ```mermaid
@@ -698,6 +758,10 @@ flowchart LR
   Images --> Phase10Kind[Platform install + migrations + test + upgrade + test]
   Tests --> Phase11[Metrics + rules + dashboard + runbook verification]
   Phase11 --> Promtool[Prometheus rule syntax]
+  HelmLint --> Phase12[Rollout + PDB + HPA + NetworkPolicy verification]
+  Phase12 --> Phase12Kind[Two-replica install + PDB + policy + upgrade]
+  Images --> Phase13[11 digest scans + CycloneDX SBOMs + evidence]
+  Phase13 --> Phase13Kind[Exact-digest install + reliability + upgrade]
   Images --> MetricsSmoke[10 backend image metrics checks]
   Phase10Kind --> ClusterMetrics[10 backend cluster scrapes]
   PostgresSmoke --> Browser[Desktop/mobile auth, project, notification, deployment workflows]
@@ -723,8 +787,13 @@ pnpm verify
 pnpm verify:terraform
 pnpm verify:phase10
 HELM_BIN=/path/to/helm PROMTOOL_BIN=/path/to/promtool pnpm verify:phase11
+HELM_BIN=/path/to/helm pnpm verify:phase12
+HELM_BIN=/path/to/helm ACTIONLINT_BIN=/path/to/actionlint pnpm verify:phase13
 pnpm verify:phase10:images
+TRIVY_BIN=/path/to/trivy pnpm verify:phase13:images
 KIND_BIN=/path/to/kind HELM_BIN=/path/to/helm pnpm verify:phase10:kind
+KIND_BIN=/path/to/kind HELM_BIN=/path/to/helm pnpm verify:phase12:kind
+KIND_BIN=/path/to/kind HELM_BIN=/path/to/helm pnpm verify:phase13:kind
 pnpm smoke
 pnpm smoke:phase6:postgres
 pnpm smoke:phase9:postgres
@@ -753,7 +822,24 @@ one PrometheusRule, six recording rules, and three alerts. Prometheus v3.12.0
 accepted the rules; all 11 hardened image smokes and the independent Phase 9
 cluster regression remained green.
 
-The structured companion validates as 90 unique nodes and 150 relationships
+The Phase 12 verifier confirmed safe rollout and soft topology behavior for all
+11 Deployments while preserving the default 38-resource, zero-Secret release.
+Opt-in renders contain 11 PDBs, 11 HPAs, and 11 ingress-only NetworkPolicies
+with 25 internal caller edges. The disposable Phase 12 cluster ran 22
+application replicas with all PDBs and policies installed through successful
+install/test/upgrade/test, then was deleted. HPA metrics and CNI enforcement
+remain operator-environment responsibilities rather than claims of that
+fixture.
+
+The Phase 13 gate confirmed 21 immutable action references, 11 digest-resolved
+components, 11 valid CycloneDX SBOMs, 14 checksummed release files, and six
+hostile evidence failures. All 11 rebuilt images had zero HIGH/CRITICAL Trivy
+findings and zero detected secrets. A separate disposable cluster completed
+the full install/test/upgrade/test lifecycle using exact local image digests,
+then was deleted. No registry push, OIDC signing request, GitHub Release, or
+external deployment occurred.
+
+The structured companion validates as 98 unique nodes and 166 relationships
 with no dangling edges.
 
 The notification browser test confirmed complete message rendering, individual
@@ -784,6 +870,9 @@ persistence after relisting.
 | `infrastructure/database/migrations/` | Actual durable schema history                                  |
 | `docker-compose.dev.yml`              | Local dependency topology                                      |
 | `.github/workflows/ci.yml`            | BuildSphere's own CI workflow                                  |
+| `.github/workflows/release.yml`       | Protected image signing and draft-release certification flow   |
+| `infrastructure/release/`             | Canonical component inventory and release-evidence contract    |
+| `docs/17_RELEASE_CERTIFICATION.md`    | Operator authorization, verification, and publication guide    |
 | `scripts/`                            | Toolchain, verification, smoke, and PostgreSQL provider checks |
 | `memory/`                             | Current status, completed work, and next-session continuity    |
 | `research/`                           | Non-binding product ideas and competitor context               |
@@ -801,6 +890,9 @@ persistence after relisting.
 - Eleven non-root production images and a BuildSphere-owned Helm release with
   external secrets/database, migrations, probes, security bounds, and local
   install/upgrade verification.
+- Exact-digest platform releases, OCI source identity, blocking image
+  vulnerability/secret scans, CycloneDX SBOMs, protected keyless-signing
+  automation, and deterministic draft-release evidence.
 - Seven-stage explainable simulated pipelines with success, failure, cancellation, and logs.
 - Thirteen deterministic recommendation rules and suggestion lifecycle.
 - Kubernetes target records, manifest validation, ephemeral kubeconfig
@@ -830,8 +922,9 @@ persistence after relisting.
 - Cost estimation.
 - Team collaboration and template sharing.
 - External LLM provider, operated metrics/log retention and alert routing,
-  centralized logs, tracing, registry/signing, security scanning, high
-  availability, backup/restore, and production release certification.
+  centralized logs, tracing, live registry promotion, multi-zone and database
+  availability, external Secret rotation, backup/restore, and approved external
+  staging/production operation.
 
 ## Important limitations to state honestly
 
@@ -852,11 +945,12 @@ persistence after relisting.
 9. Analytics Service exposes health only.
 10. Monitoring health aggregation does not include Analytics Service, and the
     repository does not operate or persist a Prometheus/Grafana stack.
-11. Phase 10 packaging and Phase 11 observability contracts are suitable for
-    controlled staging, but they do not
-    provide registry promotion, image signing/scanning, external secret
-    operations, database HA/backups, network policy, autoscaling,
-    environment-specific alert routing, or production release certification.
+11. Phase 13 implements digest, scan, SBOM, signing, and draft-certification
+    automation, but no live tag-triggered GHCR push, OIDC signature, or GitHub
+    Release has been exercised. External secret operations, database
+    HA/backups, environment alert routing, and staging/production promotion
+    remain operator work. HPA and NetworkPolicy resources require
+    operator-owned Metrics API and enforcing CNI support.
 12. The frontend uses session storage and a lightweight custom route helper.
 13. GitHub disconnect, organization SSO, run dispatch/rerun/cancel, and log archive UI are out of scope.
 14. Rate limiting, audit logs, full RBAC, production secret management, and automated checked-in browser E2E tests remain future hardening.

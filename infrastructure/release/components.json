@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "components": [
+    { "name": "api-gateway", "type": "backend", "port": 8080 },
+    { "name": "auth-service", "type": "backend", "port": 8081 },
+    { "name": "project-service", "type": "backend", "port": 8082 },
+    { "name": "pipeline-service", "type": "backend", "port": 8083 },
+    { "name": "deployment-service", "type": "backend", "port": 8084 },
+    { "name": "monitoring-service", "type": "backend", "port": 8085 },
+    { "name": "logging-service", "type": "backend", "port": 8086 },
+    { "name": "ai-service", "type": "backend", "port": 8087 },
+    { "name": "analytics-service", "type": "backend", "port": 8088 },
+    { "name": "notification-service", "type": "backend", "port": 8089 },
+    { "name": "frontend", "type": "frontend", "port": 8080 }
+  ]
+}

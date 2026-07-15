@@ -107,6 +107,17 @@ release history, and cleans temporary files and the cluster. Set exact
 `pnpm verify:phase10:kind`.
 
 The script never pushes images or contacts an external Kubernetes cluster.
+Set `BUILDSPHERE_PHASE12_RELIABILITY=true`, or run
+`pnpm verify:phase12:kind`, to install two replicas of every application plus
+the Phase 12 PodDisruptionBudgets and NetworkPolicies during the same
+install/test/upgrade/test lifecycle. Horizontal autoscaling remains a
+structural test because the disposable cluster does not install a Metrics API.
+Set `BUILDSPHERE_PHASE13_DIGEST_MODE=true`, or run
+`pnpm verify:phase13:kind`, to combine the reliability controls with exact
+local `repository@sha256` references for every application, migration, and
+chart-test container. Because kind imports local images under tag names, this
+mode registers equivalent digest-qualified aliases in the disposable node's
+containerd image store before Helm installation.
 
 ## `verify-phase11-observability.mjs`
 
@@ -125,3 +136,75 @@ HELM_BIN=/path/to/helm PROMTOOL_BIN=/path/to/promtool pnpm verify:phase11
 `PROMTOOL_BIN` is optional for a local structural check and mandatory when
 `CI=true`. The verifier creates only temporary rendered files and does not
 contact a cluster or monitoring server.
+
+## `verify-phase12-reliability.mjs`
+
+Runs Helm strict lint and verifies the complete Phase 12 chart contract:
+zero-unavailable rollout, soft selector-matched topology spreading, opt-in PDB
+replica safety, HPA ownership and behavior, and the exact ingress-only service
+caller graph. It also checks custom external selectors, destination ports,
+default resource compatibility, zero Secrets, and negative schema/render
+cases.
+
+Run it with:
+
+```bash
+HELM_BIN=/path/to/helm pnpm verify:phase12
+```
+
+The verifier renders manifests locally and never contacts a Kubernetes
+cluster. Use the disposable Phase 10 kind gate for runtime install and upgrade
+coverage.
+
+## `create-release-evidence.mjs`
+
+Implements the data-only core of Phase 13 release certification:
+
+- `metadata` validates a semantic tag and writes the canonical build matrix.
+- `component` validates one image digest and CycloneDX SBOM.
+- `bundle` requires all eleven components and emits the release manifest,
+  digest-only Helm values, copied SBOM set, and `SHA256SUMS`.
+- `references` emits the exact digest references for Cosign verification.
+
+The tool accepts no credential or signing key and performs no network request.
+
+## `install-trivy.sh` and `install-actionlint.sh`
+
+Download the explicitly versioned Linux AMD64 release archives for Trivy and
+actionlint, verify checked-in SHA-256 values before extraction, and install only
+the expected binary. CI uses actionlint for workflow semantics; the tag release
+uses Trivy for immutable-image vulnerability and secret scanning.
+
+## `verify-phase13-supply-chain.mjs`
+
+Runs Helm strict lint and validates default tag mode, complete digest mode,
+eleven image references, migration/test digest reuse, Docker OCI metadata,
+digest-pinned bases, least-privilege workflows, immutable action pins,
+Dependabot configuration, and pinned scanner installers. It also creates a
+complete local eleven-component evidence bundle twice, verifies every checksum,
+and rejects missing, duplicate, unknown, mismatched, malformed-digest, and
+invalid-SBOM fixtures.
+
+```bash
+HELM_BIN=/path/to/helm ACTIONLINT_BIN=/path/to/actionlint pnpm verify:phase13
+```
+
+The verifier creates temporary local files only. It does not push an image,
+request GitHub OIDC, sign an artifact, create a release, or contact a cluster.
+
+## `verify-phase13-images.mjs`
+
+Inspects the eleven locally built BuildSphere images, validates their OCI
+labels and non-root runtime users, and confirms that backend runtime images do
+not retain npm, Corepack, PNPM, or Yarn tooling. It then applies the same
+HIGH/CRITICAL vulnerability and secret policy used by the release workflow and
+generates and validates one CycloneDX SBOM per image.
+
+```bash
+TRIVY_BIN=/path/to/trivy pnpm verify:phase13:images
+```
+
+The command expects the default `phase10-local` image tag. Override it with
+`PHASE13_IMAGE_TAG`; use `TRIVY_CACHE_DIR` to reuse a downloaded vulnerability
+database. The scanner is read-only with respect to registries and deletes its
+temporary reports and SBOMs.

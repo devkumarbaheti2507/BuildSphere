@@ -8,6 +8,9 @@ The chart expects the existing Secret {{ .Values.runtime.existingSecret }} with:
 
 Create runtime credentials out of band before installation. Kubernetes
 deployment execution is {{ ternary "enabled" "disabled" .Values.deploymentExecution.enabled }}.
+Horizontal autoscaling is {{ ternary "enabled" "disabled" .Values.availability.autoscaling.enabled }}.
+Pod disruption budgets are {{ ternary "enabled" "disabled" .Values.availability.podDisruptionBudget.enabled }}.
+Ingress network policies are {{ ternary "enabled" "disabled" .Values.networkPolicy.enabled }}.
 {{- if .Values.ingress.enabled }}
 Public URL: {{ .Values.publicUrl }}
 {{- else }}

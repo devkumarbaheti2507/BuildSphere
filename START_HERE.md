@@ -6,12 +6,15 @@ Use this file first when opening the project with Codex.
 
 BuildSphere is an AI-assisted Developer Experience Platform for designing, generating, deploying, observing, and improving microservice applications.
 
-It is a documentation-first, Codex-friendly local platform with Phases 0-11
+It is a documentation-first, Codex-friendly local platform with Phases 0-13
 complete. The current implementation includes the tracked GitHub milestone,
 optional Helm and AWS EKS Terraform generation, secure Kubernetes inspection,
 offline planning, opt-in approved apply, status, and bounded rollback, plus
 production containers, a BuildSphere-owned Helm release, and a production
-observability/SLO contract with optional operator resources.
+observability/SLO contract with optional operator resources, plus validated
+runtime rollout, topology, disruption, autoscaling, and ingress-isolation
+controls, plus digest-bound images, scan/SBOM gates, keyless-signing workflow
+definitions, and deterministic release evidence.
 
 ## First reading order
 
@@ -75,6 +78,12 @@ Before coding, verify:
 21. Instrument all backend services, add optional Prometheus discovery/rules,
     define API SLOs, and verify the dashboard, runbooks, images, and cluster
     metrics path without installing an external monitoring stack.
+22. Add zero-unavailable rollout and soft topology spreading, plus opt-in PDB,
+    HPA, and exact ingress-only NetworkPolicy resources with structural and
+    disposable-cluster verification.
+23. Bind all platform images to immutable digests, scan and inventory them,
+    define protected keyless signing, and certify deterministic draft-release
+    evidence without publishing during local verification.
 
 ## Learning and presentation pack
 

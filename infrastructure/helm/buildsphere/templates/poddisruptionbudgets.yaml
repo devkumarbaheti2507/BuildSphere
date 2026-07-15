@@ -1,0 +1,18 @@
+{{- if .Values.availability.podDisruptionBudget.enabled -}}
+{{- $components := (include "buildsphere.applicationComponents" . | fromYaml).components -}}
+{{- range $component := $components }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "buildsphere.componentName" (dict "root" $ "component" $component.name) }}
+  labels:
+    {{- include "buildsphere.commonLabels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $component.name }}
+spec:
+  minAvailable: {{ $.Values.availability.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "buildsphere.selectorLabels" (dict "root" $ "component" $component.name) | nindent 6 }}
+{{- end }}
+{{- end }}

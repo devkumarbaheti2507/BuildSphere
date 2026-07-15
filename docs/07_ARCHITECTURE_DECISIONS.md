@@ -6,7 +6,7 @@
 | Version           | 0.1.0                               |
 | Status            | Draft                               |
 | Author            | BuildSphere Team                    |
-| Last Updated      | 2026-07-14                          |
+| Last Updated      | 2026-07-15                          |
 | Related Documents | docs/adr/*                          |
 
 ---
@@ -44,6 +44,8 @@ Create an ADR when a decision affects:
 | ADR-011 | Controlled Kubernetes execution and bounded rollback                    | Accepted |
 | ADR-012 | Shared production images and BuildSphere-owned Helm release             | Accepted |
 | ADR-013 | Shared Prometheus metrics and operator-owned monitoring stack           | Accepted |
+| ADR-014 | Optional Kubernetes reliability controls and ingress-only isolation     | Accepted |
+| ADR-015 | Digest-bound, keyless software supply-chain release certification       | Accepted |
 
 # ADR template
 

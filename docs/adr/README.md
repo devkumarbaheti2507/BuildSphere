@@ -6,7 +6,7 @@
 | Version           | 0.1.0                           |
 | Status            | Draft                           |
 | Author            | BuildSphere Team                |
-| Last Updated      | 2026-07-14                      |
+| Last Updated      | 2026-07-15                      |
 | Related Documents | ../07_ARCHITECTURE_DECISIONS.md |
 
 ---
@@ -30,3 +30,5 @@ Architecture Decision Records explain important BuildSphere design choices.
 - ADR-011: Controlled Kubernetes execution and bounded rollback.
 - ADR-012: Package BuildSphere with shared backend builds and Helm.
 - ADR-013: Use isolated Prometheus registries and optional operator resources.
+- ADR-014: Use optional reliability resources and ingress-only network policy.
+- ADR-015: Use digest-bound keyless release certification.

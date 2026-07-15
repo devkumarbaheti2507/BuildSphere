@@ -22,6 +22,11 @@
     "verify:phase10:images": "sh scripts/verify-phase10-images.sh && sh scripts/smoke-phase10-images.sh",
     "verify:phase10:kind": "bash scripts/verify-phase10-kind.sh",
     "verify:phase11": "node scripts/verify-phase11-observability.mjs",
+    "verify:phase12": "node scripts/verify-phase12-reliability.mjs",
+    "verify:phase12:kind": "env BUILDSPHERE_PHASE12_RELIABILITY=true bash scripts/verify-phase10-kind.sh",
+    "verify:phase13": "node scripts/verify-phase13-supply-chain.mjs",
+    "verify:phase13:images": "node scripts/verify-phase13-images.mjs",
+    "verify:phase13:kind": "env BUILDSPHERE_PHASE12_RELIABILITY=true BUILDSPHERE_PHASE13_DIGEST_MODE=true bash scripts/verify-phase10-kind.sh",
     "verify:terraform": "sh scripts/pnpm-workspace.sh --filter @buildsphere/project-service exec tsx ../../scripts/verify-terraform-template.ts",
     "db:migrate": "sh scripts/pnpm-workspace.sh --filter @buildsphere/service-core db:migrate",
     "format": "prettier --write \"**/*.{ts,tsx,mjs,md,json,yml,yaml}\""

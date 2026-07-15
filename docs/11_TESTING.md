@@ -6,7 +6,7 @@
 | Version           | 0.1.0                |
 | Status            | Draft                |
 | Author            | BuildSphere Team     |
-| Last Updated      | 2026-07-14           |
+| Last Updated      | 2026-07-15           |
 | Related Documents | 01_SRS.md, 03_LLD.md |
 
 ---
@@ -275,3 +275,66 @@ Phase 11 production observability completed and verified on 2026-07-14:
   both disposable clusters were deleted.
 - No external monitoring stack, cluster, registry, cloud account, production
   Secret, alert receiver, or production resource was contacted or modified.
+
+Phase 12 runtime reliability and network security completed and verified on
+2026-07-15:
+
+- Frozen installation, zero-warning lint, every production build, and all 63
+  automated tests pass on Node v24.18.0; Node 22 remains preferred.
+- Helm v4.2.3 strict lint and the Phase 10-12 structural gates pass. The default
+  release remains 38 resources with zero Secrets and no PDB, HPA, or
+  NetworkPolicy.
+- Default verification confirms zero-unavailable rolling updates, one surge,
+  five-second readiness settling, and selector-matched soft hostname spreading
+  for all 11 Deployments.
+- Opt-in verification parses 11 `policy/v1` PDBs, 11 `autoscaling/v2` HPAs,
+  and 11 ingress-only NetworkPolicies. It checks HPA replica ownership and
+  behavior, exact workload selectors and ports, 25 internal caller edges,
+  chart-test access, external controller/collector selectors, and negative
+  safety cases.
+- A checksum-matched kind v0.31.0 / Kubernetes v1.34.3 cluster installed two
+  replicas of every application with all 11 PDBs and NetworkPolicies. Seven
+  migrations, frontend/API/database/ten-metrics Helm smoke, upgrade, repeated
+  migration/smoke, release history, and cluster cleanup passed.
+- All 11 production images rebuilt and passed non-root, read-only-root,
+  dropped-capability health smoke; every backend metric endpoint passed.
+- The PostgreSQL gateway smoke passed with 26 files, seven stages, 14 logs, one
+  suggestion, four planned resources, eight monitored services, four
+  notifications, and persisted read state. Phase 6 and Phase 9 PostgreSQL
+  verifiers remained green.
+- Terraform v1.15.8 again passed format, backend-disabled initialization,
+  exact module/provider resolution, and static validation without credentials.
+  The Phase 9 official-client apply/status/rollback/prune/revocation regression
+  also passed against a separate disposable cluster.
+- Prometheus v3.12.0 accepted all Phase 11 rules. Both kind clusters were
+  deleted, and no external or production environment was modified.
+
+Phase 13 software supply-chain security and release certification completed and
+verified on 2026-07-15:
+
+- Frozen installation, zero-warning lint, every production build, and all 63
+  automated tests remain green. Actionlint `1.7.12` accepts normal CI and the
+  release workflow, whose 21 action references are pinned to full commit SHAs.
+- The focused verifier passes strict Helm lint for chart `0.4.0`, the unchanged
+  38-resource tag-mode default, complete digest rendering for all 11 images,
+  migration/test digest reuse, OCI metadata, checksum-pinned tool installers,
+  least-privilege workflow permissions, and six hostile evidence cases.
+- All 11 images rebuilt with exact base digests and OCI labels. Trivy `0.70.0`
+  reported zero HIGH/CRITICAL vulnerabilities and zero secrets, generated one
+  CycloneDX SBOM per image, and verified that backend runtime images contain no
+  npm, Corepack, PNPM, or Yarn executables.
+- Deterministic release certification produced 11 component records, 11 SBOMs,
+  a packaged chart, digest-only values, a canonical manifest, and 14 verified
+  checksum entries without publishing them.
+- The Phase 12 tag-mode kind lifecycle passed again. A separate Phase 13 mode
+  installed every application, migration, and test image by exact local digest
+  with two replicas, PDBs, NetworkPolicies, seven migrations, Helm smoke,
+  upgrade, repeat smoke, and complete cleanup.
+- Migrations 001-007 remained idempotent; Phase 6 and Phase 9 PostgreSQL
+  verifiers, the 26-file gateway workflow, Terraform v1.15.8 static validation,
+  Prometheus v3.12.0 rules, and the independent Phase 9 real-client
+  apply/status/rollback/prune/revocation workflow all remained green.
+- No GHCR image was pushed, no OIDC signing certificate was requested, no
+  GitHub Release was created, and no external cluster, cloud account, or
+  production resource was modified. A live release requires an approved
+  semantic-version tag and the protected `production-release` environment.

@@ -65,6 +65,27 @@ The project follows semantic versioning once the first implementation milestone 
 - ADR-013, the production observability specification, a structural Phase 11
   verifier, CI `promtool` validation, backend image metric smoke, and
   ten-service in-cluster metrics checks.
+- Phase 12 zero-unavailable rolling updates, readiness settling, and soft
+  hostname topology spreading for all 11 platform Deployments.
+- Optional, default-disabled `policy/v1` PodDisruptionBudgets and
+  `autoscaling/v2` HPAs with replica-safety validation, CPU/memory targets, and
+  stabilized scale-down behavior.
+- Optional ingress-only NetworkPolicies for all 11 workloads with 25 exact
+  internal caller edges, chart-test access, configurable public-ingress and
+  backend-metrics peers, and destination-port bounds.
+- ADR-014, the runtime reliability specification, Phase 12 structural verifier,
+  CI gate, and a two-replica disposable-cluster install/upgrade mode.
+- Phase 13 digest-aware chart `0.4.0`, exact base-image inputs, OCI source
+  identity, and a canonical 11-component release inventory.
+- A protected semantic-version release workflow with BuildKit SBOM/provenance,
+  blocking Trivy vulnerability/secret scans, CycloneDX SBOMs, keyless Cosign
+  image and evidence signing, and draft GitHub Release publication only.
+- Deterministic release manifest, digest values, packaged chart, checksum, and
+  component-evidence tooling with missing/duplicate/unknown/inconsistent input
+  rejection.
+- Checksum-pinned Trivy/actionlint installers, Phase 13 structural and image
+  verifiers, Dependabot updates, release certification guidance, and an
+  exact-digest disposable-kind mode.
 
 ### Fixed
 
@@ -92,6 +113,12 @@ The project follows semantic versioning once the first implementation milestone 
   root while retaining the monorepo-relative local fallback.
 - Correct the backend image root variable so migration hooks read packaged SQL
   files from `/app/infrastructure/database/migrations`.
+- Remove bundled JavaScript package managers from backend runtime layers after
+  scanning found avoidable high-severity npm vulnerabilities.
+- Use the exact minimal Nginx `1.30.3-alpine-slim` runtime digest after scanning
+  rejected vulnerable non-slim frontend base variants.
+- Keep GitHub Release SBOM assets and checksum paths flat so direct release
+  downloads verify without reconstructing artifact directories.
 
 ### Verified
 
@@ -141,6 +168,22 @@ The project follows semantic versioning once the first implementation milestone 
 - Every backend `/metrics` endpoint in the disposable Phase 10 chart before and
   after upgrade, plus repeat Phase 9 apply/status/rollback verification and
   cleanup with no external monitoring or production resource contacted.
+- The complete Phase 12 gate: unchanged 38-resource default, all 11 optional
+  PDBs/HPAs/NetworkPolicies, unsafe-value failures, 25 internal policy edges,
+  all 63 tests, all 11 current image smokes, PostgreSQL/gateway/Terraform
+  regressions, and Prometheus v3.12.0 rule validation.
+- A two-replica kind v0.31.0 / Kubernetes v1.34.3 platform install with all 11
+  disruption budgets and NetworkPolicies, seven migrations, Helm smoke,
+  upgrade, repeat smoke, and cleanup; the independent Phase 9 real-client
+  cluster regression also passed and both clusters were deleted.
+- The complete Phase 13 gate: immutable workflow references, strict tag/digest
+  chart rendering, six hostile evidence cases, 11 OCI-labeled image builds,
+  zero HIGH/CRITICAL vulnerability or secret findings, 11 CycloneDX SBOMs,
+  and deterministic 14-entry release checksums.
+- An exact-digest kind install/test/upgrade/test with Phase 12 reliability
+  controls, plus the full 63-test, PostgreSQL, gateway, Terraform, Prometheus,
+  tag-mode kind, and independent Phase 9 cluster regressions. No release asset
+  was published and every disposable cluster was deleted.
 
 ## [0.1.0] - 2026-06-28
 

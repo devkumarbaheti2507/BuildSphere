@@ -53,6 +53,7 @@ This repository is prepared for a TypeScript-first implementation:
 | Packaging        | Helm                                                                        | Configurable Kubernetes application charts without automatic install. |
 | Infrastructure   | Terraform for AWS EKS                                                       | Reviewable infrastructure source with cloud creation disabled.        |
 | CI/CD            | GitHub Actions first                                                        | Common, accessible, and portfolio-friendly.                           |
+| Supply chain     | Trivy + CycloneDX + Cosign                                                  | Scan, inventory, and sign immutable release evidence.                 |
 | Monitoring       | Prometheus metrics + Grafana assets                                         | Standard signals and operator-owned cloud-native monitoring.          |
 
 ## Repository structure
@@ -166,6 +167,23 @@ runbook contract:
 HELM_BIN=/path/to/helm PROMTOOL_BIN=/path/to/promtool pnpm verify:phase11
 ```
 
+Validate Phase 12 rollout, disruption, autoscaling, and network-policy
+contracts, then optionally exercise the two-replica disposable release:
+
+```bash
+HELM_BIN=/path/to/helm pnpm verify:phase12
+KIND_BIN=/path/to/kind HELM_BIN=/path/to/helm pnpm verify:phase12:kind
+```
+
+Validate Phase 13 digest resolution, release evidence, workflow permissions,
+image scans/SBOMs, and the exact-digest disposable release:
+
+```bash
+HELM_BIN=/path/to/helm ACTIONLINT_BIN=/path/to/actionlint pnpm verify:phase13
+TRIVY_BIN=/path/to/trivy pnpm verify:phase13:images
+KIND_BIN=/path/to/kind HELM_BIN=/path/to/helm pnpm verify:phase13:kind
+```
+
 The kind command creates and deletes its own local cluster. External staging
 or production installation is not performed by repository CI.
 
@@ -203,12 +221,17 @@ The pack excludes `.env`, credentials, provider tokens, personal account data, a
 
 ## Current status
 
-Status: Phases 0-11 are complete. Phase 9 adds secure Kubernetes inspection,
+Status: Phases 0-13 are complete. Phase 9 adds secure Kubernetes inspection,
 offline planning, opt-in approved apply, durable rollout summaries, and bounded
 rollback. Phase 10 packages BuildSphere itself as 11 non-root production images
 and a hardened Helm release with external secrets and PostgreSQL. Phase 11 adds
 shared runtime and bounded HTTP metrics, optional Prometheus Operator discovery
 and rules, an eight-panel Grafana dashboard, API SLOs, and alert runbooks.
+Phase 12 adds zero-unavailable rollout, soft topology spreading, and optional
+validated PDB, HPA, and least-privilege ingress-policy resources.
+Phase 13 adds digest-bound platform releases, OCI source identity, blocking
+vulnerability and secret scans, CycloneDX SBOMs, keyless signing definitions,
+and deterministic draft-release evidence behind a protected workflow.
 
 Implemented workflows include local and GitHub authentication, project and
 tool configuration, selection-aware DevOps, Helm, and Terraform generation, GitHub
@@ -221,12 +244,17 @@ approval, apply only allowlisted resources, expose safe operation history, and
 restore a prior owned release. The BuildSphere chart passed install, all seven
 migrations, 11 ready workloads, an in-cluster frontend/API/database test,
 all ten backend metric scrapes, upgrade, and repeat test against a disposable
-kind cluster. All 63 automated tests and the current cross-phase smoke gates
-pass. The observability resources remain disabled by default and require an
-operator-owned Prometheus/Grafana/Alertmanager stack. Registry publication,
-external staging installation, Terraform
-plan/apply, cloud or production deployment, production secret lifecycle,
-release hardening, and additional provider integrations remain future work.
+kind cluster. A separate two-replica install/upgrade passed with all 11
+disruption budgets and NetworkPolicies enabled. Exact-digest mode passed the
+same lifecycle, and all 11 rebuilt images passed the Phase 13 scan/SBOM gate.
+All 63 automated tests and the current cross-phase smoke gates pass.
+Observability, HPA, PDB, and policy resources remain disabled by default; their
+monitoring, Metrics API, replica, and network-plugin prerequisites are
+operator-owned. A live semantic-version release was not triggered, so GHCR
+publication and GitHub OIDC signatures remain unexercised external operations.
+External staging installation, Terraform plan/apply, cloud or production
+deployment, production secret/database operations, and additional provider
+integrations remain future work.
 
 ## License
 

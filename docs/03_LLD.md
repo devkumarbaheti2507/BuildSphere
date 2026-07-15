@@ -345,6 +345,111 @@ Grafana -> Prometheus: render BuildSphere overview dashboard
 Alert receiver -> Runbook: diagnose service, dependency, error, or latency issue
 ```
 
+# Phase 12 runtime reliability and network security
+
+Every application Deployment declares `RollingUpdate` with zero unavailable
+replicas, one surge replica by default, and a readiness settling period. A soft
+`kubernetes.io/hostname` topology spread constraint uses the same immutable
+selector labels as the Deployment. The soft constraint preserves local
+single-node installation while distributing replicas when nodes are
+available.
+
+Optional reliability modules:
+
+- One `policy/v1` PodDisruptionBudget per application Deployment uses the
+  exact workload selector. Chart validation requires at least two effective
+  minimum replicas and requires `minAvailable` to remain below that count.
+- One `autoscaling/v2` HorizontalPodAutoscaler per application Deployment uses
+  CPU and memory utilization targets. When enabled, the Deployment omits
+  `spec.replicas`; Helm no longer competes with the autoscaler for scale.
+- HPA scale-up is responsive and scale-down uses a stabilization window plus a
+  bounded percentage policy. The Kubernetes Metrics API is an external
+  prerequisite and is not installed by the chart.
+
+Optional network module:
+
+- One ingress-only NetworkPolicy selects each application component.
+- Same-namespace callers must match the chart name, release instance, and
+  reviewed source component.
+- The Helm chart-test component can reach every application workload.
+- Configurable namespace and pod selectors admit an ingress controller only to
+  Frontend and API Gateway, and a metrics collector only to backend services.
+- Rules expose only the selected destination's named HTTP port. No `ipBlock`,
+  unrestricted peer, or egress policy is rendered.
+
+## Sequence: schedule, scale, and admit traffic
+
+```text
+Helm -> Kubernetes API: create Deployment with rollout and topology controls
+Helm -> Kubernetes API: optionally create matching PDB, HPA, and NetworkPolicy
+Scheduler -> Nodes: spread replicas when topology permits
+Eviction API -> PDB: preserve the configured minimum availability
+Metrics API -> HPA: report CPU and memory utilization
+HPA -> Deployment scale: adjust desired replicas without Helm ownership conflict
+Network plugin -> Destination pod: admit only a reviewed ingress peer and port
+```
+
+Phase 12 does not restrict egress, install cluster add-ons, create credentials,
+or change generated customer project charts.
+
+# Phase 13 software supply-chain release certification
+
+Phase 13 applies to BuildSphere's own eleven production images and Helm chart.
+It does not change generated customer project images or run a deployment.
+
+Container metadata modules:
+
+- Both runtime Dockerfiles accept `BUILD_VERSION`, `BUILD_REVISION`,
+  `BUILD_SOURCE`, and `BUILD_LICENSES` arguments and expose the corresponding
+  OCI labels.
+- Release builds use the exact tag commit and never pass credentials as build
+  arguments or persist them in image layers.
+- A pinned, checksum-verified Trivy binary scans immutable image digests and
+  emits one CycloneDX SBOM per component.
+
+Release evidence modules:
+
+- A component-record command validates component identity, image repository,
+  `sha256` digest, semantic version, source commit, and CycloneDX SBOM.
+- A bundle command requires exactly the ten backend components plus Frontend,
+  verifies every record against one release identity, hashes each SBOM and the
+  packaged chart, and emits a canonical JSON release manifest.
+- The same command emits a Helm values overlay containing the repository
+  prefix and all eleven image digests.
+- The release workflow signs image digests and release files with Cosign using
+  the short-lived GitHub Actions OIDC identity. No long-lived signing key is
+  stored in the repository or GitHub Secrets.
+
+Helm image resolution:
+
+- Tag mode remains the default for local development and existing no-push CI.
+- Digest mode is explicit and requires one valid `sha256` digest for every
+  application component.
+- All Deployments, the migration Job, and the Helm test use the same image
+  resolver, so digest mode cannot silently fall back to a tag.
+
+## Sequence: certify a BuildSphere release candidate
+
+```text
+Git tag -> Release workflow: validate semantic version and default-branch ancestry
+Release workflow -> Protected environment: wait for configured reviewer approval
+BuildKit -> GHCR: publish component image plus SBOM/provenance attestations
+Trivy -> Image digest: scan and write CycloneDX SBOM
+Cosign -> Image digest: create keyless signature after the scan passes
+Matrix job -> Artifact store: upload signed component record and SBOM
+Certification job -> Cosign: verify all image signatures against workflow identity
+Certification job -> Helm: package the chart for the release version
+Evidence tool -> Release directory: write manifest, digest values, and checksums
+Cosign -> Release directory: sign manifest and checksums as keyless blobs
+GitHub CLI -> Draft release: upload the complete candidate for operator review
+```
+
+Phase 13 verification exercises evidence generation with deterministic local
+fixtures, validates the workflow and all pinned actions structurally, renders
+the chart in tag and digest modes, and rebuilds/runs the production images. It
+does not push to GHCR, request an OIDC certificate, create a GitHub Release, or
+deploy to an external environment.
+
 # Logging Service
 
 Responsibilities:
@@ -407,7 +512,7 @@ Responsibilities:
 Responsibilities:
 
 - Aggregate service health.
-- Expose metrics endpoint in future.
+- Expose aggregate health, runtime, and HTTP metrics on `/metrics`.
 - Provide dashboard-ready data.
 
 # Sequence: create project

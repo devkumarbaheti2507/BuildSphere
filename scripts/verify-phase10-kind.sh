@@ -12,6 +12,8 @@ node_image="${KIND_NODE_IMAGE:-kindest/node:v1.34.3@sha256:08497ee19eace7b4b5348
 postgres_base_image="${POSTGRES_BASE_IMAGE:-postgres:16-alpine@sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777}"
 postgres_image="${POSTGRES_IMAGE:-buildsphere/phase10-postgres:phase10-local}"
 tag="${BUILDSPHERE_IMAGE_TAG:-phase10-local}"
+phase12_reliability="${BUILDSPHERE_PHASE12_RELIABILITY:-false}"
+phase13_digest_mode="${BUILDSPHERE_PHASE13_DIGEST_MODE:-false}"
 temp_dir="$(mktemp -d)"
 kubeconfig="${temp_dir}/kubeconfig"
 fixture_values="${temp_dir}/fixture-values.yaml"
@@ -31,6 +33,24 @@ components=(
   pipeline-service
   project-service
 )
+
+if [[ "${phase12_reliability}" != "true" && "${phase12_reliability}" != "false" ]]; then
+  echo "BUILDSPHERE_PHASE12_RELIABILITY must be true or false" >&2
+  exit 1
+fi
+if [[ "${phase13_digest_mode}" != "true" && "${phase13_digest_mode}" != "false" ]]; then
+  echo "BUILDSPHERE_PHASE13_DIGEST_MODE must be true or false" >&2
+  exit 1
+fi
+
+reliability_args=()
+if [[ "${phase12_reliability}" == "true" ]]; then
+  reliability_args=(
+    --set replicaCount=2
+    --set availability.podDisruptionBudget.enabled=true
+    --set networkPolicy.enabled=true
+  )
+fi
 
 cleanup() {
   local status=$?
@@ -66,9 +86,16 @@ command -v docker >/dev/null
 command -v openssl >/dev/null
 
 images=()
+declare -A image_digests=()
 for component in "${components[@]}"; do
   image="buildsphere/${component}:${tag}"
   docker image inspect "${image}" >/dev/null
+  image_digest="$(docker image inspect --format '{{.Id}}' "${image}")"
+  if [[ ! "${image_digest}" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+    echo "Local image ${image} does not expose a sha256 manifest digest" >&2
+    exit 1
+  fi
+  image_digests["${component}"]="${image_digest}"
   images+=("${image}")
 done
 docker image inspect "${postgres_base_image}" >/dev/null
@@ -106,6 +133,13 @@ image:
   repositoryPrefix: buildsphere
   tag: "${tag}"
   pullPolicy: Never
+  digestMode: ${phase13_digest_mode}
+  digests:
+EOF
+for component in "${components[@]}"; do
+  printf '    %s: "%s"\n' "${component}" "${image_digests[${component}]}" >>"${buildsphere_values}"
+done
+cat >>"${buildsphere_values}" <<EOF
 runtime:
   existingSecret: buildsphere-runtime
   logLevel: info
@@ -124,6 +158,14 @@ cluster_created=true
 for image in "${images[@]}"; do
   "${kind_bin}" load docker-image --name "${cluster_name}" "${image}"
 done
+if [[ "${phase13_digest_mode}" == "true" ]]; then
+  for component in "${components[@]}"; do
+    docker exec "${cluster_name}-control-plane" \
+      ctr --namespace k8s.io images tag \
+      "docker.io/buildsphere/${component}:${tag}" \
+      "docker.io/buildsphere/${component}@${image_digests[${component}]}"
+  done
+fi
 
 "${helm_bin}" install "${fixture_release}" \
   "${repo_root}/scripts/fixtures/phase10-runtime" \
@@ -139,6 +181,7 @@ done
   --namespace "${namespace}" \
   --kubeconfig "${kubeconfig}" \
   --values "${buildsphere_values}" \
+  "${reliability_args[@]}" \
   --wait \
   --timeout 5m
 
@@ -153,6 +196,7 @@ done
   --namespace "${namespace}" \
   --kubeconfig "${kubeconfig}" \
   --values "${buildsphere_values}" \
+  "${reliability_args[@]}" \
   --set runtime.pipelineStageDelayMs=26 \
   --wait \
   --timeout 5m
@@ -167,4 +211,10 @@ done
   --namespace "${namespace}" \
   --kubeconfig "${kubeconfig}"
 
-echo "Phase 10 kind install, migration, smoke, and upgrade verification passed."
+if [[ "${phase13_digest_mode}" == "true" ]]; then
+  echo "Phase 13 digest-pinned install, reliability, smoke, and upgrade verification passed."
+elif [[ "${phase12_reliability}" == "true" ]]; then
+  echo "Phase 12 two-replica, disruption-budget, network-policy, smoke, and upgrade verification passed."
+else
+  echo "Phase 10 kind install, migration, smoke, and upgrade verification passed."
+fi

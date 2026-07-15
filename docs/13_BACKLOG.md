@@ -6,7 +6,7 @@
 | Version           | 0.1.0                  |
 | Status            | Draft                  |
 | Author            | BuildSphere Team       |
-| Last Updated      | 2026-07-14             |
+| Last Updated      | 2026-07-15             |
 | Related Documents | 12_ROADMAP.md, specs/* |
 
 ---
@@ -650,3 +650,179 @@ The eight-panel Grafana dashboard, explicit API availability/latency objectives,
 three alert runbooks, CI verifier, hardened image metric smoke, and ten-service
 cluster scrape test are checked in. All 63 tests and the complete Phase 0-10
 regression suite pass without modifying an external environment.
+
+# Phase 12 tickets
+
+## BS-1201: Add rollout and disruption safeguards
+
+Priority: High
+Milestone: Phase 12
+Status: Done
+
+Description:
+Make application updates and voluntary disruptions predictable across local
+and multi-node Kubernetes installations.
+
+Acceptance criteria:
+
+- All application Deployments define zero-unavailable rolling updates, bounded
+  surge, and a readiness settling period.
+- All application Deployments use a selector-matched soft hostname topology
+  spread constraint.
+- The chart can optionally render one `policy/v1` PodDisruptionBudget per
+  workload.
+- Chart validation rejects disruption budgets that cannot tolerate one
+  voluntary disruption.
+
+Outcome:
+All 11 Deployments now use zero-unavailable rolling updates, a five-second
+readiness settling period, and selector-matched soft hostname spreading.
+Opt-in PDBs use exact selectors and fail rendering for singleton or
+non-disruptable minimum configurations. A two-replica disposable-cluster
+install and upgrade passed with every PDB present.
+
+## BS-1202: Add bounded horizontal autoscaling
+
+Priority: High
+Milestone: Phase 12
+Status: Done
+
+Description:
+Let an operator opt into Kubernetes-owned horizontal scaling without adding a
+Metrics API dependency to the default release.
+
+Acceptance criteria:
+
+- The chart can optionally render one `autoscaling/v2` HPA per application
+  Deployment.
+- Minimum and maximum replicas, CPU and memory targets, and stabilization
+  windows are bounded and schema-validated.
+- Deployments omit `spec.replicas` while autoscaling is enabled.
+- The chart documents the operator-owned Metrics API prerequisite.
+
+Outcome:
+Opt-in `autoscaling/v2` HPAs target all 11 Deployments with bounded two-to-five
+replica defaults, CPU and memory utilization targets, responsive scale-up, and
+stabilized 25-percent scale-down. Autoscaled Deployments omit `spec.replicas`.
+Schema, behavior, ownership, and invalid-bound checks pass; runtime metrics
+scaling remains correctly dependent on an operator-installed Metrics API.
+
+## BS-1203: Isolate ingress and verify compatibility
+
+Priority: High
+Milestone: Phase 12
+Status: Done
+
+Description:
+Encode BuildSphere's reviewed ingress graph and prove compatibility with all
+completed phases.
+
+Acceptance criteria:
+
+- The chart can optionally render one ingress-only NetworkPolicy per
+  application workload.
+- Internal peers use exact chart, release, and component selectors.
+- External ingress-controller and metrics-collector selectors are
+  configurable and limited to their required destinations.
+- The chart does not emit unrestricted peers, `ipBlock`, or egress policy.
+- CI runs structured Phase 12 verification and the complete Phase 0-11
+  regression suite remains green.
+
+Outcome:
+Opt-in policies select all 11 workloads, preserve exactly 25 current internal
+caller edges plus chart-test access, allow configured ingress controllers only
+to Frontend/API Gateway, and allow configured collectors only to backends.
+Every policy is ingress-only, port-bounded, and contains no `ipBlock`, broad
+peer, or egress section. CI runs the verifier; the complete workspace, image,
+PostgreSQL, Terraform, gateway, and two disposable-cluster regressions pass.
+
+# Phase 13 tickets
+
+## BS-1301: Bind images and Helm releases to immutable digests
+
+Priority: High
+Milestone: Phase 13
+Status: Done
+
+Description:
+Add reviewable OCI source metadata to every BuildSphere runtime image and an
+explicit Helm mode that resolves every workload, migration, and test image by
+component digest.
+
+Acceptance criteria:
+
+- Backend and frontend runtime images expose version, revision, source, and
+  license OCI labels supplied by release builds.
+- Default chart behavior remains tag-based for existing local workflows.
+- Digest mode requires all eleven exact `sha256` values.
+- No workload, migration, or test image silently falls back to a tag in digest
+  mode.
+- Helm schema, strict lint, positive render, and negative render tests pass.
+
+Outcome:
+All backend and frontend release targets use digest-pinned base images and
+release-supplied OCI identity. Chart `0.4.0` preserves tag mode for local use
+and adds explicit fail-closed digest mode for all 11 application images plus
+the migration and chart-test consumers. Strict lint, structured positive
+renders, malformed/missing digest failures, and an exact-digest disposable
+kind install/upgrade pass.
+
+## BS-1302: Scan, attest, and keylessly sign release images
+
+Priority: High
+Milestone: Phase 13
+Status: Done
+
+Description:
+Create a separately authorized semantic-version release workflow for GHCR
+images with pinned automation, BuildKit attestations, CycloneDX SBOMs,
+blocking vulnerability/secret scans, and GitHub OIDC signatures.
+
+Acceptance criteria:
+
+- Normal CI has no registry write or OIDC authority.
+- Every action reference is pinned to a full commit SHA.
+- A checksum-pinned scanner blocks HIGH/CRITICAL findings.
+- BuildKit emits SBOM and maximal provenance attestations for each image.
+- Cosign signs only the immutable digest after scanning succeeds.
+- Exactly one validated component record and SBOM is retained per image.
+
+Outcome:
+The protected semantic-version workflow builds 11 GHCR targets with maximal
+BuildKit provenance and SBOM attestations, scans immutable references with
+checksum-pinned Trivy `0.70.0`, emits CycloneDX SBOMs, and signs accepted
+digests keylessly through GitHub OIDC. Normal CI remains read-only and all
+workflow actions are pinned. Local image verification rebuilt and scanned all
+11 images with zero HIGH/CRITICAL vulnerability or secret findings.
+
+## BS-1303: Certify one complete release candidate
+
+Priority: High
+Milestone: Phase 13
+Status: Done
+
+Description:
+Aggregate and verify all component evidence, package the chart, emit signed
+release metadata and digest values, and present the result as a draft release
+without deploying it.
+
+Acceptance criteria:
+
+- Missing, duplicate, unknown, inconsistent, or malformed component evidence
+  fails certification.
+- The manifest binds source, image digests, SBOM hashes, chart hash, scan
+  policy, and signing identity.
+- Checksums cover every release file and both manifest and checksums have
+  keyless verification bundles.
+- A draft GitHub Release is the only publication result.
+- Focused and complete Phase 0-12 regression gates pass without external
+  publication or deployment.
+
+Outcome:
+The evidence builder rejects missing, duplicate, unknown, inconsistent,
+malformed-digest, and invalid-SBOM inputs, then deterministically emits the
+complete 11-component manifest, digest values, chart archive, SBOM set, and 14
+checksums. The workflow verifies image signatures, signs the manifest and
+checksums, and targets a draft release only. Focused and complete Phase 0-12
+regressions pass locally; no GHCR push, OIDC signing request, GitHub Release, or
+external deployment was performed.

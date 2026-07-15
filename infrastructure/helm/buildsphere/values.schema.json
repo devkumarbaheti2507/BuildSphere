@@ -1,10 +1,36 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
+  "definitions": {
+    "labelSelector": {
+      "type": "object",
+      "required": ["matchLabels"],
+      "properties": {
+        "matchLabels": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 253
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 63
+          }
+        }
+      }
+    }
+  },
   "required": [
     "publicUrl",
     "image",
     "runtime",
+    "replicaCount",
+    "terminationGracePeriodSeconds",
+    "availability",
+    "networkPolicy",
     "resources",
     "probes",
     "migration",
@@ -20,13 +46,83 @@
     },
     "image": {
       "type": "object",
-      "required": ["repositoryPrefix", "tag", "pullPolicy"],
+      "required": [
+        "repositoryPrefix",
+        "tag",
+        "digestMode",
+        "digests",
+        "pullPolicy"
+      ],
       "properties": {
         "repositoryPrefix": { "type": "string", "minLength": 1 },
         "tag": {
           "type": "string",
           "minLength": 1,
           "not": { "const": "latest" }
+        },
+        "digestMode": { "type": "boolean" },
+        "digests": {
+          "type": "object",
+          "required": [
+            "api-gateway",
+            "auth-service",
+            "project-service",
+            "pipeline-service",
+            "deployment-service",
+            "monitoring-service",
+            "logging-service",
+            "ai-service",
+            "analytics-service",
+            "notification-service",
+            "frontend"
+          ],
+          "properties": {
+            "api-gateway": {
+              "type": "string",
+              "pattern": "^$|^sha256:[0-9a-f]{64}$"
+            },
+            "auth-service": {
+              "type": "string",
+              "pattern": "^$|^sha256:[0-9a-f]{64}$"
+            },
+            "project-service": {
+              "type": "string",
+              "pattern": "^$|^sha256:[0-9a-f]{64}$"
+            },
+            "pipeline-service": {
+              "type": "string",
+              "pattern": "^$|^sha256:[0-9a-f]{64}$"
+            },
+            "deployment-service": {
+              "type": "string",
+              "pattern": "^$|^sha256:[0-9a-f]{64}$"
+            },
+            "monitoring-service": {
+              "type": "string",
+              "pattern": "^$|^sha256:[0-9a-f]{64}$"
+            },
+            "logging-service": {
+              "type": "string",
+              "pattern": "^$|^sha256:[0-9a-f]{64}$"
+            },
+            "ai-service": {
+              "type": "string",
+              "pattern": "^$|^sha256:[0-9a-f]{64}$"
+            },
+            "analytics-service": {
+              "type": "string",
+              "pattern": "^$|^sha256:[0-9a-f]{64}$"
+            },
+            "notification-service": {
+              "type": "string",
+              "pattern": "^$|^sha256:[0-9a-f]{64}$"
+            },
+            "frontend": {
+              "type": "string",
+              "pattern": "^$|^sha256:[0-9a-f]{64}$"
+            }
+          },
+          "additionalProperties": false
         },
         "pullPolicy": {
           "type": "string",
@@ -65,6 +161,138 @@
       "type": "integer",
       "minimum": 10,
       "maximum": 300
+    },
+    "availability": {
+      "type": "object",
+      "required": [
+        "rollout",
+        "topologySpread",
+        "podDisruptionBudget",
+        "autoscaling"
+      ],
+      "properties": {
+        "rollout": {
+          "type": "object",
+          "required": ["minReadySeconds", "maxUnavailable", "maxSurge"],
+          "properties": {
+            "minReadySeconds": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 300
+            },
+            "maxUnavailable": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "maxSurge": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10
+            }
+          }
+        },
+        "topologySpread": {
+          "type": "object",
+          "required": ["enabled", "maxSkew", "topologyKey"],
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "maxSkew": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10
+            },
+            "topologyKey": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 253,
+              "pattern": "^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?[A-Za-z0-9]([-A-Za-z0-9_.]*[A-Za-z0-9])?$"
+            }
+          }
+        },
+        "podDisruptionBudget": {
+          "type": "object",
+          "required": ["enabled", "minAvailable"],
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "minAvailable": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 49
+            }
+          }
+        },
+        "autoscaling": {
+          "type": "object",
+          "required": [
+            "enabled",
+            "minReplicas",
+            "maxReplicas",
+            "cpuUtilizationPercentage",
+            "memoryUtilizationPercentage",
+            "scaleUpStabilizationWindowSeconds",
+            "scaleDownStabilizationWindowSeconds"
+          ],
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "minReplicas": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            },
+            "maxReplicas": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            },
+            "cpuUtilizationPercentage": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "memoryUtilizationPercentage": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "scaleUpStabilizationWindowSeconds": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3600
+            },
+            "scaleDownStabilizationWindowSeconds": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3600
+            }
+          }
+        }
+      }
+    },
+    "networkPolicy": {
+      "type": "object",
+      "required": ["enabled", "ingressController", "metricsCollector"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "ingressController": {
+          "type": "object",
+          "required": ["enabled", "namespaceSelector", "podSelector"],
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "namespaceSelector": { "$ref": "#/definitions/labelSelector" },
+            "podSelector": { "$ref": "#/definitions/labelSelector" }
+          }
+        },
+        "metricsCollector": {
+          "type": "object",
+          "required": ["enabled", "namespaceSelector", "podSelector"],
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "namespaceSelector": { "$ref": "#/definitions/labelSelector" },
+            "podSelector": { "$ref": "#/definitions/labelSelector" }
+          }
+        }
+      }
     },
     "observability": {
       "type": "object",

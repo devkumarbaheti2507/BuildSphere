@@ -6,6 +6,19 @@ publicUrl: https://buildsphere.example.com
 image:
   repositoryPrefix: ghcr.io/example/buildsphere
   tag: "0.1.0"
+  digestMode: false
+  digests:
+    api-gateway: ""
+    auth-service: ""
+    project-service: ""
+    pipeline-service: ""
+    deployment-service: ""
+    monitoring-service: ""
+    logging-service: ""
+    ai-service: ""
+    analytics-service: ""
+    notification-service: ""
+    frontend: ""
   pullPolicy: IfNotPresent
   pullSecrets: []
 
@@ -16,6 +29,46 @@ runtime:
 
 replicaCount: 1
 terminationGracePeriodSeconds: 30
+
+availability:
+  rollout:
+    minReadySeconds: 5
+    maxUnavailable: 0
+    maxSurge: 1
+  topologySpread:
+    enabled: true
+    maxSkew: 1
+    topologyKey: kubernetes.io/hostname
+  podDisruptionBudget:
+    enabled: false
+    minAvailable: 1
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 5
+    cpuUtilizationPercentage: 70
+    memoryUtilizationPercentage: 80
+    scaleUpStabilizationWindowSeconds: 0
+    scaleDownStabilizationWindowSeconds: 300
+
+networkPolicy:
+  enabled: false
+  ingressController:
+    enabled: true
+    namespaceSelector:
+      matchLabels:
+        kubernetes.io/metadata.name: ingress-nginx
+    podSelector:
+      matchLabels:
+        app.kubernetes.io/name: ingress-nginx
+  metricsCollector:
+    enabled: true
+    namespaceSelector:
+      matchLabels:
+        kubernetes.io/metadata.name: monitoring
+    podSelector:
+      matchLabels:
+        app.kubernetes.io/name: prometheus
 
 resources:
   backend:
