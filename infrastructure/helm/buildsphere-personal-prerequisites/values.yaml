@@ -1,0 +1,37 @@
+nameOverride: ""
+fullnameOverride: ""
+
+postgresql:
+  image:
+    repository: postgres
+    tag: 16-alpine
+    digest: sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777
+    pullPolicy: IfNotPresent
+  existingSecret: buildsphere-database
+  service:
+    port: 5432
+  persistence:
+    size: 20Gi
+    storageClass: ""
+    accessMode: ReadWriteOnce
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  probes:
+    startupFailureThreshold: 30
+    periodSeconds: 5
+    timeoutSeconds: 3
+
+tls:
+  enabled: false
+  email: ""
+  host: ""
+  secretName: buildsphere-tls
+  ingressClass: traefik
+  issuerName: buildsphere-letsencrypt
+  privateKeySecretName: buildsphere-letsencrypt-account
+  acmeServer: https://acme-v02.api.letsencrypt.org/directory

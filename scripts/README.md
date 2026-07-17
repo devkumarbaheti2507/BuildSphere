@@ -119,6 +119,14 @@ chart-test container. Because kind imports local images under tag names, this
 mode registers equivalent digest-qualified aliases in the disposable node's
 containerd image store before Helm installation.
 
+Set both `BUILDSPHERE_PHASE13_DIGEST_MODE=true` and
+`BUILDSPHERE_PHASE14_PERSONAL_PROFILE=true`, or run
+`pnpm verify:phase14:kind`, to replace the old runtime fixture with the real
+personal prerequisite chart. This mode creates disposable database/runtime
+Secrets, installs and tests persistent PostgreSQL, installs digest-pinned
+BuildSphere with the one-node profile, upgrades both releases, repeats both
+tests, and deletes the cluster.
+
 ## `verify-phase11-observability.mjs`
 
 Runs Helm strict lint and verifies the complete Phase 11 observability
@@ -158,10 +166,11 @@ coverage.
 
 ## `create-release-evidence.mjs`
 
-Implements the data-only core of Phase 13 release certification:
+Implements the data-only core of Phase 13-14 release certification:
 
 - `metadata` validates a semantic tag and writes the canonical build matrix.
-- `component` validates one image digest and CycloneDX SBOM.
+- `component` validates one image digest and either the legacy Phase 13 SBOM or
+  the exact AMD64 and ARM64 Phase 14 SBOM pair.
 - `bundle` requires all eleven components and emits the release manifest,
   digest-only Helm values, copied SBOM set, and `SHA256SUMS`.
 - `references` emits the exact digest references for Cosign verification.
@@ -170,10 +179,11 @@ The tool accepts no credential or signing key and performs no network request.
 
 ## `install-trivy.sh` and `install-actionlint.sh`
 
-Download the explicitly versioned Linux AMD64 release archives for Trivy and
-actionlint, verify checked-in SHA-256 values before extraction, and install only
-the expected binary. CI uses actionlint for workflow semantics; the tag release
-uses Trivy for immutable-image vulnerability and secret scanning.
+Download the explicitly versioned Linux AMD64 or ARM64 release archives for
+Trivy and actionlint, verify architecture-specific checked-in SHA-256 values
+before extraction, and install only the expected binary. CI uses actionlint for
+workflow semantics; the tag release uses Trivy for immutable-image
+vulnerability and secret scanning.
 
 ## `verify-phase13-supply-chain.mjs`
 
@@ -208,3 +218,30 @@ The command expects the default `phase10-local` image tag. Override it with
 `PHASE13_IMAGE_TAG`; use `TRIVY_CACHE_DIR` to reuse a downloaded vulnerability
 database. The scanner is read-only with respect to registries and deletes its
 temporary reports and SBOMs.
+
+## `create-personal-deployment-secrets.sh`
+
+Creates `buildsphere-database` and `buildsphere-runtime` only after
+`BUILDSPHERE_CONFIRM_CONTEXT` exactly matches the current kubectl context. It
+refuses existing Secrets, performs a server dry run, generates credentials in
+memory, and never prints or writes their values. Optional GitHub client values
+must be supplied as a pair. This command changes the confirmed cluster and is
+not run by normal CI.
+
+## `verify-phase14-personal-deployment.mjs`
+
+Runs strict and structural checks for both charts, the one-node values profile,
+TLS positive and negative renders, guarded Secret bootstrap, multi-platform
+workflow, schema-2 evidence with 22 SBOMs, and ARM64 installer support. It uses
+only temporary fixtures and a fake kubectl API.
+
+```bash
+HELM_BIN=/path/to/helm pnpm verify:phase14
+```
+
+## `verify-phase14-arm64-images.sh`
+
+Uses Docker Buildx to produce local OCI archives for one representative backend
+and the frontend on `linux/arm64`. It never loads or pushes the images and
+removes both archives afterward. Run it with `pnpm verify:phase14:arm64` after
+Docker and ARM64 emulation are available.

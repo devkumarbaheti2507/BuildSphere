@@ -826,3 +826,88 @@ checksums. The workflow verifies image signatures, signs the manifest and
 checksums, and targets a draft release only. Focused and complete Phase 0-12
 regressions pass locally; no GHCR push, OIDC signing request, GitHub Release, or
 external deployment was performed.
+
+# Phase 14 tickets
+
+## BS-1401: Certify multi-platform release indexes
+
+Priority: High
+Milestone: Phase 14
+Status: Done
+
+Description:
+Extend the protected release path from AMD64 images to immutable indexes for
+AMD64 and ARM64, with explicit platform scans and evidence.
+
+Acceptance criteria:
+
+- Every component build targets exactly `linux/amd64` and `linux/arm64`.
+- QEMU and every other workflow action are pinned to full commit SHAs.
+- Trivy scans each supported platform and emits one CycloneDX SBOM for it.
+- Evidence schema 2 rejects an incomplete, duplicate, reordered, or unsupported
+  platform set.
+- The index digest is signed only after both platform scans pass.
+
+Outcome:
+The release workflow now uses full-SHA-pinned QEMU and Buildx to publish exact
+AMD64/ARM64 indexes. Each platform has a blocking Trivy scan and CycloneDX
+SBOM, and evidence schema 2 fails closed unless all 22 platform records are
+complete and ordered. Representative backend and frontend ARM64 cross-builds
+pass without a registry push.
+
+## BS-1402: Package personal deployment prerequisites
+
+Priority: High
+Milestone: Phase 14
+Status: Done
+
+Description:
+Provide a separate, least-privilege PostgreSQL and optional TLS Helm release,
+a conservative application values profile, and a guarded Secret bootstrap.
+
+Acceptance criteria:
+
+- PostgreSQL uses a digest-pinned multi-platform image and retained storage.
+- The prerequisite chart renders no Secret and accepts an existing Secret.
+- Optional cert-manager Issuer and Certificate resources fail closed on
+  incomplete identity values.
+- Secret bootstrap requires exact kube-context confirmation, refuses implicit
+  replacement, and does not print or persist generated values.
+- The application profile is one replica and disables add-on-dependent
+  reliability, monitoring, isolation, and deployment-execution features.
+
+Outcome:
+The separate prerequisite chart installs digest-pinned PostgreSQL with retained
+storage, least-privilege security, database ingress policy, and an authenticated
+test while rendering no Secret. Optional namespaced ACME resources, the
+one-node application overlay, and a wrong-context/existing-Secret-safe bootstrap
+are checked in and structurally verified.
+
+## BS-1403: Verify the personal profile and compatibility
+
+Priority: High
+Milestone: Phase 14
+Status: Done
+
+Description:
+Exercise all new artifacts locally and keep every completed BuildSphere phase
+green before beginning operator-led cloud deployment.
+
+Acceptance criteria:
+
+- Strict Helm lint and structural positive and negative renders pass.
+- Evidence fixtures prove all 22 platform SBOMs and checksum coverage.
+- Representative backend and frontend ARM64 cross-builds pass when Buildx is
+  available.
+- A disposable kind cluster installs, tests, upgrades, retests, and removes
+  the prerequisite and application releases.
+- Complete Phase 0-13 regressions pass without external mutation or
+  publication.
+
+Outcome:
+Strict chart, TLS, bootstrap, workflow, multi-platform evidence, checksum, and
+negative verification passes. A disposable cluster installed PostgreSQL and
+all 11 digest-pinned workloads, ran seven migrations and both Helm tests,
+upgraded both releases, repeated both tests, and was deleted. Workspace,
+gateway, PostgreSQL, Terraform, observability, reliability, and legacy release
+certification gates remain green without external mutation or publication.

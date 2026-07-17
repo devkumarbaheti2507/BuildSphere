@@ -7,7 +7,7 @@
 | Status            | Accepted                                                                                                         |
 | Author            | BuildSphere Team                                                                                                 |
 | Last Updated      | 2026-07-15                                                                                                       |
-| Related Documents | 08_DEVOPS.md, ../specs/SUPPLY_CHAIN_SECURITY_SPEC.md, adr/ADR-015-Software-Supply-Chain-Release-Certification.md |
+| Related Documents | 08_DEVOPS.md, ../specs/SUPPLY_CHAIN_SECURITY_SPEC.md, ../specs/PERSONAL_FREE_TIER_DEPLOYMENT_SPEC.md, adr/ADR-015-Software-Supply-Chain-Release-Certification.md, adr/ADR-016-Personal-Free-Tier-Deployment-Profile.md |
 
 ---
 
@@ -40,8 +40,8 @@ default branch:
 ```bash
 git switch main
 git pull --ff-only
-git tag -a v0.4.0 -m "BuildSphere v0.4.0"
-git push origin v0.4.0
+git tag -a v0.5.0 -m "BuildSphere v0.5.0"
+git push origin v0.5.0
 ```
 
 The workflow rejects non-semantic tags and tags whose commit is not contained
@@ -53,13 +53,13 @@ publication until a configured reviewer approves it.
 The release workflow:
 
 1. Resolves the canonical ten backend components plus Frontend.
-2. Builds each image from the tagged commit and pushes version and commit tags
-   to GHCR.
+2. Builds each image from the tagged commit as one `linux/amd64` and
+   `linux/arm64` OCI index and pushes version and commit tags to GHCR.
 3. Attaches BuildKit SBOM and maximal provenance attestations.
-4. Scans the immutable digest with checksum-pinned Trivy for HIGH/CRITICAL
-   vulnerabilities and secrets.
-5. Emits one CycloneDX SBOM and signs each accepted digest with Cosign and
-   GitHub OIDC.
+4. Scans each immutable platform selection with checksum-pinned Trivy for
+   HIGH/CRITICAL vulnerabilities and secrets.
+5. Emits one CycloneDX SBOM per platform and signs each accepted index digest
+   with Cosign and GitHub OIDC only after both scans pass.
 6. Verifies all eleven signatures against the exact repository workflow
    identity.
 7. Packages the Helm chart and creates a digest-only values overlay.
@@ -81,7 +81,7 @@ The draft release contains:
 - `buildsphere-release-manifest.json.bundle`
 - `SHA256SUMS`
 - `SHA256SUMS.bundle`
-- Eleven `buildsphere-<component>.cdx.json` files
+- Twenty-two `buildsphere-<component>-linux-<architecture>.cdx.json` files
 
 The manifest is the authoritative binding. A version tag by itself is not
 deployment evidence.
@@ -93,15 +93,15 @@ file hash. All checksum entries are root-level asset names, matching the flat
 directory created by `gh release download`:
 
 ```bash
-gh release download v0.4.0 --dir /tmp/buildsphere-v0.4.0
-cd /tmp/buildsphere-v0.4.0
+gh release download v0.5.0 --dir /tmp/buildsphere-v0.5.0
+cd /tmp/buildsphere-v0.5.0
 sha256sum --check SHA256SUMS
 ```
 
 Verify the signed manifest and checksum list with the exact workflow identity:
 
 ```bash
-IDENTITY="https://github.com/OWNER/REPOSITORY/.github/workflows/release.yml@refs/tags/v0.4.0"
+IDENTITY="https://github.com/OWNER/REPOSITORY/.github/workflows/release.yml@refs/tags/v0.5.0"
 ISSUER="https://token.actions.githubusercontent.com"
 
 cosign verify-blob \
@@ -135,9 +135,9 @@ The generated values file activates fail-closed digest mode:
 helm lint --strict infrastructure/helm/buildsphere
 helm template buildsphere infrastructure/helm/buildsphere \
   --namespace buildsphere \
-  --values /tmp/buildsphere-v0.4.0/buildsphere-digest-values.yaml \
+  --values /tmp/buildsphere-v0.5.0/buildsphere-digest-values.yaml \
   --values /path/to/staging-values.yaml \
-  > /tmp/buildsphere-v0.4.0/rendered.yaml
+  > /tmp/buildsphere-v0.5.0/rendered.yaml
 ```
 
 Inspect the render and confirm that every application image uses
@@ -152,5 +152,5 @@ database, Secret provider, ingress, TLS, monitoring, and network prerequisites;
 record smoke, rollback, capacity, and security evidence; then make a human
 release decision.
 
-Phase 13 local verification never pushes an image, requests a signing
+Phase 14 local verification never pushes an image, requests a signing
 certificate, creates a GitHub Release, or changes an external cluster.

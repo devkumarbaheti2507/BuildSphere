@@ -424,6 +424,40 @@ Acceptance criteria:
   human review. This phase does not publish a release during local
   verification or deploy one to an external cluster.
 
+## FR-023 Personal free-tier deployment readiness
+
+BuildSphere shall provide a reviewable single-node deployment profile that can
+run its certified release on resource-constrained Linux AMD64 or ARM64 K3s
+hosts without embedding credentials or provisioning a cloud account.
+
+Acceptance criteria:
+
+- Release images target both `linux/amd64` and `linux/arm64` under one immutable
+  OCI index digest.
+- Vulnerability and secret scanning runs separately for each supported
+  platform, and release evidence binds one CycloneDX SBOM per component and
+  platform.
+- Certification requires the exact supported platform set for all eleven
+  components and rejects missing, duplicate, unknown, or inconsistent platform
+  evidence.
+- A separate prerequisite Helm chart can install one persistent PostgreSQL 16
+  instance, an internal Service, least-privilege ingress policy, and a database
+  connectivity test while rendering no Secret.
+- The prerequisite chart can optionally create a namespaced cert-manager ACME
+  Issuer and Certificate for an operator-supplied hostname and contact email.
+- Runtime and database credentials are generated out of band only after the
+  operator confirms the exact kubeconfig context. Secret values are neither
+  written to the repository nor printed by the bootstrap path.
+- The checked-in personal values profile uses one replica and keeps PDB, HPA,
+  monitoring CRDs, application NetworkPolicy, and Kubernetes deployment
+  execution disabled until their external prerequisites are deliberately
+  configured.
+- Structural, negative, release-evidence, image-platform, and disposable kind
+  integration checks pass without contacting a cloud account, publishing a
+  release, requesting a public certificate, or changing an external cluster.
+- The profile is documented as personal evaluation infrastructure, not a
+  highly available or production-operated environment.
+
 # Non-functional requirements
 
 ## NFR-001 Usability

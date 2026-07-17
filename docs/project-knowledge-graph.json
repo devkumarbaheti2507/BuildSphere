@@ -6,7 +6,7 @@
     "name": "BuildSphere",
     "version": "0.1.0",
     "kind": "AI-assisted Developer Experience Platform",
-    "status": "Phases 0-13 complete with controlled Kubernetes execution, platform packaging, observability, runtime reliability, and supply-chain release certification validated locally",
+    "status": "Phases 0-14 complete with controlled Kubernetes execution, platform packaging, observability, runtime reliability, supply-chain certification, and a personal free-tier deployment profile validated locally",
     "primaryAudience": [
       "learning developer",
       "backend or DevOps portfolio builder",
@@ -33,7 +33,7 @@
       "type": "product",
       "name": "BuildSphere",
       "status": "implemented",
-      "description": "Guided platform for project configuration, selection-aware DevOps, Helm, disabled AWS EKS Terraform generation, controlled Kubernetes deployment, explainable delivery workflows, recommendations, validation, GitHub integration, locally verified production packaging, observability, optional Kubernetes runtime reliability controls, and deterministic supply-chain release certification.",
+      "description": "Guided platform for project configuration, selection-aware DevOps, Helm, disabled AWS EKS Terraform generation, controlled Kubernetes deployment, explainable delivery workflows, recommendations, validation, GitHub integration, locally verified production packaging, observability, optional Kubernetes runtime reliability controls, deterministic supply-chain release certification, and a guarded single-node personal deployment profile.",
       "evidence": ["README.md", "docs/00_PROJECT_VISION.md"]
     },
     {
@@ -846,7 +846,7 @@
       "type": "technology",
       "name": "CycloneDX SBOM",
       "status": "implemented",
-      "reason": "Represent each release image's software inventory in a portable, checksummed format bound to its digest.",
+      "reason": "Represent each release image platform's software inventory in a portable, checksummed format bound to its OCI index digest.",
       "evidence": [
         "scripts/create-release-evidence.mjs",
         ".github/workflows/release.yml"
@@ -868,7 +868,7 @@
       "type": "capability",
       "name": "Software supply-chain release certification",
       "status": "implemented",
-      "description": "A protected semantic-version workflow requires all 11 immutable image records, scan/SBOM evidence, verified image signatures, digest-only Helm values, canonical checksums, and signed draft-release evidence without deployment.",
+      "description": "A protected semantic-version workflow requires all 11 immutable AMD64/ARM64 image indexes, 22 platform scan/SBOM records, verified image signatures, digest-only Helm values, canonical checksums, and signed draft-release evidence without deployment.",
       "evidence": [
         "specs/SUPPLY_CHAIN_SECURITY_SPEC.md",
         ".github/workflows/release.yml",
@@ -885,6 +885,32 @@
       "evidence": [
         "scripts/verify-phase13-supply-chain.mjs",
         "scripts/verify-phase13-images.mjs",
+        "scripts/verify-phase10-kind.sh",
+        "docs/11_TESTING.md"
+      ]
+    },
+    {
+      "id": "capability.personal_free_tier_deployment",
+      "type": "capability",
+      "name": "Personal free-tier deployment profile",
+      "status": "implemented",
+      "description": "A provider-neutral one-node profile combines certified AMD64/ARM64 digests with a separate persistent PostgreSQL and optional TLS chart plus context-confirmed out-of-band Secret creation.",
+      "evidence": [
+        "specs/PERSONAL_FREE_TIER_DEPLOYMENT_SPEC.md",
+        "infrastructure/deployment/free-tier/",
+        "infrastructure/helm/buildsphere-personal-prerequisites/",
+        "scripts/create-personal-deployment-secrets.sh"
+      ]
+    },
+    {
+      "id": "workflow.phase14_personal_deployment_verification",
+      "type": "workflow",
+      "name": "Phase 14 personal deployment verification",
+      "status": "implemented",
+      "description": "Checks both charts, TLS failures, Secret safety, 22-SBOM evidence, multi-platform workflow structure, representative ARM64 cross-builds, and a disposable prerequisite-plus-application lifecycle.",
+      "evidence": [
+        "scripts/verify-phase14-personal-deployment.mjs",
+        "scripts/verify-phase14-arm64-images.sh",
         "scripts/verify-phase10-kind.sh",
         "docs/11_TESTING.md"
       ]
@@ -1698,6 +1724,31 @@
       "to": "capability.platform_helm_release"
     },
     {
+      "from": "product.buildsphere",
+      "relation": "prepares",
+      "to": "capability.personal_free_tier_deployment"
+    },
+    {
+      "from": "capability.personal_free_tier_deployment",
+      "relation": "uses",
+      "to": "capability.release_certification"
+    },
+    {
+      "from": "capability.personal_free_tier_deployment",
+      "relation": "extends",
+      "to": "capability.platform_helm_release"
+    },
+    {
+      "from": "workflow.phase14_personal_deployment_verification",
+      "relation": "verifies",
+      "to": "capability.personal_free_tier_deployment"
+    },
+    {
+      "from": "capability.personal_free_tier_deployment",
+      "relation": "externalizes",
+      "to": "boundary.external_production_dependencies"
+    },
+    {
       "from": "capability.release_certification",
       "relation": "externalizes",
       "to": "boundary.external_production_dependencies"
@@ -1779,6 +1830,8 @@
       "two-replica disposable platform install with all 11 PDBs and NetworkPolicies, Helm smoke, upgrade, repeat smoke, and cleanup",
       "Phase 13 verification for 21 pinned action references, complete digest-mode Helm rendering, deterministic 11-component evidence with 14 checksums, and six hostile evidence failures",
       "all 11 images scanned with zero HIGH/CRITICAL vulnerability or secret findings, 11 CycloneDX SBOMs, and an exact-digest disposable install-test-upgrade-test lifecycle",
+      "Phase 14 verification for 25 pinned action references, eleven AMD64/ARM64 indexes, 22 CycloneDX SBOMs, 25 checksums, guarded Secret creation, and both personal Helm releases",
+      "representative backend and frontend ARM64 cross-builds plus disposable PostgreSQL/application install-test-upgrade-retest and cleanup",
       "live GitHub OAuth, private repository publication, successful Actions synchronization, and no-op republish"
     ]
   },
@@ -1796,7 +1849,7 @@
     "Rate limiting, general security audit events, full RBAC, and production secret management are future hardening.",
     "The repository defines metrics, SLOs, rules, a dashboard, and runbooks but does not operate or persist Prometheus, Grafana, Alertmanager, or receiver credentials.",
     "Phase 12 reliability resources are optional: HPA runtime scaling needs an operator Metrics API, policy enforcement needs an enforcing CNI and correct controller selectors, and the disposable fixture does not claim load tuning or CNI enforcement.",
-    "Phase 13 defines and locally verifies registry build, scanning, SBOM, keyless signing, and draft-certification automation, but no live tag-triggered GHCR push, OIDC signature, or GitHub Release has been exercised; external Secret operations, database HA/backups, environment alert routing, and staging/production promotion remain open."
+    "Phase 14 prepares and locally verifies a personal single-node deployment, but no live tag-triggered GHCR push, OIDC signature, GitHub Release, cloud VM, public certificate, or external installation has been exercised; the profile is not highly available and backup/restore, Secret rotation, host operation, capacity, and recovery remain operator responsibilities."
   ],
   "sourceMap": {
     "productAndRequirements": [
@@ -1829,6 +1882,8 @@
       ".github/workflows/release.yml",
       "infrastructure/docker/",
       "infrastructure/helm/buildsphere/",
+      "infrastructure/helm/buildsphere-personal-prerequisites/",
+      "infrastructure/deployment/free-tier/",
       "infrastructure/release/",
       "infrastructure/observability/",
       "docs/17_RELEASE_CERTIFICATION.md",

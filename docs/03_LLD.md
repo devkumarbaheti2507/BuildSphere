@@ -450,6 +450,54 @@ the chart in tag and digest modes, and rebuilds/runs the production images. It
 does not push to GHCR, request an OIDC certificate, create a GitHub Release, or
 deploy to an external environment.
 
+# Phase 14 personal free-tier deployment readiness
+
+Phase 14 preserves the Phase 10 application chart boundary while adding the
+smallest operator-owned prerequisites needed by a single-node K3s deployment.
+
+Release platform modules:
+
+- Buildx creates one OCI index per component for exactly `linux/amd64` and
+  `linux/arm64` after QEMU setup through a full-SHA-pinned action.
+- Trivy scans each immutable platform selection independently and writes one
+  CycloneDX SBOM per component and platform.
+- Evidence schema 2 requires the exact ordered platform set, while schema 1
+  remains readable only for frozen Phase 13 regression fixtures.
+- The bundle contains 22 SBOMs and binds them to the eleven index digests.
+
+Personal prerequisite modules:
+
+- A separate `buildsphere-personal-prerequisites` Helm chart installs one
+  PostgreSQL StatefulSet, retained PVC, internal Service, ingress-only
+  NetworkPolicy, and database readiness test.
+- The chart references an existing database Secret and never renders Secret
+  material. Optional cert-manager resources are namespaced and disabled by
+  default.
+- A shell bootstrap requires an exact kube-context confirmation, refuses to
+  overwrite either Secret, generates values in memory, and sends them directly
+  to Kubernetes without printing them or writing a credential file.
+- The checked-in application overlay uses Traefik ingress and one replica and
+  leaves autoscaling, disruption budgets, monitoring CRDs, application network
+  policies, and controlled deployment execution disabled.
+
+## Sequence: prepare a personal K3s installation
+
+```text
+Operator -> kubectl: confirm the exact current context
+Bootstrap -> Kubernetes API: create namespace and two generated Secrets
+Helm -> Prerequisite chart: install PostgreSQL and retained storage
+Helm test -> PostgreSQL Service: verify authenticated readiness
+Operator -> cert-manager: install the external controller when TLS is desired
+Helm -> Prerequisite chart: optionally create Issuer and Certificate
+Helm -> Main chart: merge certified digest values with personal values
+Migration Job -> PostgreSQL: apply the seven idempotent migrations
+Helm test -> API Gateway: verify the deployed application
+```
+
+Local verification uses structural renders, deterministic evidence fixtures,
+representative ARM64 cross-builds, and a disposable kind cluster. It does not
+provision or mutate a personal cloud server.
+
 # Logging Service
 
 Responsibilities:

@@ -35,3 +35,4 @@ Specs are implementation-focused instructions for Codex and developers.
 | `PRODUCTION_OBSERVABILITY_SPEC.md` | BuildSphere metrics, SLO, alert, and dashboard contract.               |
 | `RUNTIME_RELIABILITY_SPEC.md`      | BuildSphere rollout, scaling, disruption, and network policy contract. |
 | `SUPPLY_CHAIN_SECURITY_SPEC.md`    | BuildSphere image, SBOM, signing, provenance, and release evidence contract. |
+| `PERSONAL_FREE_TIER_DEPLOYMENT_SPEC.md` | BuildSphere single-node AMD64/ARM64 personal deployment prerequisite contract. |

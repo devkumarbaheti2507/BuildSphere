@@ -1,0 +1,9 @@
+apiVersion: v2
+name: buildsphere-personal-prerequisites
+description: Single-node PostgreSQL and optional TLS prerequisites for BuildSphere
+type: application
+version: 0.1.0
+appVersion: "16"
+kubeVersion: ">=1.28.0-0"
+annotations:
+  artifacthub.io/license: MIT

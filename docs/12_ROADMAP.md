@@ -529,7 +529,58 @@ Verification outcome:
 - No image was pushed, no signing certificate was requested, no GitHub Release
   was created, and no external cluster or production resource was changed.
 
-# Post-Phase 13 candidates
+# Phase 14: Personal free-tier deployment readiness
+
+Status: Complete as of 2026-07-15.
+
+Goal: Make the certified BuildSphere release installable on a
+resource-constrained personal AMD64 or ARM64 K3s host without embedding
+credentials, coupling runtime code to one cloud, or weakening existing release
+evidence.
+
+Planned slices:
+
+1. BS-1401: certify AMD64 and ARM64 release indexes and platform evidence.
+2. BS-1402: package personal PostgreSQL, TLS, and secret prerequisites.
+3. BS-1403: verify the personal profile and all completed phases together.
+
+Exit criteria:
+
+- All eleven release images target exactly AMD64 and ARM64 and are scanned once
+  per platform before their index digest is signed.
+- Evidence schema 2 requires 22 CycloneDX SBOMs and emits checksums for every
+  release asset while retaining Phase 13 fixture compatibility.
+- A separate chart installs persistent PostgreSQL and optional namespaced TLS
+  resources but no Secret.
+- A context-confirmed bootstrap generates database and runtime Secrets without
+  printing or persisting their values.
+- A conservative checked-in values profile installs one application replica
+  through Traefik and keeps external add-on-dependent features disabled.
+- Helm, evidence, workflow, ARM64 cross-build, and disposable-cluster checks
+  pass alongside all Phase 0-13 regressions.
+- No local check pushes images, creates a release, requests a public
+  certificate, provisions cloud resources, or changes an external cluster.
+
+Verification outcome:
+
+- Chart `0.5.0` preserves the 38-resource, zero-Secret application default and
+  adds the shared pod identity required by the database ingress policy.
+- The protected workflow builds all 11 images as exact AMD64/ARM64 indexes,
+  scans each platform, emits 22 SBOMs, and binds them through evidence schema 2
+  while retaining schema-1 regression compatibility.
+- The prerequisite chart renders five default resources and zero Secrets; its
+  optional TLS profile adds one namespaced Issuer and Certificate.
+- The context-confirmed bootstrap rejects wrong contexts and existing Secrets,
+  passes a server dry run, and creates generated database/runtime values without
+  printing or persisting them.
+- Representative ARM64 backend/frontend cross-builds and the complete
+  disposable kind install/test/upgrade/retest lifecycle passed. The cluster was
+  deleted.
+- Frozen install, lint, all builds and 63 tests, gateway, PostgreSQL,
+  Terraform, Phase 10-13 chart/release, and focused Phase 14 checks pass. No
+  external or cloud resource was changed.
+
+# Post-Phase 14 candidates
 
 These items require separate specifications and backlog milestones:
 

@@ -6,7 +6,7 @@
 | ---------------------- | ---------------------------------------------------------------------------------------- |
 | Purpose                | Self-contained technical and product context for learning, presentation, and AI tutoring |
 | Snapshot date          | 2026-07-15                                                                               |
-| Current milestone      | Phase 13 complete; supply-chain release certification locally validated                  |
+| Current milestone      | Phase 14 complete; personal free-tier deployment profile locally validated               |
 | Intended readers       | Project owner, reviewers, interviewers, mentors, and ChatGPT                             |
 | Structured companion   | `docs/project-knowledge-graph.json`                                                      |
 | Presentation companion | `docs/16_PRESENTATION_AND_LEARNING_GUIDE.md`                                             |
@@ -31,8 +31,10 @@ metrics, optional operator discovery/rules, a Grafana dashboard, SLOs, and alert
 runbooks. Its platform Deployments also have safe rollout/topology defaults and
 optional validated disruption budgets, autoscaling, and ingress isolation.
 Certified platform candidates bind all 11 images to immutable digests, scan
-and inventory them, define keyless signatures, and produce deterministic
-draft-release evidence through a separately protected workflow.
+and inventory both AMD64 and ARM64 platforms, define keyless signatures, and
+produce deterministic draft-release evidence through a separately protected
+workflow. A separate chart and guarded bootstrap prepare persistent PostgreSQL,
+optional TLS, and a conservative one-node K3s installation.
 
 ## What problem it solves
 
@@ -66,6 +68,7 @@ Use these labels throughout this graph:
 | Phase 11 observability   | Metrics, SLOs, rules, dashboard, and runbooks complete     | `specs/PRODUCTION_OBSERVABILITY_SPEC.md`, ADR-013                  |
 | Phase 12 reliability     | Rollout, PDB, HPA, and ingress policy controls complete    | `specs/RUNTIME_RELIABILITY_SPEC.md`, ADR-014                       |
 | Phase 13 supply chain    | Digest, scan, SBOM, signing, and evidence flow complete    | `specs/SUPPLY_CHAIN_SECURITY_SPEC.md`, ADR-015                     |
+| Phase 14 personal deploy | AMD64/ARM64, PostgreSQL/TLS, and one-node profile complete | `specs/PERSONAL_FREE_TIER_DEPLOYMENT_SPEC.md`, ADR-016             |
 | Automated verification   | 63 tests plus lint and production builds pass              | `docs/11_TESTING.md`, `memory/next-session.md`                     |
 | PostgreSQL persistence   | Implemented and restart-tested                             | migrations and smoke scripts                                       |
 | Browser workflow         | Auth, project, notification, and deployment flows checked  | `memory/completed-features.md`                                     |
@@ -209,8 +212,12 @@ flowchart LR
     read-only; a semantic-version workflow scans and signs immutable images,
     requires all 11 component records, signs deterministic evidence, and
     creates only a draft release without deploying.
+16. **Provider-neutral personal deployment**: release indexes support AMD64 and
+    ARM64, state stays in a separate PostgreSQL release, Secrets are created
+    only after exact context confirmation, and cloud provisioning remains an
+    explicit operator action.
 
-Evidence: `docs/adr/ADR-001-*` through `ADR-015-*`.
+Evidence: `docs/adr/ADR-001-*` through `ADR-016-*`.
 
 ## Domain and data graph
 
@@ -789,11 +796,14 @@ pnpm verify:phase10
 HELM_BIN=/path/to/helm PROMTOOL_BIN=/path/to/promtool pnpm verify:phase11
 HELM_BIN=/path/to/helm pnpm verify:phase12
 HELM_BIN=/path/to/helm ACTIONLINT_BIN=/path/to/actionlint pnpm verify:phase13
+HELM_BIN=/path/to/helm pnpm verify:phase14
 pnpm verify:phase10:images
 TRIVY_BIN=/path/to/trivy pnpm verify:phase13:images
+pnpm verify:phase14:arm64
 KIND_BIN=/path/to/kind HELM_BIN=/path/to/helm pnpm verify:phase10:kind
 KIND_BIN=/path/to/kind HELM_BIN=/path/to/helm pnpm verify:phase12:kind
 KIND_BIN=/path/to/kind HELM_BIN=/path/to/helm pnpm verify:phase13:kind
+KIND_BIN=/path/to/kind HELM_BIN=/path/to/helm pnpm verify:phase14:kind
 pnpm smoke
 pnpm smoke:phase6:postgres
 pnpm smoke:phase9:postgres
@@ -839,7 +849,13 @@ the full install/test/upgrade/test lifecycle using exact local image digests,
 then was deleted. No registry push, OIDC signing request, GitHub Release, or
 external deployment occurred.
 
-The structured companion validates as 98 unique nodes and 166 relationships
+The Phase 14 gate confirms 25 immutable action references, eleven exact
+AMD64/ARM64 index records, 22 platform SBOMs, 25 checksums, two representative
+ARM64 cross-builds, and a zero-Secret PostgreSQL/TLS prerequisite chart. A
+separate disposable cluster installed, tested, upgraded, and retested both the
+prerequisite and all digest-pinned application workloads, then was deleted.
+
+The structured companion validates as 100 unique nodes and 171 relationships
 with no dangling edges.
 
 The notification browser test confirmed complete message rendering, individual
@@ -945,12 +961,14 @@ persistence after relisting.
 9. Analytics Service exposes health only.
 10. Monitoring health aggregation does not include Analytics Service, and the
     repository does not operate or persist a Prometheus/Grafana stack.
-11. Phase 13 implements digest, scan, SBOM, signing, and draft-certification
-    automation, but no live tag-triggered GHCR push, OIDC signature, or GitHub
-    Release has been exercised. External secret operations, database
-    HA/backups, environment alert routing, and staging/production promotion
-    remain operator work. HPA and NetworkPolicy resources require
-    operator-owned Metrics API and enforcing CNI support.
+11. Phase 14 prepares a personal one-node deployment, but no live tag-triggered
+    GHCR push, OIDC signature, GitHub Release, cloud VM, public certificate, or
+    external installation has been exercised. The profile is not highly
+    available; backup/restore, rotation, host operation, capacity, and recovery
+    remain operator responsibilities. Production database HA, external Secret
+    rotation, environment alert routing, and staging promotion remain future
+    work. HPA and NetworkPolicy resources require operator-owned Metrics API
+    and enforcing CNI support.
 12. The frontend uses session storage and a lightweight custom route helper.
 13. GitHub disconnect, organization SSO, run dispatch/rerun/cancel, and log archive UI are out of scope.
 14. Rate limiting, audit logs, full RBAC, production secret management, and automated checked-in browser E2E tests remain future hardening.

@@ -152,6 +152,15 @@ all eleven immutable image digests to the chart package and a digest-only Helm
 values overlay. The workflow creates a draft release for operator review; it
 does not deploy the candidate.
 
+Phase 14 adds a provider-neutral personal deployment boundary around that
+certified release. Release images become multi-platform OCI indexes for AMD64
+and ARM64, with platform-specific scans and SBOMs bound to one immutable
+digest. A separate prerequisite Helm release owns one persistent PostgreSQL
+instance and optional namespaced certificate resources, while an explicit
+context-confirmed command creates runtime Secrets out of band. The application
+keeps its existing external database and Secret contracts and installs through
+a conservative single-node values overlay.
+
 The generated Phase 7 chart is an inspectable deployment asset. Real Helm
 install, upgrade, rollback, and Kubernetes credential handling remain outside
 the generation boundary.
@@ -241,6 +250,23 @@ Operator -> External staging: separately approve deployment and verification
 Image publication and release creation exist only in the tag-triggered
 workflow. The standard CI workflow retains `contents: read` and no package,
 OIDC, attestation, release, or deployment authority.
+
+## Personal deployment preparation flow
+
+```text
+Release Buildx -> OCI index: publish AMD64 and ARM64 platform manifests
+Trivy -> Each platform: scan and emit one CycloneDX SBOM
+Evidence tool -> Release bundle: bind 22 SBOMs to 11 index digests
+Operator -> Confirmed kube context: generate database and runtime Secrets
+Prerequisite Helm release -> K3s: install persistent PostgreSQL and optional TLS
+Digest values + personal values -> Main Helm release: install BuildSphere
+Helm tests -> Internal services: verify database and application readiness
+```
+
+The repository prepares and verifies these assets without creating a cloud
+account, provisioning a host, requesting a public certificate, or mutating an
+external cluster. The personal profile is intentionally single-node and does
+not claim high availability.
 
 ## Project generation flow
 

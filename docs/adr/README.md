@@ -32,3 +32,4 @@ Architecture Decision Records explain important BuildSphere design choices.
 - ADR-013: Use isolated Prometheus registries and optional operator resources.
 - ADR-014: Use optional reliability resources and ingress-only network policy.
 - ADR-015: Use digest-bound keyless release certification.
+- ADR-016: Use a provider-neutral single-node deployment profile.

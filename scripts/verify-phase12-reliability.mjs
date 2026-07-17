@@ -418,7 +418,7 @@ expectFailure(
 console.log(
   JSON.stringify(
     {
-      chartVersion: "0.4.0",
+      chartVersion: "0.5.0",
       defaultResources: defaults.length,
       deploymentsWithSafeRollout: defaultDeployments.size,
       optionalPodDisruptionBudgets: fixedBudgets.size,

@@ -46,6 +46,7 @@ Create an ADR when a decision affects:
 | ADR-013 | Shared Prometheus metrics and operator-owned monitoring stack           | Accepted |
 | ADR-014 | Optional Kubernetes reliability controls and ingress-only isolation     | Accepted |
 | ADR-015 | Digest-bound, keyless software supply-chain release certification       | Accepted |
+| ADR-016 | Provider-neutral single-node personal deployment profile                | Accepted |
 
 # ADR template
 

@@ -40,10 +40,14 @@ const scanPolicy = Object.freeze({
   severities: ["HIGH", "CRITICAL"],
   ignoreUnfixed: false,
 });
+const supportedPlatforms = Object.freeze(["linux/amd64", "linux/arm64"]);
 
 const fail = (message) => {
   throw new Error(message);
 };
+
+const writeStdout = (value) => writeFileSync(process.stdout.fd, value, "utf8");
+const writeStderr = (value) => writeFileSync(process.stderr.fd, value, "utf8");
 
 const parseOptions = (args) => {
   const options = {};
@@ -214,11 +218,62 @@ const validateScanPolicy = (policy, label) => {
     `${label}.scanPolicy`,
   );
   if (JSON.stringify(policy) !== JSON.stringify(scanPolicy)) {
-    fail(`${label}.scanPolicy does not match the Phase 13 release policy`);
+    fail(`${label}.scanPolicy does not match the BuildSphere release policy`);
   }
 };
 
+const canonicalPlatformSbomPath = (component, platform) =>
+  `sbom/${component}-${platform.replace("/", "-")}.cdx.json`;
+
+const validatePlatforms = (platforms, component, label) => {
+  if (!Array.isArray(platforms)) {
+    fail(`${label}.platforms must be an array`);
+  }
+  if (platforms.length !== supportedPlatforms.length) {
+    fail(`${label}.platforms must contain exactly the supported platforms`);
+  }
+  platforms.forEach((platform, index) => {
+    assertExactKeys(
+      platform,
+      ["name", "sbomPath"],
+      `${label}.platforms[${index}]`,
+    );
+    const expectedName = supportedPlatforms[index];
+    if (platform.name !== expectedName) {
+      fail(`${label}.platforms[${index}].name must be ${expectedName}`);
+    }
+    const expectedPath = canonicalPlatformSbomPath(component, expectedName);
+    if (platform.sbomPath !== expectedPath) {
+      fail(`${label}.platforms[${index}].sbomPath must be ${expectedPath}`);
+    }
+  });
+};
+
 const validateRecord = (record, label) => {
+  if (record?.schemaVersion === 2) {
+    assertExactKeys(
+      record,
+      [
+        "schemaVersion",
+        "component",
+        "image",
+        "digest",
+        "version",
+        "sourceCommit",
+        "platforms",
+        "scanPolicy",
+      ],
+      label,
+    );
+    validateComponent(record.component);
+    validateDigest(record.digest);
+    validateVersion(record.version);
+    validateCommit(record.sourceCommit);
+    validatePlatforms(record.platforms, record.component, label);
+    validateScanPolicy(record.scanPolicy, label);
+    return record;
+  }
+
   assertExactKeys(
     record,
     [
@@ -282,23 +337,26 @@ const commandMetadata = (options) => {
     `matrix=${JSON.stringify(matrix)}`,
   ];
   appendFileSync(options["github-output"], `${outputs.join("\n")}\n`, "utf8");
-  process.stdout.write(
+  writeStdout(
     `${JSON.stringify({ version, repositoryPrefix, workflowIdentity, components: components.length }, null, 2)}\n`,
   );
 };
 
 const commandComponent = (options) => {
+  const legacy = Object.hasOwn(options, "sbom");
+  const commonOptions = [
+    "component",
+    "repository-prefix",
+    "digest",
+    "version",
+    "commit",
+    "output",
+  ];
   assertOptions(
     options,
-    [
-      "component",
-      "repository-prefix",
-      "digest",
-      "version",
-      "commit",
-      "sbom",
-      "output",
-    ],
+    legacy
+      ? [...commonOptions, "sbom"]
+      : [...commonOptions, "sbom-amd64", "sbom-arm64"],
     "component",
   );
   const component = validateComponent(options.component);
@@ -308,20 +366,38 @@ const commandComponent = (options) => {
   const digest = validateDigest(options.digest);
   const version = validateVersion(options.version);
   const sourceCommit = validateCommit(options.commit);
-  validateSbom(options.sbom);
-
-  const record = {
-    schemaVersion: 1,
-    component,
-    image: `${repositoryPrefix}/${component}`,
-    digest,
-    version,
-    sourceCommit,
-    sbomPath: `sbom/${component}.cdx.json`,
-    scanPolicy,
-  };
+  let record;
+  if (legacy) {
+    validateSbom(options.sbom);
+    record = {
+      schemaVersion: 1,
+      component,
+      image: `${repositoryPrefix}/${component}`,
+      digest,
+      version,
+      sourceCommit,
+      sbomPath: `sbom/${component}.cdx.json`,
+      scanPolicy,
+    };
+  } else {
+    validateSbom(options["sbom-amd64"]);
+    validateSbom(options["sbom-arm64"]);
+    record = {
+      schemaVersion: 2,
+      component,
+      image: `${repositoryPrefix}/${component}`,
+      digest,
+      version,
+      sourceCommit,
+      platforms: supportedPlatforms.map((name) => ({
+        name,
+        sbomPath: canonicalPlatformSbomPath(component, name),
+      })),
+      scanPolicy,
+    };
+  }
   writeJson(options.output, record);
-  process.stdout.write(
+  writeStdout(
     `${JSON.stringify({ component, reference: `${record.image}@${digest}` }, null, 2)}\n`,
   );
 };
@@ -368,7 +444,14 @@ const readComponentRecords = (inputDir) => {
       `Release requires exactly 11 component records; missing: ${missing.join(", ") || "none"}`,
     );
   }
-  return componentNames.map((name) => byComponent.get(name));
+  const records = componentNames.map((name) => byComponent.get(name));
+  const schemaVersions = new Set(
+    records.map(({ schemaVersion }) => schemaVersion),
+  );
+  if (schemaVersions.size !== 1) {
+    fail("Release component records must all use the same schema version");
+  }
+  return records;
 };
 
 const writeDigestValues = ({
@@ -426,6 +509,7 @@ const commandBundle = (options) => {
   const outputDir = path.resolve(options["output-dir"]);
   mkdirSync(outputDir, { recursive: true });
 
+  const schemaVersion = records[0].schemaVersion;
   const images = records.map((record) => {
     if (
       record.version !== identity.version ||
@@ -434,21 +518,41 @@ const commandBundle = (options) => {
     ) {
       fail(`Component record identity mismatch: ${record.component}`);
     }
-    const sourceSbom = path.join(options["input-dir"], record.sbomPath);
-    validateSbom(sourceSbom);
-    const sbomFile = `buildsphere-${record.component}.cdx.json`;
-    const destinationSbom = path.join(outputDir, sbomFile);
-    copyFileSync(sourceSbom, destinationSbom);
-    return {
+    const image = {
       component: record.component,
       repository: record.image,
       digest: record.digest,
       reference: `${record.image}@${record.digest}`,
-      sbom: {
+    };
+
+    if (schemaVersion === 1) {
+      const sourceSbom = path.join(options["input-dir"], record.sbomPath);
+      validateSbom(sourceSbom);
+      const sbomFile = `buildsphere-${record.component}.cdx.json`;
+      const destinationSbom = path.join(outputDir, sbomFile);
+      copyFileSync(sourceSbom, destinationSbom);
+      image.sbom = {
         file: sbomFile,
         sha256: sha256File(destinationSbom),
-      },
-    };
+      };
+      return image;
+    }
+
+    image.platforms = record.platforms.map((platform) => {
+      const sourceSbom = path.join(options["input-dir"], platform.sbomPath);
+      validateSbom(sourceSbom);
+      const sbomFile = `buildsphere-${record.component}-${platform.name.replace("/", "-")}.cdx.json`;
+      const destinationSbom = path.join(outputDir, sbomFile);
+      copyFileSync(sourceSbom, destinationSbom);
+      return {
+        name: platform.name,
+        sbom: {
+          file: sbomFile,
+          sha256: sha256File(destinationSbom),
+        },
+      };
+    });
+    return image;
   });
 
   const chartDestination = path.join(outputDir, expectedChartName);
@@ -467,7 +571,7 @@ const commandBundle = (options) => {
   const manifestFile = "buildsphere-release-manifest.json";
   const manifestPath = path.join(outputDir, manifestFile);
   const manifest = {
-    schemaVersion: 1,
+    schemaVersion,
     release: {
       name: "BuildSphere",
       version: identity.version,
@@ -499,7 +603,11 @@ const commandBundle = (options) => {
     expectedChartName,
     digestValuesFile,
     manifestFile,
-    ...images.map(({ sbom }) => sbom.file),
+    ...images.flatMap((image) =>
+      schemaVersion === 1
+        ? [image.sbom.file]
+        : image.platforms.map(({ sbom }) => sbom.file),
+    ),
   ].sort();
   const checksums = checksumFiles
     .map((relativePath) => {
@@ -510,15 +618,18 @@ const commandBundle = (options) => {
     .join("\n");
   writeFileSync(path.join(outputDir, "SHA256SUMS"), `${checksums}\n`, "utf8");
 
-  process.stdout.write(
-    `${JSON.stringify({ version: identity.version, images: images.length, releaseFiles: checksumFiles.length + 1 }, null, 2)}\n`,
+  writeStdout(
+    `${JSON.stringify({ version: identity.version, images: images.length, platformSboms: schemaVersion === 2 ? images.length * supportedPlatforms.length : images.length, releaseFiles: checksumFiles.length + 1 }, null, 2)}\n`,
   );
 };
 
 const commandReferences = (options) => {
   assertOptions(options, ["manifest"], "references");
   const manifest = readJson(options.manifest, "Release manifest");
-  if (manifest.schemaVersion !== 1 || !Array.isArray(manifest.images)) {
+  if (
+    ![1, 2].includes(manifest.schemaVersion) ||
+    !Array.isArray(manifest.images)
+  ) {
     fail("Release manifest schema is invalid");
   }
   const names = new Set();
@@ -527,6 +638,17 @@ const commandReferences = (options) => {
     validateDigest(image.digest);
     if (image.reference !== `${image.repository}@${image.digest}`) {
       fail(`Release manifest reference mismatch: ${image.component}`);
+    }
+    if (manifest.schemaVersion === 2) {
+      if (!Array.isArray(image.platforms)) {
+        fail(`Release manifest platforms are missing: ${image.component}`);
+      }
+      if (
+        JSON.stringify(image.platforms.map(({ name }) => name)) !==
+        JSON.stringify(supportedPlatforms)
+      ) {
+        fail(`Release manifest platform set is invalid: ${image.component}`);
+      }
     }
     if (names.has(image.component)) {
       fail(`Release manifest contains duplicate component: ${image.component}`);
@@ -539,7 +661,7 @@ const commandReferences = (options) => {
   }
   for (const name of componentNames) {
     const image = manifest.images.find(({ component }) => component === name);
-    process.stdout.write(`${image.reference}\n`);
+    writeStdout(`${image.reference}\n`);
   }
 };
 
@@ -566,6 +688,6 @@ try {
   }
   handler(parseOptions(args));
 } catch (error) {
-  process.stderr.write(`Release evidence error: ${error.message}\n`);
+  writeStderr(`Release evidence error: ${error.message}\n`);
   process.exitCode = 1;
 }

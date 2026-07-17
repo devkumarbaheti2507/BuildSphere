@@ -184,6 +184,16 @@ TRIVY_BIN=/path/to/trivy pnpm verify:phase13:images
 KIND_BIN=/path/to/kind HELM_BIN=/path/to/helm pnpm verify:phase13:kind
 ```
 
+Validate Phase 14 multi-platform evidence, the personal PostgreSQL/TLS profile,
+guarded Secret bootstrap, representative ARM64 images, and the complete
+single-node disposable release:
+
+```bash
+HELM_BIN=/path/to/helm pnpm verify:phase14
+pnpm verify:phase14:arm64
+KIND_BIN=/path/to/kind HELM_BIN=/path/to/helm pnpm verify:phase14:kind
+```
+
 The kind command creates and deletes its own local cluster. External staging
 or production installation is not performed by repository CI.
 
@@ -221,7 +231,7 @@ The pack excludes `.env`, credentials, provider tokens, personal account data, a
 
 ## Current status
 
-Status: Phases 0-13 are complete. Phase 9 adds secure Kubernetes inspection,
+Status: Phases 0-14 are complete. Phase 9 adds secure Kubernetes inspection,
 offline planning, opt-in approved apply, durable rollout summaries, and bounded
 rollback. Phase 10 packages BuildSphere itself as 11 non-root production images
 and a hardened Helm release with external secrets and PostgreSQL. Phase 11 adds
@@ -232,6 +242,9 @@ validated PDB, HPA, and least-privilege ingress-policy resources.
 Phase 13 adds digest-bound platform releases, OCI source identity, blocking
 vulnerability and secret scans, CycloneDX SBOMs, keyless signing definitions,
 and deterministic draft-release evidence behind a protected workflow.
+Phase 14 adds exact AMD64/ARM64 release indexes and SBOMs, a separate persistent
+PostgreSQL and optional TLS chart, a context-confirmed Secret bootstrap, and a
+conservative one-node K3s values profile.
 
 Implemented workflows include local and GitHub authentication, project and
 tool configuration, selection-aware DevOps, Helm, and Terraform generation, GitHub
@@ -247,14 +260,18 @@ all ten backend metric scrapes, upgrade, and repeat test against a disposable
 kind cluster. A separate two-replica install/upgrade passed with all 11
 disruption budgets and NetworkPolicies enabled. Exact-digest mode passed the
 same lifecycle, and all 11 rebuilt images passed the Phase 13 scan/SBOM gate.
-All 63 automated tests and the current cross-phase smoke gates pass.
+The personal prerequisite and exact-digest application releases also passed
+install/test/upgrade/retest together, and representative backend/frontend
+ARM64 cross-builds pass. All 63 automated tests and the current cross-phase
+smoke gates pass.
 Observability, HPA, PDB, and policy resources remain disabled by default; their
 monitoring, Metrics API, replica, and network-plugin prerequisites are
 operator-owned. A live semantic-version release was not triggered, so GHCR
 publication and GitHub OIDC signatures remain unexercised external operations.
-External staging installation, Terraform plan/apply, cloud or production
-deployment, production secret/database operations, and additional provider
-integrations remain future work.
+No cloud account or external cluster has been changed. The next step is an
+operator-led personal deployment; external staging, Terraform plan/apply,
+production HA/backup/Secret operations, and additional provider integrations
+remain future work.
 
 ## License
 

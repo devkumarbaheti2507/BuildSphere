@@ -74,7 +74,10 @@ The project is valuable in three ways:
 > disruption budgets, autoscaling, and exact ingress-only NetworkPolicies. The
 > Phase 13 binds all 11 platform images to immutable digests, blocks vulnerable
 > or secret-bearing candidates, emits CycloneDX SBOMs, defines keyless signing,
-> and builds deterministic draft-release evidence. The Kubernetes workflows
+> and builds deterministic draft-release evidence. Phase 14 extends every
+> release to AMD64 and ARM64 and adds a separate persistent PostgreSQL/optional
+> TLS chart, guarded Secret bootstrap, and conservative one-node K3s profile.
+> The Kubernetes workflows
 > were verified against disposable local kind clusters; a real GHCR/signing
 > release was not triggered, and operating cluster add-ons, a monitoring stack,
 > external staging, production operations, and cloud deployment remain outside
@@ -202,6 +205,9 @@ Use the system graph from `docs/15_PROJECT_KNOWLEDGE_GRAPH.md`.
 - Phase 13 checks for 11 exact image digests, 11 zero-finding image scans, 11
   CycloneDX SBOMs, deterministic 14-file checksums, six hostile evidence cases,
   and a complete exact-digest kind install/test/upgrade/test run.
+- Phase 14 checks 11 AMD64/ARM64 indexes, 22 platform SBOMs, 25 checksums,
+  guarded Secret creation, representative ARM64 builds, and a combined
+  PostgreSQL plus application install/test/upgrade/retest cluster run.
 
 ### Slide 12: Boundaries and roadmap
 
@@ -222,12 +228,15 @@ Use the system graph from `docs/15_PROJECT_KNOWLEDGE_GRAPH.md`.
   certification automation is implemented and locally verified. A live tag,
   GHCR push, OIDC signature, and GitHub Release still require explicit protected
   environment approval and have not been exercised.
+- Phase 14 personal deployment assets are implemented and locally verified, but
+  no cloud VM, public certificate, or external installation has been created.
+  The one-node profile is not highly available and still needs off-host backup.
 - No Terraform plan/apply/destroy, AWS credential handling, or state ownership.
 - No external LLM yet.
 - Redis/MinIO/MailHog prepared but not active.
-- Phases 0-13 are complete. The recommended Phase 14 subject is production data
-  and secret operations, with Jenkins, cost estimation, collaboration, and
-  external AI still later options.
+- Phases 0-14 are complete. The next activity is the guided personal deployment;
+  production data operations, Jenkins, cost estimation, collaboration, and
+  external AI remain later options.
 - Explain that these are intentional roadmap boundaries, not hidden claims.
 
 ## Ten-minute live demonstration
@@ -523,6 +532,21 @@ scan-before-sign, SBOM/provenance roles, protected OIDC authority,
 deterministic evidence, draft review, and why local verification does not claim
 a live registry release.
 
+### Module 13: Personal deployment profile
+
+Read:
+
+- `specs/PERSONAL_FREE_TIER_DEPLOYMENT_SPEC.md`
+- `docs/adr/ADR-016-Personal-Free-Tier-Deployment-Profile.md`
+- `infrastructure/deployment/free-tier/`
+- `infrastructure/helm/buildsphere-personal-prerequisites/`
+- `scripts/create-personal-deployment-secrets.sh`
+
+Be able to explain multi-platform OCI indexes, per-platform SBOMs, why state has
+a separate Helm lifecycle, exact kube-context confirmation, why the chart never
+renders credentials, and which availability and operating responsibilities a
+single free-tier server cannot satisfy.
+
 ## ChatGPT study prompts
 
 ### Guided tutor
@@ -604,7 +628,8 @@ scenario questions about failures, security boundaries, and future design.
   rule, dashboard, runbook, image, and in-cluster scrape verification, plus
   Phase 12 PDB/HPA/NetworkPolicy structure and two-replica cluster validation,
   plus Phase 13 digest, scan, SBOM, evidence, workflow, and exact-digest cluster
-  validation.
+  validation, plus Phase 14 multi-platform, Secret safety, ARM64, PostgreSQL,
+  and combined-cluster validation.
 - Name at least two tradeoffs and two future milestones.
 - Keep secrets and `.env` off screen.
 - End with what you learned and the next bounded improvement.

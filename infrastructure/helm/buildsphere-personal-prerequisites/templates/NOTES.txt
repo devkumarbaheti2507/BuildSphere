@@ -1,0 +1,9 @@
+BuildSphere personal prerequisites were rendered in {{ .Release.Namespace }}.
+
+The chart expects the existing Secret {{ .Values.postgresql.existingSecret }}
+with POSTGRES_DB, POSTGRES_USER, and POSTGRES_PASSWORD. It never creates or
+rotates that Secret.
+
+PostgreSQL Service: {{ include "buildsphere-personal-prerequisites.fullname" . }}:{{ .Values.postgresql.service.port }}
+Persistent data is retained when the StatefulSet or Helm release is deleted.
+TLS prerequisites are {{ ternary "enabled" "disabled" .Values.tls.enabled }}.

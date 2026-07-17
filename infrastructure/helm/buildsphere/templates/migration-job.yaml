@@ -16,6 +16,7 @@ spec:
     metadata:
       labels:
         {{- include "buildsphere.selectorLabels" (dict "root" . "component" "migration") | nindent 8 }}
+        app.kubernetes.io/part-of: buildsphere
     spec:
       restartPolicy: Never
       serviceAccountName: {{ include "buildsphere.componentName" (dict "root" . "component" "migration") }}

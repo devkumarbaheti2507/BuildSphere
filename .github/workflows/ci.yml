@@ -72,6 +72,9 @@ jobs:
       - name: Verify software supply-chain release certification
         run: pnpm verify:phase13
 
+      - name: Verify personal free-tier deployment readiness
+        run: pnpm verify:phase14
+
   container-builds:
     needs: build-test
     runs-on: ubuntu-latest
@@ -126,3 +129,21 @@ jobs:
           --build-arg VITE_API_URL=/api
           --tag buildsphere/frontend:ci
           .
+
+  arm64-container-smoke:
+    needs: build-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Setup QEMU for ARM64 builds
+        uses: docker/setup-qemu-action@9430f61a7691bd1bfdc4d6ba70e558659d36fa7a # v4.1.0
+        with:
+          platforms: arm64
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+
+      - name: Cross-build representative ARM64 images without push
+        run: bash scripts/verify-phase14-arm64-images.sh

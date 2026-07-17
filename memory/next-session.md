@@ -2,81 +2,67 @@
 
 Recommended next task:
 
-Define Phase 14. Phase 13 software supply-chain security and release
-certification is complete locally; no Phase 14 requirement or ticket is yet
-approved.
+Guide the owner through the first personal free-tier deployment interactively.
+Repository prerequisites are complete; begin with one operator action at a
+time and verify each result before continuing.
 
 Immediate tasks:
 
-1. Specify production data and secret operations: external Secret integration
-   and rotation, PostgreSQL high availability, backup/restore, disaster
-   recovery, and a bounded staging-validation contract.
-2. Add FR-023, an ADR, a Phase 14 spec, roadmap milestone, and backlog tickets
-   before implementation.
-3. Keep `pnpm verify`, Phase 10-13 structural gates, `verify:phase13:images`,
-   gateway/PostgreSQL/Terraform/Prometheus regressions, and both controlled
-   Kubernetes paths green.
-4. Require explicit approval and environment configuration before any live
-   tag, GHCR push, OIDC signing, GitHub Release, external Secret, database, or
-   staging-cluster operation.
+1. Confirm the intended GitHub repository is clean and push Phase 14 through a
+   reviewed commit.
+2. Configure or verify the `production-release` GitHub environment and GHCR
+   visibility/read access without exposing credentials.
+3. With explicit approval, create and review a `v0.5.0` candidate so the
+   protected workflow can publish the eleven AMD64/ARM64 indexes and draft
+   evidence bundle.
+4. Verify the draft's 25 checksums, manifest/checksum signatures, all eleven
+   image signatures, and schema-2 platform evidence before using its digest
+   values.
+5. Guide the owner through a current free-tier VM choice, firewall, SSH, K3s,
+   Helm, cert-manager, hostname, Secret bootstrap, prerequisite release, and
+   main release. Recheck provider limits and installation versions from
+   official sources at deployment time.
+6. Add an off-host PostgreSQL backup and perform a restore rehearsal before the
+   personal environment holds data that matters.
 
 Current evidence:
 
-- Phases 0-13 are complete.
-- Frozen install, zero-warning lint, every production build, and all 63 tests
-  pass.
-- All 11 production images build and become healthy under non-root,
-  read-only-root, dropped-capability smoke restrictions.
-- Helm v4.2.3 strict/structural verification passes for 38 resources: 11
-  Deployments, 11 Services, 13 ServiceAccounts, one migration Job, one test
-  Pod, and zero Secrets.
-- A disposable kind v0.31.0 / Kubernetes v1.34.3 install passed all seven
-  migrations, 11 ready Deployments, frontend/API/database tests, upgrade,
-  repeated migration/test, and cluster cleanup.
-- The 26-file gateway smoke, migrations 001-007, Phase 6 provider persistence,
-  Phase 9 encrypted operations/rollback persistence, Terraform v1.15.8 static
-  validation, and the Phase 9 real-client cluster workflow remain green.
-- CI runs the workspace gate, chart verification, and no-push builds for all 11
-  images.
-- All ten backends expose bounded runtime/HTTP metrics. Phase 11 validation
-  passes for one optional ServiceMonitor, one PrometheusRule, six recording
-  rules, three alerts, eight dashboard panels, and three linked runbooks.
-- Prometheus v3.12.0 validates the rendered rules. The Phase 10 image and kind
-  gates verify every backend metrics endpoint; the chart's default 38-resource,
-  zero-Secret, no-monitoring-CRD render remains intact.
-- Phase 12 verification passes for zero-unavailable rollout and soft topology
-  spreading on all 11 Deployments, 11 optional PDBs, 11 HPAs, 11 ingress-only
-  policies, 25 exact caller edges, HPA replica ownership, and unsafe-value
-  failures.
-- The Phase 12 kind mode passed with 22 application replicas, all 11 PDBs and
-  NetworkPolicies, seven migrations, install/test/upgrade/test, and cleanup.
-- Phase 13 verification passes for chart `0.4.0`, all 11 digest references,
-  migration/test reuse, 21 pinned action references, checksum-pinned tools,
-  deterministic evidence, 14 checksums, and six hostile evidence cases.
-- All 11 images rebuilt with exact base digests and OCI identity. Trivy
-  `0.70.0` reported zero HIGH/CRITICAL vulnerabilities and zero secrets and
-  generated 11 CycloneDX SBOMs.
-- A separate digest-mode kind lifecycle installed every application,
-  migration, and test image by exact local digest with the Phase 12 reliability
-  controls, then completed migration/test/upgrade/retest and cleanup.
-- No live release tag was triggered. No image was pushed, no signing
-  certificate was requested, and no GitHub Release was created.
+- Phases 0-14 are complete locally.
+- Main chart `0.5.0` retains 38 default resources and zero Secrets.
+- Prerequisite chart `0.1.0` renders five default resources and zero Secrets;
+  TLS opt-in adds one namespaced Issuer and Certificate.
+- The protected workflow targets exactly `linux/amd64` and `linux/arm64` for
+  all eleven components, with per-platform scans and 22 SBOMs.
+- Evidence schema 2 produces 25 checksum entries and 26 release files; schema
+  1 remains green for Phase 13 regression fixtures.
+- All 25 GitHub Action references are full-SHA pinned and actionlint passes.
+- Context mismatch, existing Secret, server dry-run, generated credential,
+  optional GitHub OAuth, and non-disclosure bootstrap checks pass.
+- Representative backend and frontend ARM64 OCI cross-builds pass without a
+  push.
+- A disposable kind cluster installed persistent PostgreSQL and all eleven
+  digest-pinned application workloads, applied seven migrations, passed both
+  Helm tests, upgraded both releases, repeated both tests, and was deleted.
+- Node 22 frozen install, lint, all builds and 63 tests, the 26-file gateway
+  flow, Phase 6/9 PostgreSQL, Terraform validation, and Phase 10-13 focused
+  regressions pass.
 
-Production boundaries still open:
+Deployment boundaries still open:
 
-- Live GHCR authorization, protected-environment approval, OIDC signature and
-  attestation verification, and draft-release review in the real repository.
-- External Secret integration and rotation, PostgreSQL high availability,
-  backup/restore, and disaster recovery.
-- Multi-zone hard scheduling, ingress controller, Metrics API, enforcing CNI,
-  DNS, certificate automation, autoscaling load tuning, and capacity testing.
-- Operating and retaining Prometheus/Grafana/Alertmanager data, centralized
-  logging, distributed tracing, environment-specific alert routing, and
-  on-call ownership.
-- Approved external staging deployment and production promotion after draft
-  release review.
-- Terraform plan/apply/state and cloud account operations remain out of scope
-  until separately approved.
+- No live `v0.5.0` tag, GHCR multi-platform release, OIDC signature, or draft
+  GitHub Release has been created.
+- No personal cloud account, VM, firewall, SSH key, external Kubernetes
+  cluster, DNS name, cert-manager installation, or public certificate has been
+  created or changed.
+- The single-node profile is not highly available. PostgreSQL backup/restore,
+  Secret rotation, host patching, capacity monitoring, and recovery remain
+  operator responsibilities.
+- PDB, HPA, monitoring CRDs, application NetworkPolicies, and controlled
+  Kubernetes execution remain disabled in the initial personal profile.
+- Production HA, managed Secrets, multi-zone scheduling, load testing,
+  centralized logs/traces, alert routing, and formal staging promotion remain
+  future separately specified work.
 
-Node `v22.23.1` remains preferred via `.nvmrc`; Node `v24.18.0` also passes the
-latest complete gate.
+Node `v22.23.1` remains the supported local runtime. Use official current
+provider, K3s, cert-manager, GitHub, and OCI documentation during live
+deployment because free-tier limits and installation versions can change.

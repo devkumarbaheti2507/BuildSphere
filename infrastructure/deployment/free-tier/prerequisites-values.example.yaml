@@ -1,0 +1,15 @@
+# Replace the email and example IP-derived hostname before enabling TLS.
+fullnameOverride: buildsphere-postgres
+
+postgresql:
+  existingSecret: buildsphere-database
+  persistence:
+    size: 20Gi
+    storageClass: ""
+
+tls:
+  enabled: true
+  email: you@example.com
+  host: buildsphere.203-0-113-10.sslip.io
+  secretName: buildsphere-tls
+  ingressClass: traefik

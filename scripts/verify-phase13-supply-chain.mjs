@@ -4,6 +4,7 @@ import { spawnSync } from "node:child_process";
 import {
   copyFileSync,
   cpSync,
+  existsSync,
   mkdtempSync,
   mkdirSync,
   readFileSync,
@@ -28,8 +29,14 @@ const evidenceScript = path.join(
   "scripts",
   "create-release-evidence.mjs",
 );
-const helm = process.env.HELM_BIN?.trim() || "helm";
-const actionlint = process.env.ACTIONLINT_BIN?.trim();
+const cachedHelm = path.join(repoRoot, ".cache", "tools", "helm");
+const cachedActionlint = path.join(repoRoot, ".cache", "tools", "actionlint");
+const helm =
+  process.env.HELM_BIN?.trim() ||
+  (existsSync(cachedHelm) ? cachedHelm : "helm");
+const actionlint =
+  process.env.ACTIONLINT_BIN?.trim() ||
+  (existsSync(cachedActionlint) ? cachedActionlint : undefined);
 const componentCatalog = JSON.parse(
   readFileSync(
     path.join(repoRoot, "infrastructure", "release", "components.json"),
@@ -63,6 +70,7 @@ const run = (command, args, { expectSuccess = true, cwd = repoRoot } = {}) => {
     cwd,
     encoding: "utf8",
     maxBuffer: 32 * 1024 * 1024,
+    env: { ...process.env },
   });
   if (result.error) {
     throw result.error;
@@ -120,7 +128,7 @@ assert.deepEqual(
 );
 
 const chartMetadata = readYaml(path.join(chart, "Chart.yaml"));
-assert.equal(chartMetadata.version, "0.4.0");
+assert.equal(chartMetadata.version, "0.5.0");
 runHelm(["lint", "--strict", chart]);
 
 const defaults = render();

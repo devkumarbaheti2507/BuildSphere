@@ -5,14 +5,16 @@ generating, deploying, observing, and improving microservice applications.
 
 Current implementation status:
 
-- Phases 0-13 are complete. Phase 9 provides inspected/planned/approved
+- Phases 0-14 are complete. Phase 9 provides inspected/planned/approved
   Kubernetes apply, durable status, and bounded rollback. Phase 10 packages
   BuildSphere itself for controlled staging. Phase 11 defines the production
   metric, SLO, dashboard, alert, and response baseline.
   Phase 12 adds safe rollout/topology defaults and optional disruption,
   autoscaling, and ingress-isolation controls. Phase 13 adds immutable image
   identity, scan/SBOM/signing gates, digest-only Helm releases, and
-  deterministic release certification.
+  deterministic release certification. Phase 14 adds AMD64/ARM64 release
+  indexes, a personal PostgreSQL/TLS prerequisite chart, guarded Secret
+  bootstrap, and a conservative single-node K3s profile.
 - Local and GitHub App authentication, project repository publishing, GitHub
   Actions synchronization, projects, generation, pipelines, logs, suggestions,
   deployment targets, monitoring, notifications, and frontend workflows are
@@ -30,6 +32,13 @@ Current implementation status:
 - Certified chart values require all 11 immutable image digests and cover
   application Deployments, migrations, and chart tests without tag fallback.
   `infrastructure/release/components.json` is the canonical component set.
+- Certified release schema 2 binds the exact AMD64/ARM64 platform set and 22
+  CycloneDX SBOMs to eleven immutable OCI index digests. Legacy schema 1 remains
+  supported only for frozen Phase 13 regression fixtures.
+- `infrastructure/helm/buildsphere-personal-prerequisites` installs persistent
+  PostgreSQL and optional namespaced TLS resources without rendering a Secret.
+  `infrastructure/deployment/free-tier` provides the one-node application
+  values used after certified digest values.
 - All 11 Deployments use zero-unavailable rolling updates and soft hostname
   spreading. The chart can optionally emit selector-matched PDBs,
   `autoscaling/v2` HPAs, and exact ingress-only NetworkPolicies while retaining
@@ -57,21 +66,21 @@ Current implementation status:
 
 Primary goal now:
 
-Define Phase 14 around production data and secret operations: external Secret
-integration/rotation, PostgreSQL high availability, backup/restore, disaster
-recovery, and bounded staging validation. Add requirements, an ADR where the
-architecture changes, a specification, and backlog tickets before
-implementation or external operations.
+Guide the owner through the first personal free-tier deployment one explicit
+step at a time. Begin with repository/release prerequisites, then create the
+owner's selected free account and VM only with approval. Do not silently trigger
+a release, change GitHub package visibility, provision cloud resources, request
+a certificate, or mutate an external cluster.
 
 Important boundary:
 
-Phases 10-13 provide staging-deployable packaging, observability and runtime
-controls, and an authorized release-certification path, not an operated
-production environment. Normal CI does not push images or request OIDC. The
-release workflow is implemented but no live semantic-version tag, GHCR push,
-signature, draft release, or external deployment was executed. No external
-cluster, cloud account, production Secret, registry, remote state, or
-production resource has been modified.
+Phases 10-14 provide staging-deployable packaging, observability/runtime
+controls, an authorized release-certification path, and a verified personal
+installation profile, not an operated production environment. Normal CI does
+not push images or request OIDC. No live `v0.5.0` tag, GHCR multi-platform push,
+signature, draft release, public certificate, or external deployment has run.
+No cloud account, external cluster, remote state, or production resource was
+modified.
 
 Learning pack:
 
@@ -87,6 +96,8 @@ Default stack:
 - Docker/Compose for local infrastructure and production images.
 - GitHub Actions for read-only CI and protected release automation.
 - Kubernetes and Helm for controlled deployment packaging.
+- K3s, Traefik, and a separate PostgreSQL prerequisite release for the personal
+  profile.
 - Trivy, CycloneDX, BuildKit provenance, and Cosign for release certification.
 - Prometheus metrics and operator-compatible monitoring assets.
 - Optional generated AWS EKS Terraform source with no apply authority.

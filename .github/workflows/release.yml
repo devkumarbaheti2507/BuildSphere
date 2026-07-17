@@ -80,6 +80,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Setup QEMU for ARM64 builds
+        uses: docker/setup-qemu-action@9430f61a7691bd1bfdc4d6ba70e558659d36fa7a # v4.1.0
+        with:
+          platforms: arm64
+
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
 
@@ -98,7 +103,7 @@ jobs:
         with:
           context: .
           file: infrastructure/docker/Dockerfile.backend
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           push: true
           provenance: mode=max
           sbom: true
@@ -122,7 +127,7 @@ jobs:
         with:
           context: .
           file: infrastructure/docker/Dockerfile.frontend
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           push: true
           provenance: mode=max
           sbom: true
@@ -138,26 +143,34 @@ jobs:
           cache-from: type=gha,scope=release-${{ matrix.component }}
           cache-to: type=gha,mode=max,scope=release-${{ matrix.component }}
 
-      - name: Scan immutable image and create CycloneDX SBOM
+      - name: Scan both immutable platforms and create CycloneDX SBOMs
         env:
           IMAGE_DIGEST: ${{ steps.build_backend.outputs.digest || steps.build_frontend.outputs.digest }}
           IMAGE_REPOSITORY: ${{ needs.prepare.outputs.repository_prefix }}/${{ matrix.component }}
         run: |
           image_reference="${IMAGE_REPOSITORY}@${IMAGE_DIGEST}"
           mkdir -p "dist/component/sbom" "dist/component/records"
-          trivy image \
-            --no-progress \
-            --scanners vuln,secret \
-            --severity HIGH,CRITICAL \
-            --ignore-unfixed=false \
-            --exit-code 1 \
-            "${image_reference}"
-          trivy image \
-            --quiet \
-            --no-progress \
-            --format cyclonedx \
-            --output "dist/component/sbom/${{ matrix.component }}.cdx.json" \
-            "${image_reference}"
+          scan_platform() {
+            platform="$1"
+            architecture="$2"
+            trivy image \
+              --platform "${platform}" \
+              --no-progress \
+              --scanners vuln,secret \
+              --severity HIGH,CRITICAL \
+              --ignore-unfixed=false \
+              --exit-code 1 \
+              "${image_reference}"
+            trivy image \
+              --platform "${platform}" \
+              --quiet \
+              --no-progress \
+              --format cyclonedx \
+              --output "dist/component/sbom/${{ matrix.component }}-linux-${architecture}.cdx.json" \
+              "${image_reference}"
+          }
+          scan_platform linux/amd64 amd64
+          scan_platform linux/arm64 arm64
 
       - name: Sign immutable image digest
         env:
@@ -179,7 +192,8 @@ jobs:
             --digest "${IMAGE_DIGEST}" \
             --version "${{ needs.prepare.outputs.version }}" \
             --commit "${GITHUB_SHA}" \
-            --sbom "dist/component/sbom/${{ matrix.component }}.cdx.json" \
+            --sbom-amd64 "dist/component/sbom/${{ matrix.component }}-linux-amd64.cdx.json" \
+            --sbom-arm64 "dist/component/sbom/${{ matrix.component }}-linux-arm64.cdx.json" \
             --output "dist/component/records/${{ matrix.component }}.json"
 
       - name: Upload component evidence
@@ -291,7 +305,7 @@ jobs:
               --draft \
               --verify-tag \
               --title "BuildSphere ${GITHUB_REF_NAME}" \
-              --notes "Phase 13 certified candidate for commit ${GITHUB_SHA}. Verify the signed manifest, checksums, image signatures, and staging behavior before publication."
+              --notes "Phase 14 multi-platform certified candidate for commit ${GITHUB_SHA}. Verify the signed manifest, checksums, image signatures, and staging behavior before publication."
           fi
           gh release upload "${GITHUB_REF_NAME}" \
             "dist/release/buildsphere-${RELEASE_VERSION}.tgz" \

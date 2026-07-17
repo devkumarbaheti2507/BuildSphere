@@ -218,12 +218,13 @@ semantic-version tag whose commit belongs to the default branch. Image and
 certification jobs use the `production-release` GitHub environment so
 operators can configure reviewer protection.
 
-The workflow builds all eleven images with BuildKit SBOM and maximal provenance
-attestations, scans immutable digests with checksum-pinned Trivy, writes
-CycloneDX SBOMs, and signs accepted digests keylessly with Cosign and GitHub
-OIDC. It then verifies all signatures, packages the chart, generates a
-digest-only values file, signs the canonical manifest and checksums, and creates
-a draft GitHub Release. It does not deploy or publish the draft.
+The workflow builds all eleven images as AMD64/ARM64 OCI indexes with BuildKit
+SBOM and maximal provenance attestations. It scans each immutable platform with
+checksum-pinned Trivy, writes 22 CycloneDX SBOMs, and signs accepted index
+digests keylessly with Cosign and GitHub OIDC only after both scans pass. It
+then verifies all signatures, packages the chart, generates a digest-only
+values file, signs the canonical manifest and checksums, and creates a draft
+GitHub Release. It does not deploy or publish the draft.
 
 All checked-in action references use full commit SHAs. Dependabot proposes
 reviewed updates for GitHub Actions, PNPM dependencies, and Docker base images.
@@ -240,6 +241,30 @@ two-replica, disruption-budget, and network-policy checks.
 
 The complete operator and verification procedure is in
 `docs/17_RELEASE_CERTIFICATION.md`.
+
+# Personal free-tier deployment profile
+
+`infrastructure/helm/buildsphere-personal-prerequisites` is a separate release
+that owns one PostgreSQL StatefulSet, retained storage, an internal Service,
+database ingress policy, an authenticated Helm test, and optional namespaced
+cert-manager resources. It renders no Secret and does not change the main
+chart's external database contract.
+
+`infrastructure/deployment/free-tier` provides a one-replica Traefik overlay
+for a resource-constrained K3s host. Generate its two Secrets only through the
+context-confirmed bootstrap, then combine certified digest values before the
+personal application values.
+
+Validate the complete local contract with:
+
+```bash
+HELM_BIN=/path/to/helm pnpm verify:phase14
+pnpm verify:phase14:arm64
+KIND_BIN=/path/to/kind HELM_BIN=/path/to/helm pnpm verify:phase14:kind
+```
+
+These checks do not create an account, provision a server, request a public
+certificate, push an image, or mutate an external cluster.
 
 # Runtime configuration
 
@@ -299,10 +324,11 @@ Future production work:
 | ----------- | -------------------------------------------------------------------------- |
 | local       | Developer runtime, Docker Compose, image smoke, and disposable kind.       |
 | dev         | Shared environment, not yet operated by this repository.                   |
-| staging     | Chart-ready after external images, database, secrets, ingress, and TLS.    |
-| production  | Build-time certification is ready; external staging certification remains. |
+| personal    | Repository-ready for an operator-led single-node K3s installation.         |
+| staging     | Chart-ready after external images, database, secrets, ingress, and TLS.     |
+| production  | Build-time certification is ready; external staging certification remains.  |
 
-# Phase 10-13 boundaries
+# Phase 10-14 boundaries
 
 Phase 10 creates deployable packaging but does not publish images, operate a
 registry, provision a cluster, manage production secrets, configure backups,
@@ -322,3 +348,8 @@ Phase 13 defines an authorized publication and build-time certification path.
 Local verification performs no registry mutation or signing. A live tag run can
 publish signed GHCR digests and a draft release, but final publication and
 external staging/production deployment remain separate human approvals.
+
+Phase 14 prepares a single-node installation but does not create a cloud
+account, host, firewall, DNS record, certificate controller, public
+certificate, backup destination, or production operating commitment. Those
+remain explicit operator actions.

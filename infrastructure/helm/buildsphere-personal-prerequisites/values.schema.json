@@ -1,0 +1,121 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "nameOverride": { "type": "string", "maxLength": 63 },
+    "fullnameOverride": { "type": "string", "maxLength": 63 },
+    "postgresql": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "image",
+        "existingSecret",
+        "service",
+        "persistence",
+        "resources",
+        "probes"
+      ],
+      "properties": {
+        "image": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["repository", "tag", "digest", "pullPolicy"],
+          "properties": {
+            "repository": { "type": "string", "minLength": 1 },
+            "tag": { "type": "string", "minLength": 1 },
+            "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+            "pullPolicy": { "enum": ["Always", "IfNotPresent", "Never"] }
+          }
+        },
+        "existingSecret": {
+          "type": "string",
+          "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
+          "maxLength": 253
+        },
+        "service": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["port"],
+          "properties": {
+            "port": { "type": "integer", "minimum": 1, "maximum": 65535 }
+          }
+        },
+        "persistence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["size", "storageClass", "accessMode"],
+          "properties": {
+            "size": { "type": "string", "pattern": "^[1-9][0-9]*(Mi|Gi|Ti)$" },
+            "storageClass": { "type": "string" },
+            "accessMode": { "enum": ["ReadWriteOnce", "ReadWriteOncePod"] }
+          }
+        },
+        "resources": { "$ref": "#/definitions/resources" },
+        "probes": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "startupFailureThreshold",
+            "periodSeconds",
+            "timeoutSeconds"
+          ],
+          "properties": {
+            "startupFailureThreshold": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 60
+            },
+            "periodSeconds": { "type": "integer", "minimum": 1, "maximum": 60 },
+            "timeoutSeconds": { "type": "integer", "minimum": 1, "maximum": 30 }
+          }
+        }
+      }
+    },
+    "tls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "email",
+        "host",
+        "secretName",
+        "ingressClass",
+        "issuerName",
+        "privateKeySecretName",
+        "acmeServer"
+      ],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "email": { "type": "string", "maxLength": 254 },
+        "host": { "type": "string", "maxLength": 253 },
+        "secretName": { "type": "string", "maxLength": 253 },
+        "ingressClass": { "type": "string", "maxLength": 63 },
+        "issuerName": { "type": "string", "maxLength": 253 },
+        "privateKeySecretName": { "type": "string", "maxLength": 253 },
+        "acmeServer": { "type": "string", "format": "uri", "maxLength": 2048 }
+      }
+    }
+  },
+  "required": ["postgresql", "tls"],
+  "definitions": {
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requests", "limits"],
+      "properties": {
+        "requests": { "$ref": "#/definitions/resourcePair" },
+        "limits": { "$ref": "#/definitions/resourcePair" }
+      }
+    },
+    "resourcePair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cpu", "memory"],
+      "properties": {
+        "cpu": { "type": "string", "pattern": "^([1-9][0-9]*m|[1-9][0-9]*)$" },
+        "memory": { "type": "string", "pattern": "^[1-9][0-9]*(Mi|Gi)$" }
+      }
+    }
+  }
+}

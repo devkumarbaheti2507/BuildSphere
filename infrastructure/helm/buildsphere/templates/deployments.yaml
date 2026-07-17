@@ -26,6 +26,7 @@ spec:
     metadata:
       labels:
         {{- include "buildsphere.selectorLabels" (dict "root" $ "component" $service.name) | nindent 8 }}
+        app.kubernetes.io/part-of: buildsphere
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") $ | sha256sum }}
     spec:
@@ -135,6 +136,7 @@ spec:
     metadata:
       labels:
         {{- include "buildsphere.selectorLabels" (dict "root" . "component" "frontend") | nindent 8 }}
+        app.kubernetes.io/part-of: buildsphere
     spec:
       serviceAccountName: {{ include "buildsphere.componentName" (dict "root" . "component" "frontend") }}
       automountServiceAccountToken: false

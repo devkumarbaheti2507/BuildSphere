@@ -345,3 +345,33 @@
   v1.15.8 validation, and Prometheus v3.12.0 rule checks successfully.
 - No GHCR image, signing certificate, GitHub Release, external cluster, cloud
   account, production Secret, or production resource was created or modified.
+- Defined and completed Phase 14 through FR-023, the personal free-tier
+  deployment specification, ADR-016, and tickets BS-1401 through BS-1403.
+- Bumped the application chart to `0.5.0` and added the shared pod identity
+  required by a same-namespace database ingress policy while preserving the
+  38-resource, zero-Secret default.
+- Extended all 11 release builds to exact `linux/amd64` and `linux/arm64` OCI
+  indexes with a full-SHA-pinned QEMU action, per-platform Trivy scans, and one
+  CycloneDX SBOM per component and platform.
+- Added release evidence schema 2 with exact platform-set validation, 22 SBOM
+  assets, 25 checksum entries, and 26 release files while retaining schema-1
+  compatibility for Phase 13 fixtures.
+- Added the separate `buildsphere-personal-prerequisites` chart for persistent
+  digest-pinned PostgreSQL, retained storage, an internal Service,
+  least-privilege ingress policy, authenticated Helm test, and optional
+  namespaced cert-manager Issuer/Certificate resources. It renders no Secret.
+- Added one-node Traefik values, architecture-aware checksum-pinned Trivy and
+  actionlint installers, and a context-confirmed Secret bootstrap that rejects
+  existing credentials and uses server-side dry run plus create semantics.
+- Added Phase 14 focused, representative ARM64, and disposable-cluster gates to
+  package scripts and CI. All 25 workflow action references remain pinned to
+  full commit SHAs.
+- Passed five-resource and TLS chart verification, 22-SBOM evidence checks,
+  representative backend/frontend ARM64 OCI cross-builds, and a disposable
+  kind install/test/upgrade/retest of PostgreSQL plus all 11 digest-pinned
+  BuildSphere workloads. The cluster was deleted.
+- Re-ran Node 22 frozen install, lint, all builds and 63 tests, the 26-file
+  gateway flow, Phase 6/9 PostgreSQL checks, Terraform validation, and Phase
+  10-13 packaging/observability/reliability/certification gates successfully.
+- No image was pushed, no signing or public certificate request was made, no
+  release was created, and no cloud account or external cluster was changed.

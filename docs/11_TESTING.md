@@ -338,3 +338,33 @@ verified on 2026-07-15:
   GitHub Release was created, and no external cluster, cloud account, or
   production resource was modified. A live release requires an approved
   semantic-version tag and the protected `production-release` environment.
+
+Phase 14 personal free-tier deployment readiness completed and verified on
+2026-07-15:
+
+- Frozen Node 22 installation, zero-warning lint, all production builds, and
+  all 63 tests pass. The 26-file gateway flow also passes with seven pipeline
+  stages, 14 logs, one suggestion, four planned resources, four notifications,
+  and persisted notification read state.
+- Helm strict lint and structural verification pass for the main chart
+  `0.5.0` and prerequisite chart `0.1.0`. The default prerequisite render has
+  one ServiceAccount, Service, StatefulSet, NetworkPolicy, authenticated test,
+  and zero Secrets; the TLS render adds one Issuer and Certificate.
+- Schema-2 release fixtures certify all 11 AMD64/ARM64 indexes, 22 CycloneDX
+  SBOMs, 25 checksum entries, and 26 release files. Legacy Phase 13 schema-1
+  evidence and all six hostile fixture cases remain green.
+- Actionlint accepts both workflows with all 25 action references pinned.
+  Representative backend and frontend `linux/arm64` OCI cross-builds pass
+  without loading or pushing an image.
+- The guarded Secret bootstrap passes wrong-context, existing-Secret, server
+  dry-run, optional GitHub credential, encryption-key, and non-disclosure
+  checks against a fake kubectl API.
+- A disposable kind cluster installed and authenticated against persistent
+  PostgreSQL, applied all seven migrations, started all 11 digest-pinned
+  workloads, passed both Helm tests, upgraded both releases, repeated both
+  tests, and was deleted.
+- Phase 10 packaging, Phase 11 Prometheus rules, Phase 12 reliability, Phase 13
+  certification, Phase 6 and Phase 9 PostgreSQL persistence, and generated
+  Terraform validation remain green. No Terraform apply, image push, signing
+  request, release creation, public certificate request, cloud account change,
+  or external-cluster mutation occurred.

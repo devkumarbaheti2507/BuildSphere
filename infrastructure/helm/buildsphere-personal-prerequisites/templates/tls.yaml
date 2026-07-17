@@ -1,0 +1,35 @@
+{{- if .Values.tls.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ .Values.tls.issuerName }}
+  labels:
+    {{- include "buildsphere-personal-prerequisites.commonLabels" . | nindent 4 }}
+    app.kubernetes.io/component: tls
+spec:
+  acme:
+    email: {{ .Values.tls.email | quote }}
+    server: {{ .Values.tls.acmeServer | quote }}
+    privateKeySecretRef:
+      name: {{ .Values.tls.privateKeySecretName }}
+    solvers:
+      - http01:
+          ingress:
+            ingressClassName: {{ .Values.tls.ingressClass | quote }}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "buildsphere-personal-prerequisites.fullname" . }}
+  labels:
+    {{- include "buildsphere-personal-prerequisites.commonLabels" . | nindent 4 }}
+    app.kubernetes.io/component: tls
+spec:
+  secretName: {{ .Values.tls.secretName }}
+  issuerRef:
+    name: {{ .Values.tls.issuerName }}
+    kind: Issuer
+    group: cert-manager.io
+  dnsNames:
+    - {{ .Values.tls.host | quote }}
+{{- end }}

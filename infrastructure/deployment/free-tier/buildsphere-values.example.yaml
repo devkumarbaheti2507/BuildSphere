@@ -1,0 +1,37 @@
+# Merge this file after the digest values from a certified BuildSphere release.
+publicUrl: https://buildsphere.203-0-113-10.sslip.io
+
+image:
+  repositoryPrefix: ghcr.io/example/buildsphere
+  pullPolicy: IfNotPresent
+
+runtime:
+  existingSecret: buildsphere-runtime
+
+replicaCount: 1
+
+availability:
+  podDisruptionBudget:
+    enabled: false
+  autoscaling:
+    enabled: false
+
+networkPolicy:
+  enabled: false
+
+observability:
+  serviceMonitor:
+    enabled: false
+  prometheusRule:
+    enabled: false
+
+ingress:
+  enabled: true
+  className: traefik
+  host: buildsphere.203-0-113-10.sslip.io
+  tls:
+    enabled: true
+    secretName: buildsphere-tls
+
+deploymentExecution:
+  enabled: false

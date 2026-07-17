@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "buildsphere-personal-prerequisites.fullname" . }}
+  labels:
+    {{- include "buildsphere-personal-prerequisites.commonLabels" . | nindent 4 }}
+    app.kubernetes.io/component: database
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - name: postgresql
+      port: {{ .Values.postgresql.service.port }}
+      targetPort: postgresql
+      protocol: TCP
+  selector:
+    {{- include "buildsphere-personal-prerequisites.selectorLabels" . | nindent 4 }}
