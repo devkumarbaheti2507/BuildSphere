@@ -329,6 +329,19 @@ try {
   assert.match(releaseSource, /--scanners vuln,secret/);
   assert.match(releaseSource, /--severity HIGH,CRITICAL/);
   assert.match(releaseSource, /cosign sign --yes/);
+  assert.equal(
+    (releaseSource.match(/cosign-release: "v3\.0\.6"/g) ?? []).length,
+    2,
+  );
+  assert.match(
+    releaseSource,
+    /--annotations "buildsphere\.version=\$\{\{ needs\.prepare\.outputs\.version \}\}"/,
+  );
+  assert.match(
+    releaseSource,
+    /--annotations "buildsphere\.commit=\$\{GITHUB_SHA\}"/,
+  );
+  assert.doesNotMatch(releaseSource, /--annotation\s/);
   assert.match(releaseSource, /cosign verify/);
   assert.equal(
     (releaseSource.match(/cosign sign-blob --yes/g) ?? []).length,

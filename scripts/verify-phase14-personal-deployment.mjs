@@ -522,6 +522,19 @@ exit 2
   assert.match(releaseWorkflow, /scan_platform linux\/arm64 arm64/);
   assert.match(releaseWorkflow, /--sbom-amd64/);
   assert.match(releaseWorkflow, /--sbom-arm64/);
+  assert.equal(
+    (releaseWorkflow.match(/cosign-release: "v3\.0\.6"/g) ?? []).length,
+    2,
+  );
+  assert.match(
+    releaseWorkflow,
+    /--annotations "buildsphere\.version=\$\{\{ needs\.prepare\.outputs\.version \}\}"/,
+  );
+  assert.match(
+    releaseWorkflow,
+    /--annotations "buildsphere\.commit=\$\{GITHUB_SHA\}"/,
+  );
+  assert.doesNotMatch(releaseWorkflow, /--annotation\s/);
   assert.ok(
     releaseWorkflow.indexOf("Scan both immutable platforms") <
       releaseWorkflow.indexOf("Sign immutable image digest"),

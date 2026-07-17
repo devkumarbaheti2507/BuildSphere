@@ -66,8 +66,9 @@ Current implementation status:
 
 Primary goal now:
 
-Guide the owner through the first personal free-tier deployment one explicit
-step at a time. Begin with repository/release prerequisites, then create the
+Recover and certify the first personal free-tier release candidate one explicit
+step at a time, then continue deployment. Commit the Cosign compatibility fix,
+confirm normal CI, and use a fresh `v0.5.1` tag only with approval. Create the
 owner's selected free account and VM only with approval. Do not silently trigger
 a release, change GitHub package visibility, provision cloud resources, request
 a certificate, or mutate an external cluster.
@@ -77,10 +78,14 @@ Important boundary:
 Phases 10-14 provide staging-deployable packaging, observability/runtime
 controls, an authorized release-certification path, and a verified personal
 installation profile, not an operated production environment. Normal CI does
-not push images or request OIDC. No live `v0.5.0` tag, GHCR multi-platform push,
-signature, draft release, public certificate, or external deployment has run.
-No cloud account, external cluster, remote state, or production resource was
-modified.
+not push images or request OIDC. The live `v0.5.0` candidate built, scanned, and
+pushed all eleven multi-platform indexes but failed before signing or draft
+release creation because the workflow used Cosign's obsolete singular
+`--annotation` option. The workflow now uses `--annotations`, pins Cosign
+`v3.0.6`, and passes Phase 13, Phase 14, and actionlint checks. Keep `v0.5.0` as
+failed audit evidence and use `v0.5.1` for the recovery candidate. No public
+certificate, cloud account, external cluster, remote state, or production
+resource was created or modified.
 
 Learning pack:
 

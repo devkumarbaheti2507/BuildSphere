@@ -1,12 +1,12 @@
 # Document Information
 
-| Field             | Value                                                                                                            |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Document          | BuildSphere Release Certification Guide                                                                          |
-| Version           | 0.1.0                                                                                                            |
-| Status            | Accepted                                                                                                         |
-| Author            | BuildSphere Team                                                                                                 |
-| Last Updated      | 2026-07-15                                                                                                       |
+| Field             | Value                                                                                                                                                                                                                  |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Document          | BuildSphere Release Certification Guide                                                                                                                                                                                |
+| Version           | 0.1.1                                                                                                                                                                                                                  |
+| Status            | Accepted                                                                                                                                                                                                               |
+| Author            | BuildSphere Team                                                                                                                                                                                                       |
+| Last Updated      | 2026-07-17                                                                                                                                                                                                             |
 | Related Documents | 08_DEVOPS.md, ../specs/SUPPLY_CHAIN_SECURITY_SPEC.md, ../specs/PERSONAL_FREE_TIER_DEPLOYMENT_SPEC.md, adr/ADR-015-Software-Supply-Chain-Release-Certification.md, adr/ADR-016-Personal-Free-Tier-Deployment-Profile.md |
 
 ---
@@ -40,13 +40,18 @@ default branch:
 ```bash
 git switch main
 git pull --ff-only
-git tag -a v0.5.0 -m "BuildSphere v0.5.0"
-git push origin v0.5.0
+RELEASE_TAG=v0.5.1
+git tag -a "${RELEASE_TAG}" -m "BuildSphere ${RELEASE_TAG}"
+git push origin "${RELEASE_TAG}"
 ```
 
 The workflow rejects non-semantic tags and tags whose commit is not contained
 in the default branch. The `production-release` environment can pause image
 publication until a configured reviewer approves it.
+
+Tags and pushed image versions are immutable release evidence. If a candidate
+fails after publication begins, fix the release workflow on the default branch
+and use the next unused patch version; never move or reuse the failed tag.
 
 # Certification stages
 
@@ -93,15 +98,18 @@ file hash. All checksum entries are root-level asset names, matching the flat
 directory created by `gh release download`:
 
 ```bash
-gh release download v0.5.0 --dir /tmp/buildsphere-v0.5.0
-cd /tmp/buildsphere-v0.5.0
+RELEASE_TAG=v0.5.1
+RELEASE_DIR="/tmp/buildsphere-${RELEASE_TAG}"
+gh release download "${RELEASE_TAG}" --dir "${RELEASE_DIR}"
+cd "${RELEASE_DIR}"
 sha256sum --check SHA256SUMS
 ```
 
 Verify the signed manifest and checksum list with the exact workflow identity:
 
 ```bash
-IDENTITY="https://github.com/OWNER/REPOSITORY/.github/workflows/release.yml@refs/tags/v0.5.0"
+RELEASE_TAG=v0.5.1
+IDENTITY="https://github.com/OWNER/REPOSITORY/.github/workflows/release.yml@refs/tags/${RELEASE_TAG}"
 ISSUER="https://token.actions.githubusercontent.com"
 
 cosign verify-blob \
@@ -132,12 +140,13 @@ cosign verify \
 The generated values file activates fail-closed digest mode:
 
 ```bash
+RELEASE_DIR=/tmp/buildsphere-v0.5.1
 helm lint --strict infrastructure/helm/buildsphere
 helm template buildsphere infrastructure/helm/buildsphere \
   --namespace buildsphere \
-  --values /tmp/buildsphere-v0.5.0/buildsphere-digest-values.yaml \
+  --values "${RELEASE_DIR}/buildsphere-digest-values.yaml" \
   --values /path/to/staging-values.yaml \
-  > /tmp/buildsphere-v0.5.0/rendered.yaml
+  > "${RELEASE_DIR}/rendered.yaml"
 ```
 
 Inspect the render and confirm that every application image uses

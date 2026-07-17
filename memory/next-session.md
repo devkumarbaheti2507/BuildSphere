@@ -2,22 +2,22 @@
 
 Recommended next task:
 
-Guide the owner through the first personal free-tier deployment interactively.
-Repository prerequisites are complete; begin with one operator action at a
+Recover the first personal free-tier release candidate, certify it, and then
+continue the deployment interactively. Begin with one operator action at a
 time and verify each result before continuing.
 
 Immediate tasks:
 
-1. Confirm the intended GitHub repository is clean and push Phase 14 through a
-   reviewed commit.
-2. Configure or verify the `production-release` GitHub environment and GHCR
-   visibility/read access without exposing credentials.
-3. With explicit approval, create and review a `v0.5.0` candidate so the
-   protected workflow can publish the eleven AMD64/ARM64 indexes and draft
-   evidence bundle.
+1. Commit and push the Cosign compatibility fix, then confirm normal CI passes
+   on `main`.
+2. Keep the failed `v0.5.0` tag and images as immutable audit evidence; do not
+   move, delete, or reuse that version.
+3. With explicit approval, create and review a fresh `v0.5.1` candidate so the
+   protected workflow can publish and sign the eleven AMD64/ARM64 indexes and
+   create the draft evidence bundle.
 4. Verify the draft's 25 checksums, manifest/checksum signatures, all eleven
    image signatures, and schema-2 platform evidence before using its digest
-   values.
+   values. Only then change required GHCR package visibility for deployment.
 5. Guide the owner through a current free-tier VM choice, firewall, SSH, K3s,
    Helm, cert-manager, hostname, Secret bootstrap, prerequisite release, and
    main release. Recheck provider limits and installation versions from
@@ -46,11 +46,19 @@ Current evidence:
 - Node 22 frozen install, lint, all builds and 63 tests, the 26-file gateway
   flow, Phase 6/9 PostgreSQL, Terraform validation, and Phase 10-13 focused
   regressions pass.
+- The repository is public and the `production-release` GitHub environment is
+  configured.
+- Live candidate `v0.5.0` built, scanned, and pushed all eleven multi-platform
+  indexes, then failed every matrix job at Cosign image signing because the
+  workflow used singular `--annotation`. It created no draft release.
+- The workflow now uses plural `--annotations` and pins Cosign `v3.0.6` in
+  both jobs. Phase 13, Phase 14, and actionlint verification pass locally.
 
 Deployment boundaries still open:
 
-- No live `v0.5.0` tag, GHCR multi-platform release, OIDC signature, or draft
-  GitHub Release has been created.
+- The live `v0.5.0` tag and unsigned GHCR indexes exist but are a failed,
+  non-deployable candidate. No successful OIDC image/evidence signature, draft
+  GitHub Release, or `v0.5.1` recovery candidate has been created.
 - No personal cloud account, VM, firewall, SSH key, external Kubernetes
   cluster, DNS name, cert-manager installation, or public certificate has been
   created or changed.

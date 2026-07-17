@@ -373,5 +373,16 @@
 - Re-ran Node 22 frozen install, lint, all builds and 63 tests, the 26-file
   gateway flow, Phase 6/9 PostgreSQL checks, Terraform validation, and Phase
   10-13 packaging/observability/reliability/certification gates successfully.
-- No image was pushed, no signing or public certificate request was made, no
-  release was created, and no cloud account or external cluster was changed.
+- At Phase 14 local completion, no image had been pushed, no signing or public
+  certificate request had been made, no release had been created, and no cloud
+  account or external cluster had been changed.
+- Ran the first protected live candidate from tag `v0.5.0`. All eleven
+  multi-platform indexes built, pushed, passed both platform scans, and
+  produced SBOMs, but signing stopped before evidence assembly because Cosign
+  3 rejected the obsolete singular `--annotation` option. No draft GitHub
+  Release was created, and the unsigned `v0.5.0` images are not a valid
+  deployment candidate.
+- Corrected image signing to use `--annotations`, pinned both workflow Cosign
+  installs to `v3.0.6`, and added Phase 13 and Phase 14 regression assertions
+  for both the compatible option and explicit CLI pin. Both phase verifiers
+  and actionlint pass; the next immutable candidate must use `v0.5.1`.
