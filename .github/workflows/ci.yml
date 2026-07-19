@@ -138,7 +138,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Setup QEMU for ARM64 builds
-        uses: docker/setup-qemu-action@9430f61a7691bd1bfdc4d6ba70e558659d36fa7a # v4.1.0
+        uses: docker/setup-qemu-action@288220e341e5c445ddb6d73e19a57a9012ceca88 # v4.1.0
         with:
           platforms: arm64
 
